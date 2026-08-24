@@ -20,6 +20,9 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7  # v5.0.0
         with:
-          # "simple" is language-agnostic (tracks version.txt + CHANGELOG).
-          # Swap for node/python/rust/etc. to also bump manifests.
-          release-type: simple
+          # Manifest mode: release-please-config.json lists every file carrying
+          # the version, so one merge moves version.txt, the CHANGELOG and the
+          # in-code constants together. `release-type: simple` would bump
+          # version.txt alone and let the rest drift.
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
