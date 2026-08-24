@@ -1,0 +1,28 @@
+# Secrets / local env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Build output — `make build` writes ./sci; `go build .` writes ./sci-disclose
+/sci
+/sci-disclose
+dist/
+build/
+
+# Test artifacts
+*.test
+*.out
+coverage.out
+
+# Logs / caches
+*.log
+.cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

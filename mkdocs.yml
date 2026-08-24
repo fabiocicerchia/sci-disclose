@@ -1,0 +1,27 @@
+site_name: sci-disclose
+site_description: Measures the Software Carbon Intensity of a command, a function, a repo or a declared deployment.
+repo_url: https://github.com/fabiocicerchia/sci-disclose
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      toggle: { icon: material/weather-night, name: Dark mode }
+    - scheme: slate
+      toggle: { icon: material/weather-sunny, name: Light mode }
+
+nav:
+  - Home: README.md
+  - Getting Started: getting-started.md
+  - CLI reference: cli.md
+  - Methodology: methodology.md
+  - Functional units: functional-units.md
+  - Declared deployments: manifests.md
+  - Architecture: architecture.md
+  - Where this sits: comparison.md
+  - Status & roadmap: roadmap.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences

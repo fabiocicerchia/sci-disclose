@@ -1,0 +1,28 @@
+---
+name: Bug report
+about: Something in sci-disclose does not behave as documented
+title: ""
+labels: bug
+assignees: ""
+---
+
+## What happened
+
+## What you expected
+
+## Steps to reproduce
+
+1.
+2.
+3.
+
+## Environment
+
+- `sci-disclose` version:
+- OS / runtime:
+
+## Logs or output
+
+```text
+
+```

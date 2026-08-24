@@ -1,0 +1,56 @@
+# A worked example: a small three-pod HTTP API on AWS eu-west-1, sized for a
+# month, with the storage and egress it actually uses and the laptops of the
+# people whose browsers talk to it.
+#
+#   sci estimate -f examples/sci.yaml
+name: checkout-api
+
+functional-unit:
+  label: checkout request
+  quantity: 4300000        # requests served in the period below
+
+defaults:
+  provider: aws
+  region: eu-west-1        # or: country: IE / zone: IT/SICI / intensity: 290
+                           # a region resolves to its country, and the last
+                           # hour's grid intensity is fetched for it
+  period-hours: 720        # 30 days
+
+components:
+  - name: api pods
+    type: compute
+    vcpus: 2               # per replica
+    replicas: 3
+    utilisation: 0.35      # average over the period, not peak
+    memory-gb: 4           # per replica
+    embodied:
+      device-kg: 1200      # the node the pods are scheduled on
+      lifespan-years: 4
+      total-vcpus: 64      # so the resource share is 2/64 per replica
+
+  - name: postgres
+    type: compute
+    vcpus: 4
+    utilisation: 0.25
+    memory-gb: 16
+    embodied:
+      device-kg: 1200
+      lifespan-years: 4
+      total-vcpus: 64
+
+  - name: object storage
+    type: storage
+    storage-gb: 800
+    medium: ssd
+
+  - name: egress
+    type: network
+    network-gb: 1400
+
+  # The spec asks for end-user devices inside the boundary when the software
+  # runs on them. 4.3M requests, ~4s of a laptop's attention each.
+  - name: customer laptops
+    type: device
+    watts: 20
+    replicas: 4300000
+    hours: 0.0011
