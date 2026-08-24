@@ -6,22 +6,45 @@ Guidance for Claude Code (and other AI agents) working in this repo.
 
 `sci-disclose` measures the **Software Carbon Intensity** (Green Software
 Foundation spec, ISO/IEC 21031:2024) of something you can point at: a command,
-a script, a function, a repo, or a manifest you declare. Go, single `main`
-package at the repo root, binary named `sci`. `gopkg.in/yaml.v3` is the only
-dependency, and it exists for the manifest targets alone.
+a script, a function, a repo, or a manifest you declare. Go, `cmd/sci` +
+`internal/`, binary named `sci`. `gopkg.in/yaml.v3` is the only dependency, and
+it exists for the manifest targets alone.
 
-Where things live: `sci.go` the equation, `energy.go` the RAPL and modelled
-backends, `intensity.go` the grid lookup and its offline fallback,
-`coefficients.go` the published constants, `manifest.go` the declared-workload
-path, `harness.go` the per-language function harnesses, `report.go` the
-disclosure output, `main.go` the CLI.
+Where things live:
+
+```
+cmd/sci/              the CLI: flags, subcommand dispatch, exit codes
+internal/coefficients published constants, each with its source
+internal/config       Config: the boundary, grid, hardware and functional unit
+internal/fetch        the one HTTP client (timeout, bounded read, User-Agent)
+internal/energy       E: RAPL and modelled backends, Sample, process usage
+internal/grid         I: intensity lookup, cache, offline fallback
+internal/sci          the equation and the Report types (M lives here too)
+internal/manifest     declared deployments (sci.yaml)
+internal/report       text/JSON/Markdown disclosures and compare
+internal/units        R: counting functional units
+internal/discover     finding a repo's own workload; k8s/Terraform scan
+internal/harness      per-language function harnesses
+internal/testutil     helpers and API fixtures shared by several test packages
+```
+
+**The import graph is a DAG and must stay one.** `coefficients` imports
+nothing; `config` imports only `coefficients`; `energy` and `grid` sit above
+those; `sci` imports `energy` and `grid` because `SCIReport` resolves both;
+`manifest` and `report` sit above `sci`; `cmd/sci` imports everything. Anything
+shared lower down belongs in `coefficients` or `config`, never in a new
+dependency pointing back up.
+
+A test that needs more than one branch of that graph — say grid *and* report —
+cannot live in either package. Those go in `cmd/sci/crosscutting_test.go`,
+which is `package main` and may import them all.
 
 ## Commands
 
 ```sh
 make help     # every verb this repo exposes
 make build    # compile ./sci
-make install  # go install .
+make install  # go install ./cmd/sci
 make test     # go test -race ./...
 make lint     # go vet + gofmt check
 make fmt      # gofmt -w .

@@ -1,6 +1,6 @@
 # Architecture
 
-One Go package at the repo root, one binary (`sci`), one dependency
+One binary (`sci`) in `cmd/`, the rest under `internal/`, one dependency
 (`gopkg.in/yaml.v3`, for manifests only). Every run assembles the same
 equation:
 
@@ -25,21 +25,39 @@ target ─┬─ run / file / func / repo ──► execute + observe ──┐
                                           report: text | json | markdown
 ```
 
-## Components
+## Packages
 
-| File | Responsibility |
+| Package | Responsibility |
 | --- | --- |
-| `main.go` | CLI: subcommand dispatch, flags, env fallbacks, exit codes |
-| `sci.go` | the equation — combines E, I, M, R into a disclosure |
-| `energy.go` | **E**. RAPL backend (powercap sysfs, idle-baseline subtracted) and the modelled fallback |
-| `usage_unix.go` / `usage_other.go` | process-tree CPU and peak RSS, per platform |
-| `intensity.go` | **I**. Grid intensity lookup, cache, offline fallback, staleness flagging |
-| `coefficients.go` | published constants: provider power profiles, PUE, embodied LCA midpoints |
-| `manifest.go` | `sci.yaml` parsing and the declared-deployment path |
-| `repo.go` | workload discovery for `sci repo` (Makefile target, package.json script, `go test`, …) |
-| `units.go` | **R**. Unit counts from flags, output markers (`SCI-UNITS: N`) or a counting command |
-| `harness.go` | per-language function harnesses; the protocol is one JSON blob on stdout |
-| `report.go` | text, JSON and Markdown disclosures |
+| `cmd/sci` | CLI: subcommand dispatch, flags, env fallbacks, exit codes |
+| `internal/coefficients` | published constants: provider power profiles, PUE, embodied LCA midpoints, the bundled grid table. Imports nothing. |
+| `internal/config` | `Config`: the boundary, the grid, the hardware and the functional unit, plus validation |
+| `internal/fetch` | the one HTTP client — 5s timeout, 1 MiB bounded read, a User-Agent that names the tool |
+| `internal/energy` | **E**. RAPL backend (powercap sysfs, idle-baseline subtracted), the modelled fallback, and process-tree CPU/peak RSS per platform |
+| `internal/grid` | **I**. Intensity lookup, cache, offline fallback, staleness flagging |
+| `internal/sci` | the equation — combines E, I, M, R into a `Report`. **M** is computed here. |
+| `internal/manifest` | `sci.yaml` parsing and the declared-deployment path |
+| `internal/report` | text, JSON and Markdown disclosures, and `compare` |
+| `internal/units` | **R**. Unit counts from flags, output markers (`SCI-UNITS: N`), a file, a command or a Prometheus counter |
+| `internal/discover` | workload discovery for `sci repo` (Makefile target, package.json script, `go test`, …) and the Kubernetes/Terraform scan behind `sci init` |
+| `internal/harness` | per-language function harnesses; the protocol is one JSON blob on stdout |
+| `internal/testutil` | helpers and verbatim API fixtures shared by several test packages |
+
+### The dependency direction
+
+```
+coefficients ─┬─► config ─┬─► energy ─┬─► sci ─┬─► manifest ─┐
+              │           ├─► grid ───┘        ├─► report ───┼─► cmd/sci
+              └─► fetch ──┴─► units ───────────┘             │
+                              discover ────────────────────  ┘
+                              harness ──► energy
+```
+
+It is a DAG, and that is load-bearing: `sci.SCIReport` resolves both the grid
+figure and the energy, so the equation sits *above* the two backends rather
+than beside them. `coefficients` imports nothing, so anything two packages
+need — a constant, a table, a default — belongs there rather than in a new
+edge pointing back up the graph.
 
 ## Data flow
 

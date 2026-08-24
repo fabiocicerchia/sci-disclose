@@ -1,4 +1,4 @@
-package main
+package coefficients
 
 // Coefficients. Every number here is a published estimate, not a measurement
 // of your hardware; `sci coefficients` prints this table with its sources and
@@ -109,4 +109,33 @@ var CoefficientSources = [][2]string{
 	{"Grid intensity table", "Electricity Maps yearly zone averages; " +
 		"world average 481 gCO2e/kWh (Ember). Superseded at runtime by the " +
 		"last-hour figure from the intensity API when a zone is known."},
+}
+
+// DefaultIntensityAPI is overridable with --intensity-api or $SCI_INTENSITY_API.
+const DefaultIntensityAPI = "https://ci-api.fabiocicerchia.it"
+
+// IntensityBases are the four figures every reading carries, in the order the
+// tool falls back through them. consumption_lifecycle is the default: it counts
+// the whole supply chain of the electricity actually consumed in that country,
+// which is the figure the API's own guidance says to report a footprint with.
+var IntensityBases = []string{"consumption_lifecycle", "lifecycle", "consumption_direct", "direct"}
+
+// RegionCountry maps a cloud region onto the ISO-3166 alpha-2 country the API
+// is keyed by. Sub-national bidding zones are never guessed from a region —
+// pass --zone COUNTRY/ZONE for those.
+var RegionCountry = map[string]string{
+	// AWS
+	"eu-north-1": "SE", "eu-west-1": "IE", "eu-west-2": "GB", "eu-west-3": "FR",
+	"eu-central-1": "DE", "eu-south-1": "IT", "us-east-1": "US", "us-east-2": "US",
+	"us-west-1": "US", "us-west-2": "US", "ca-central-1": "CA", "sa-east-1": "BR",
+	"ap-northeast-1": "JP", "ap-southeast-1": "SG", "ap-southeast-2": "AU",
+	"ap-south-1": "IN",
+	// GCP
+	"europe-north1": "FI", "europe-west1": "BE", "europe-west2": "GB",
+	"europe-west3": "DE", "europe-west4": "NL", "us-central1": "US",
+	"us-east4": "US", "us-west1": "US", "northamerica-northeast1": "CA",
+	// Azure
+	"swedencentral": "SE", "northeurope": "IE", "westeurope": "NL",
+	"uksouth": "GB", "francecentral": "FR", "germanywestcentral": "DE",
+	"eastus": "US", "westus2": "US", "canadaeast": "CA",
 }

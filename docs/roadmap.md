@@ -20,6 +20,6 @@
       RAPL joules can be attributed by CPU share rather than assumed
 - [ ] GPU energy via NVML, for training and inference workloads
 - [ ] More harnesses for function targets: Node, Go, Ruby (the protocol is one
-      JSON blob — see `harness.go`)
+      JSON blob — see `internal/harness`)
 - [ ] macOS `powermetrics` and Windows energy backends
 - [ ] Impact Framework manifest import/export

@@ -1,12 +1,15 @@
-package main
+package report
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math"
 	"os"
 	"strings"
+
+	"github.com/fabiocicerchia/sci-disclose/internal/sci"
 )
 
 // Output. A disclosure is only useful if it shows its working, so every
@@ -46,7 +49,7 @@ func addThousands(digits string) string {
 }
 
 // RenderText is the default human-readable disclosure.
-func RenderText(report *Report) string {
+func RenderText(report *sci.Report) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "sci: %s %s\n\n", FormatNumber(report.SCI), report.SCIUnit)
 	fmt.Fprintf(&b, "  target      %s\n", report.Target.Description)
@@ -107,7 +110,7 @@ func RenderText(report *Report) string {
 }
 
 // RenderMarkdown is the disclosure as a PR comment or README block.
-func RenderMarkdown(report *Report) string {
+func RenderMarkdown(report *sci.Report) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "### SCI: %s %s\n\n", FormatNumber(report.SCI), report.SCIUnit)
 	fmt.Fprintf(&b, "`%s`\n\n", report.Target.Description)
@@ -144,7 +147,7 @@ func RenderMarkdown(report *Report) string {
 }
 
 // Emit writes the report in the requested format, to a file or to the writer.
-func Emit(report *Report, format, output string, out io.Writer) error {
+func Emit(report *sci.Report, format, output string, out io.Writer) error {
 	var text string
 	switch format {
 	case "json":
@@ -184,7 +187,7 @@ type Comparison struct {
 }
 
 // CompareReports diffs two disclosures and flags a regression outside tolerance.
-func CompareReports(before, after *Report, tolerance float64) Comparison {
+func CompareReports(before, after *sci.Report, tolerance float64) Comparison {
 	delta := after.SCI - before.SCI
 	pct := math.Inf(1)
 	if before.SCI != 0 {
@@ -192,7 +195,7 @@ func CompareReports(before, after *Report, tolerance float64) Comparison {
 	}
 	comparison := Comparison{
 		Before: before.SCI, After: after.SCI, Delta: delta, DeltaPct: pct,
-		Unit: firstNonEmpty(after.SCIUnit, before.SCIUnit, "gCO2e"),
+		Unit: cmp.Or(after.SCIUnit, before.SCIUnit, "gCO2e"),
 		// A tolerance of exactly 0 still means "no increase allowed".
 		Regression: pct > tolerance, TolerancePct: tolerance,
 	}

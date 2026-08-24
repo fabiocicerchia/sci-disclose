@@ -1,11 +1,18 @@
-package main
+package manifest
 
 import (
+	"cmp"
 	"fmt"
 	"os"
 	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/fabiocicerchia/sci-disclose/internal/coefficients"
+	"github.com/fabiocicerchia/sci-disclose/internal/config"
+	"github.com/fabiocicerchia/sci-disclose/internal/energy"
+	"github.com/fabiocicerchia/sci-disclose/internal/grid"
+	"github.com/fabiocicerchia/sci-disclose/internal/sci"
 )
 
 // Declared deployments: the SCI of software you are not running right now. A
@@ -70,20 +77,6 @@ type Embodied struct {
 	TotalVCPUs    float64  `yaml:"total-vcpus"`
 }
 
-// ComponentResult is one component's contribution to the disclosure.
-type ComponentResult struct {
-	Name            string       `json:"name"`
-	Type            string       `json:"type"`
-	Hours           float64      `json:"hours"`
-	Replicas        float64      `json:"replicas"`
-	EnergyKWh       float64      `json:"energy_kwh"`
-	EnergyBreakdown []EnergyPart `json:"energy_breakdown_kwh"`
-	Intensity       Intensity    `json:"intensity"`
-	Operational     float64      `json:"operational_gco2e"`
-	Embodied        float64      `json:"embodied_gco2e"`
-	Total           float64      `json:"total_gco2e"`
-}
-
 // LoadManifest reads a manifest, accepting hyphenated or underscored keys and
 // either spelling of "utilisation".
 func LoadManifest(path string) (Manifest, error) {
@@ -124,13 +117,13 @@ func normaliseKeys(node *yaml.Node) {
 }
 
 // componentConfig folds the manifest defaults and a component's overrides into
-// the same Config the measured targets use, so both paths resolve I identically.
-func componentConfig(component Component, defaults Defaults, base Config) Config {
+// the same config.Config the measured targets use, so both paths resolve I identically.
+func componentConfig(component Component, defaults Defaults, base config.Config) config.Config {
 	cfg := base
-	cfg.Provider = firstNonEmpty(component.Provider, defaults.Provider, "onprem")
-	cfg.Region = firstNonEmpty(component.Region, defaults.Region)
-	cfg.Country = firstNonEmpty(component.Country, defaults.Country)
-	cfg.Zone = firstNonEmpty(component.Zone, defaults.Zone)
+	cfg.Provider = cmp.Or(component.Provider, defaults.Provider, "onprem")
+	cfg.Region = cmp.Or(component.Region, defaults.Region)
+	cfg.Country = cmp.Or(component.Country, defaults.Country)
+	cfg.Zone = cmp.Or(component.Zone, defaults.Zone)
 	cfg.Intensity = firstPositive(component.Intensity, defaults.Intensity, base.Intensity)
 	cfg.PUE = firstPositive(component.PUE, defaults.PUE)
 	return cfg
@@ -146,8 +139,8 @@ func firstPositive(values ...float64) float64 {
 }
 
 // EstimateComponent computes energy and carbon for one declared component.
-func EstimateComponent(component Component, defaults Defaults, base Config,
-	cache map[string]Intensity) (ComponentResult, error) {
+func EstimateComponent(component Component, defaults Defaults, base config.Config,
+	cache map[string]grid.Intensity) (sci.ComponentResult, error) {
 	kind := component.Type
 	if kind == "" {
 		kind = "compute"
@@ -159,11 +152,11 @@ func EstimateComponent(component Component, defaults Defaults, base Config,
 	}
 	cfg := componentConfig(component, defaults, base)
 	if err := cfg.Validate(); err != nil {
-		return ComponentResult{}, err
+		return sci.ComponentResult{}, err
 	}
 	profile := cfg.Profile()
 
-	var parts []EnergyPart
+	var parts []energy.EnergyPart
 	switch kind {
 	case "compute":
 		vcpus := component.VCPUs
@@ -175,28 +168,28 @@ func EstimateComponent(component Component, defaults Defaults, base Config,
 			util = *component.Utilisation
 		}
 		watts := profile.MinW + util*(profile.MaxW-profile.MinW)
-		parts = append(parts, EnergyPart{"cpu", vcpus * replicas * watts * hours / 1000})
+		parts = append(parts, energy.EnergyPart{Name: "cpu", KWh: vcpus * replicas * watts * hours / 1000})
 		if component.MemoryGB > 0 {
 			parts = append(parts,
-				EnergyPart{"memory", MemorykWh(component.MemoryGB*replicas, hours)})
+				energy.EnergyPart{Name: "memory", KWh: energy.MemorykWh(component.MemoryGB*replicas, hours)})
 		}
 	case "storage":
 		medium := component.Medium
 		if medium == "" {
 			medium = "ssd"
 		}
-		if _, ok := StorageWPerTB[medium]; !ok {
-			return ComponentResult{}, fmt.Errorf("unknown storage medium %q (ssd or hdd)", medium)
+		if _, ok := coefficients.StorageWPerTB[medium]; !ok {
+			return sci.ComponentResult{}, fmt.Errorf("unknown storage medium %q (ssd or hdd)", medium)
 		}
 		parts = append(parts,
-			EnergyPart{"storage", StoragekWh(component.StorageGB*replicas, hours, medium)})
+			energy.EnergyPart{Name: "storage", KWh: energy.StoragekWh(component.StorageGB*replicas, hours, medium)})
 	case "network":
-		parts = append(parts, EnergyPart{"network", NetworkkWh(component.NetworkGB)})
+		parts = append(parts, energy.EnergyPart{Name: "network", KWh: energy.NetworkkWh(component.NetworkGB)})
 	case "device":
 		// End-user devices draw from the grid directly: no datacentre PUE.
-		parts = append(parts, EnergyPart{"device", component.Watts * hours * replicas / 1000})
+		parts = append(parts, energy.EnergyPart{Name: "device", KWh: component.Watts * hours * replicas / 1000})
 	default:
-		return ComponentResult{}, fmt.Errorf("unknown component type %q in %q",
+		return sci.ComponentResult{}, fmt.Errorf("unknown component type %q in %q",
 			kind, componentName(component, kind))
 	}
 
@@ -206,17 +199,17 @@ func EstimateComponent(component Component, defaults Defaults, base Config,
 	}
 	if kind != "device" {
 		if overhead := subtotal * (profile.PUE - 1); overhead != 0 {
-			parts = append(parts, EnergyPart{"datacentre_overhead", overhead})
+			parts = append(parts, energy.EnergyPart{Name: "datacentre_overhead", KWh: overhead})
 			subtotal += overhead
 		}
 	}
 
 	intensity, err := resolveCached(cfg, cache)
 	if err != nil {
-		return ComponentResult{}, err
+		return sci.ComponentResult{}, err
 	}
 	embodied := componentEmbodied(component, hours, replicas)
-	return ComponentResult{
+	return sci.ComponentResult{
 		Name:            componentName(component, kind),
 		Type:            kind,
 		Hours:           hours,
@@ -238,15 +231,15 @@ func componentName(component Component, kind string) string {
 }
 
 // resolveCached keeps one manifest from making the same API call per component.
-func resolveCached(cfg Config, cache map[string]Intensity) (Intensity, error) {
+func resolveCached(cfg config.Config, cache map[string]grid.Intensity) (grid.Intensity, error) {
 	key := strings.Join([]string{cfg.Region, cfg.Country, cfg.Zone,
 		fmt.Sprintf("%g", cfg.Intensity), cfg.IntensityBasis}, "|")
 	if hit, ok := cache[key]; ok {
 		return hit, nil
 	}
-	intensity, err := ResolveIntensity(cfg)
+	intensity, err := grid.ResolveIntensity(cfg)
 	if err != nil {
-		return Intensity{}, err
+		return grid.Intensity{}, err
 	}
 	cache[key] = intensity
 	return intensity, nil
@@ -259,11 +252,11 @@ func componentEmbodied(component Component, hours, replicas float64) float64 {
 	}
 	deviceKg := spec.DeviceKg
 	if deviceKg <= 0 {
-		deviceKg = Hardware["server"].EmbodiedKg
+		deviceKg = coefficients.Hardware["server"].EmbodiedKg
 	}
 	lifespan := spec.LifespanYears
 	if lifespan <= 0 {
-		lifespan = Hardware["server"].LifespanYears
+		lifespan = coefficients.Hardware["server"].LifespanYears
 	}
 	resourceShare := 1.0
 	switch {
@@ -272,12 +265,12 @@ func componentEmbodied(component Component, hours, replicas float64) float64 {
 	case spec.TotalVCPUs > 0 && component.VCPUs > 0:
 		resourceShare = component.VCPUs / spec.TotalVCPUs
 	}
-	timeShare := hours / (lifespan * HoursPerYear)
+	timeShare := hours / (lifespan * coefficients.HoursPerYear)
 	return deviceKg * 1000 * timeShare * resourceShare * replicas
 }
 
 // EstimateManifest turns a declared boundary into one disclosure.
-func EstimateManifest(manifest Manifest, base Config, path string) (*Report, error) {
+func EstimateManifest(manifest Manifest, base config.Config, path string) (*sci.Report, error) {
 	defaults := manifest.Defaults
 	if defaults.PeriodHours == 0 {
 		defaults.PeriodHours = manifest.PeriodHours
@@ -295,10 +288,10 @@ func EstimateManifest(manifest Manifest, base Config, path string) (*Report, err
 		label = "run"
 	}
 
-	cache := map[string]Intensity{}
-	var rows []ComponentResult
-	var energy, operational, embodied float64
-	var breakdown []EnergyPart
+	cache := map[string]grid.Intensity{}
+	var rows []sci.ComponentResult
+	var energyKWh, operational, embodied float64
+	var breakdown []energy.EnergyPart
 	var boundary []string
 	for _, component := range manifest.Components {
 		row, err := EstimateComponent(component, defaults, base, cache)
@@ -306,10 +299,10 @@ func EstimateManifest(manifest Manifest, base Config, path string) (*Report, err
 			return nil, err
 		}
 		rows = append(rows, row)
-		energy += row.EnergyKWh
+		energyKWh += row.EnergyKWh
 		operational += row.Operational
 		embodied += row.Embodied
-		breakdown = append(breakdown, EnergyPart{row.Name, row.EnergyKWh})
+		breakdown = append(breakdown, energy.EnergyPart{Name: row.Name, KWh: row.EnergyKWh})
 		boundary = append(boundary, fmt.Sprintf("%s (%s)", row.Name, row.Type))
 	}
 
@@ -322,23 +315,23 @@ func EstimateManifest(manifest Manifest, base Config, path string) (*Report, err
 		where = "manifest"
 	}
 	total := operational + embodied
-	report := &Report{
+	report := &sci.Report{
 		Tool:    "sci-disclose",
-		Version: Version,
-		Target: Target{Kind: "manifest", Description: fmt.Sprintf("%s (%s)", name, where),
+		Version: coefficients.Version,
+		Target: sci.Target{Kind: "manifest", Description: fmt.Sprintf("%s (%s)", name, where),
 			Path: path},
 		Components:      rows,
-		EnergyKWh:       energy,
+		EnergyKWh:       energyKWh,
 		EnergySource:    "declared (manifest)",
 		EnergyBreakdown: breakdown,
 		Operational:     operational,
 		Embodied:        embodied,
 		Total:           total,
-		FunctionalUnit:  FunctionalUnit{Label: label, Quantity: quantity},
+		FunctionalUnit:  sci.FunctionalUnit{Label: label, Quantity: quantity},
 		SCI:             total / quantity,
 		SCIUnit:         "gCO2e per " + label,
 		Boundary:        boundary,
-		Assumptions: Assumptions{
+		Assumptions: sci.Assumptions{
 			Provider:    defaults.Provider,
 			Components:  len(rows),
 			PeriodHours: defaults.PeriodHours,
@@ -353,7 +346,7 @@ func EstimateManifest(manifest Manifest, base Config, path string) (*Report, err
 	return report, nil
 }
 
-func sameIntensity(rows []ComponentResult) *Intensity {
+func sameIntensity(rows []sci.ComponentResult) *grid.Intensity {
 	if len(rows) == 0 {
 		return nil
 	}

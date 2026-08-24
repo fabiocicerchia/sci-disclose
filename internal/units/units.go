@@ -1,4 +1,4 @@
-package main
+package units
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/fabiocicerchia/sci-disclose/internal/fetch"
 )
 
 // Counting R.
@@ -98,7 +100,7 @@ func UnitsFromCommand(commandLine string, pattern *regexp.Regexp) (float64, erro
 // service's units accrue over time, so the honest count for a measured window
 // is the delta across it: scrape before, scrape after, subtract.
 func ScrapeCounter(url, metric string) (float64, error) {
-	body, status, err := httpGet(url)
+	body, status, err := fetch.Get(url)
 	if err != nil {
 		return 0, fmt.Errorf("cannot scrape %s: %w", url, err)
 	}

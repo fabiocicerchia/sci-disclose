@@ -1,4 +1,4 @@
-package main
+package harness
 
 import (
 	"encoding/json"
@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/fabiocicerchia/sci-disclose/internal/energy"
 )
 
 // Function targets need a meter inside the process being measured: interpreter
@@ -125,17 +127,17 @@ type harnessResult struct {
 // MeasureFunction runs a function target through the language harness and
 // returns the sample the harness measured from inside the process.
 func MeasureFunction(interpreter, target string, iterations, warmup int,
-	useRAPL bool) (Sample, error) {
+	useRAPL bool) (energy.Sample, error) {
 	dir, err := os.MkdirTemp("", "sci-harness")
 	if err != nil {
-		return Sample{}, err
+		return energy.Sample{}, err
 	}
 	defer os.RemoveAll(dir)
 
 	script := filepath.Join(dir, "harness.py")
 	result := filepath.Join(dir, "result.json")
 	if err := os.WriteFile(script, []byte(pythonHarness), 0o600); err != nil {
-		return Sample{}, err
+		return energy.Sample{}, err
 	}
 
 	cmd := exec.Command(interpreter, script, target,
@@ -143,23 +145,23 @@ func MeasureFunction(interpreter, target string, iterations, warmup int,
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	cmd.Env = os.Environ()
 	if useRAPL {
-		cmd.Env = append(cmd.Env, "SCI_RAPL_ROOT="+RAPLRoot)
+		cmd.Env = append(cmd.Env, "SCI_RAPL_ROOT="+energy.RAPLRoot)
 	} else {
 		cmd.Env = append(cmd.Env, "SCI_RAPL_ROOT=/nonexistent")
 	}
 	if err := cmd.Run(); err != nil {
-		return Sample{}, fmt.Errorf("the %s harness failed: %w", interpreter, err)
+		return energy.Sample{}, fmt.Errorf("the %s harness failed: %w", interpreter, err)
 	}
 
 	data, err := os.ReadFile(result)
 	if err != nil {
-		return Sample{}, fmt.Errorf("the harness produced no measurement: %w", err)
+		return energy.Sample{}, fmt.Errorf("the harness produced no measurement: %w", err)
 	}
 	var measured harnessResult
 	if err := json.Unmarshal(data, &measured); err != nil {
-		return Sample{}, err
+		return energy.Sample{}, err
 	}
-	return Sample{
+	return energy.Sample{
 		WallS:      measured.WallS,
 		CPUS:       measured.CPUS,
 		PeakRSSGB:  measured.PeakRSSGB,

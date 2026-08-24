@@ -8,6 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/fabiocicerchia/sci-disclose/internal/coefficients"
+	"github.com/fabiocicerchia/sci-disclose/internal/sci"
+	"github.com/fabiocicerchia/sci-disclose/internal/testutil"
 )
 
 // busyWork is a short, portable CPU burn: no interpreter needed beyond sh.
@@ -20,13 +24,13 @@ func runCLI(t *testing.T, args ...string) (int, string) {
 	return code, out.String()
 }
 
-func readReport(t *testing.T, path string) *Report {
+func readReport(t *testing.T, path string) *sci.Report {
 	t.Helper()
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	var report Report
+	var report sci.Report
 	if err := json.Unmarshal(data, &report); err != nil {
 		t.Fatal(err)
 	}
@@ -42,13 +46,13 @@ func TestRunMeasuresACommandAndEmitsJSON(t *testing.T) {
 		t.Fatalf("exit %d: %s", code, stdout)
 	}
 	report := readReport(t, out)
-	if report.SCI <= 0 || report.Intensity.Value != GridZones["SE"] {
+	if report.SCI <= 0 || report.Intensity.Value != coefficients.GridZones["SE"] {
 		t.Fatalf("%+v", report)
 	}
 	if report.Measurement.ExitCode != 0 || report.Measurement.CPUS <= 0 {
 		t.Fatalf("measurement: %+v", report.Measurement)
 	}
-	if report.Tool != "sci-disclose" || report.Version != Version {
+	if report.Tool != "sci-disclose" || report.Version != coefficients.Version {
 		t.Errorf("provenance: %s %s", report.Tool, report.Version)
 	}
 }
@@ -95,12 +99,12 @@ func TestUsageErrorsExitTwo(t *testing.T) {
 }
 
 func TestFileTargetRunsTheScript(t *testing.T) {
-	script := writeFile(t, t.TempDir(), "work.sh", "i=0\nwhile [ $i -lt 5000 ]; do i=$((i+1)); done\n")
+	script := testutil.WriteFile(t, t.TempDir(), "work.sh", "i=0\nwhile [ $i -lt 5000 ]; do i=$((i+1)); done\n")
 	code, stdout := runCLI(t, "file", "-offline", "-format", "json", script)
 	if code != 0 {
 		t.Fatalf("exit %d: %s", code, stdout)
 	}
-	var report Report
+	var report sci.Report
 	if err := json.Unmarshal([]byte(stdout), &report); err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +114,7 @@ func TestFileTargetRunsTheScript(t *testing.T) {
 }
 
 func TestFileTargetNeedsAKnownInterpreter(t *testing.T) {
-	odd := writeFile(t, t.TempDir(), "thing.zzz", "noop\n")
+	odd := testutil.WriteFile(t, t.TempDir(), "thing.zzz", "noop\n")
 	if code, out := runCLI(t, "file", odd); code != 2 ||
 		!strings.Contains(out, "no interpreter known") {
 		t.Fatalf("exit %d: %s", code, out)
@@ -122,7 +126,7 @@ func TestFuncTargetDividesByTheIterationCount(t *testing.T) {
 		t.Skip("python3 is not installed")
 	}
 	dir := t.TempDir()
-	writeFile(t, dir, "workload_under_test.py", "def go():\n    return sum(range(1000))\n")
+	testutil.WriteFile(t, dir, "workload_under_test.py", "def go():\n    return sum(range(1000))\n")
 	previous, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -137,14 +141,14 @@ func TestFuncTargetDividesByTheIterationCount(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("exit %d: %s", code, stdout)
 	}
-	var report Report
+	var report sci.Report
 	if err := json.Unmarshal([]byte(stdout), &report); err != nil {
 		t.Fatal(err)
 	}
 	if report.FunctionalUnit.Quantity != 50 || report.FunctionalUnit.Label != "call" {
 		t.Fatalf("R: %+v", report.FunctionalUnit)
 	}
-	approx(t, report.SCI, report.Total/50, 1e-12, "per call")
+	testutil.Approx(t, report.SCI, report.Total/50, 1e-12, "per call")
 	if report.Measurement.CPUS <= 0 || report.Measurement.WallS <= 0 {
 		t.Errorf("the harness reported nothing: %+v", report.Measurement)
 	}
@@ -163,7 +167,7 @@ func TestFuncTargetRejectsABadReference(t *testing.T) {
 
 func TestRepoTargetRunsTheDetectedWorkload(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, dir, "Makefile", "test:\n\t@true\n")
+	testutil.WriteFile(t, dir, "Makefile", "test:\n\t@true\n")
 	if _, err := exec.LookPath("make"); err != nil {
 		t.Skip("make is not installed")
 	}
@@ -171,7 +175,7 @@ func TestRepoTargetRunsTheDetectedWorkload(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("exit %d: %s", code, stdout)
 	}
-	var report Report
+	var report sci.Report
 	if err := json.Unmarshal([]byte(stdout), &report); err != nil {
 		t.Fatal(err)
 	}
@@ -193,7 +197,7 @@ func TestRepoTargetSaysSoWhenThereIsNoWorkload(t *testing.T) {
 func TestInitThenEstimateRoundTrips(t *testing.T) {
 	dir := t.TempDir()
 	manifest := filepath.Join(dir, "sci.yaml")
-	writeFile(t, dir, "deploy.yaml", `kind: Deployment
+	testutil.WriteFile(t, dir, "deploy.yaml", `kind: Deployment
 metadata:
   name: api
 spec:
@@ -229,7 +233,7 @@ spec:
 
 func TestInitRefusesToClobber(t *testing.T) {
 	dir := t.TempDir()
-	manifest := writeFile(t, dir, "sci.yaml", "keep me\n")
+	manifest := testutil.WriteFile(t, dir, "sci.yaml", "keep me\n")
 	if code, out := runCLI(t, "init", "-o", manifest, dir); code != 2 ||
 		!strings.Contains(out, "already exists") {
 		t.Fatalf("exit %d: %s", code, out)
@@ -245,8 +249,8 @@ func TestInitRefusesToClobber(t *testing.T) {
 
 func TestCompareCommandGatesOnRegression(t *testing.T) {
 	dir := t.TempDir()
-	before := writeFile(t, dir, "a.json", `{"sci": 1.0, "sci_unit": "gCO2e per run"}`)
-	after := writeFile(t, dir, "b.json", `{"sci": 2.0, "sci_unit": "gCO2e per run"}`)
+	before := testutil.WriteFile(t, dir, "a.json", `{"sci": 1.0, "sci_unit": "gCO2e per run"}`)
+	after := testutil.WriteFile(t, dir, "b.json", `{"sci": 2.0, "sci_unit": "gCO2e per run"}`)
 	if code, out := runCLI(t, "compare", before, after); code != 0 ||
 		!strings.Contains(out, "delta") {
 		t.Fatalf("exit %d: %s", code, out)
@@ -264,7 +268,7 @@ func TestCoefficientsArePrintedWithTheirSources(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("exit %d", code)
 	}
-	for _, want := range []string{"Cloud Carbon Footprint", "Embodied", DefaultIntensityAPI} {
+	for _, want := range []string{"Cloud Carbon Footprint", "Embodied", coefficients.DefaultIntensityAPI} {
 		if !strings.Contains(out, want) {
 			t.Errorf("coefficients output is missing %q", want)
 		}
@@ -286,7 +290,7 @@ func TestHelpAndVersion(t *testing.T) {
 	if code, out := runCLI(t, "--help"); code != 0 || !strings.Contains(out, "SCI = ((E x I) + M)") {
 		t.Errorf("help: exit %d\n%s", code, out)
 	}
-	if code, out := runCLI(t, "--version"); code != 0 || !strings.Contains(out, Version) {
+	if code, out := runCLI(t, "--version"); code != 0 || !strings.Contains(out, coefficients.Version) {
 		t.Errorf("version: exit %d\n%s", code, out)
 	}
 }

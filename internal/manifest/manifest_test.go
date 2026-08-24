@@ -1,23 +1,16 @@
-package main
+package manifest
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-)
 
-func writeFile(t *testing.T, dir, name, content string) string {
-	t.Helper()
-	path := filepath.Join(dir, name)
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	return path
-}
+	"github.com/fabiocicerchia/sci-disclose/internal/coefficients"
+	"github.com/fabiocicerchia/sci-disclose/internal/config"
+	"github.com/fabiocicerchia/sci-disclose/internal/discover"
+	"github.com/fabiocicerchia/sci-disclose/internal/energy"
+	"github.com/fabiocicerchia/sci-disclose/internal/testutil"
+)
 
 const demoManifest = `
 name: demo
@@ -49,7 +42,7 @@ components:
 
 func loadDemo(t *testing.T) Manifest {
 	t.Helper()
-	path := writeFile(t, t.TempDir(), "sci.yaml", demoManifest)
+	path := testutil.WriteFile(t, t.TempDir(), "sci.yaml", demoManifest)
 	manifest, err := LoadManifest(path)
 	if err != nil {
 		t.Fatal(err)
@@ -57,8 +50,8 @@ func loadDemo(t *testing.T) Manifest {
 	return manifest
 }
 
-func offlineConfig() Config {
-	cfg := NewConfig()
+func offlineConfig() config.Config {
+	cfg := config.NewConfig()
 	cfg.Offline = true
 	return cfg
 }
@@ -75,8 +68,8 @@ func TestManifestTotalsAreTheSumOfTheComponents(t *testing.T) {
 	for _, row := range report.Components {
 		energy += row.EnergyKWh
 	}
-	approx(t, report.EnergyKWh, energy, 1e-12, "total energy")
-	approx(t, report.SCI, report.Total/1000, 1e-12, "SCI per request")
+	testutil.Approx(t, report.EnergyKWh, energy, 1e-12, "total energy")
+	testutil.Approx(t, report.SCI, report.Total/1000, 1e-12, "SCI per request")
 	if report.SCIUnit != "gCO2e per request" {
 		t.Errorf("unit: %s", report.SCIUnit)
 	}
@@ -87,8 +80,8 @@ func TestManifestEmbodiedUsesVCPUsOverTotalVCPUs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expected := 1_000_000 * (10 / (4 * HoursPerYear)) * (2.0 / 64) * 2 // x2 replicas
-	approx(t, report.Components[0].Embodied, expected, 1e-9, "M for the api component")
+	expected := 1_000_000 * (10 / (4 * coefficients.HoursPerYear)) * (2.0 / 64) * 2 // x2 replicas
+	testutil.Approx(t, report.Components[0].Embodied, expected, 1e-9, "M for the api component")
 }
 
 func TestManifestComputeMatchesTheModelUsedForMeasuredRuns(t *testing.T) {
@@ -96,11 +89,11 @@ func TestManifestComputeMatchesTheModelUsedForMeasuredRuns(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	profile := CPUProfiles["aws"]
+	profile := coefficients.CPUProfiles["aws"]
 	// Four vCPUs (2 x 2 replicas) at 100% for ten hours, plus 8 GB of memory.
 	cpu := 4 * profile.MaxW * 10 / 1000
-	memory := MemorykWh(8, 10)
-	approx(t, report.Components[0].EnergyKWh, (cpu+memory)*profile.PUE, 1e-9, "api energy")
+	memory := energy.MemorykWh(8, 10)
+	testutil.Approx(t, report.Components[0].EnergyKWh, (cpu+memory)*profile.PUE, 1e-9, "api energy")
 }
 
 func TestEndUserDevicesCarryNoDatacentreOverhead(t *testing.T) {
@@ -116,7 +109,7 @@ func TestEndUserDevicesCarryNoDatacentreOverhead(t *testing.T) {
 		t.Fatal(err)
 	}
 	row := report.Components[0]
-	approx(t, row.EnergyKWh, 5*2*10/1000.0, 1e-12, "device energy")
+	testutil.Approx(t, row.EnergyKWh, 5*2*10/1000.0, 1e-12, "device energy")
 	for _, part := range row.EnergyBreakdown {
 		if part.Name == "datacentre_overhead" {
 			t.Error("end-user devices are on the grid, not in a datacentre")
@@ -125,7 +118,7 @@ func TestEndUserDevicesCarryNoDatacentreOverhead(t *testing.T) {
 }
 
 func TestManifestAcceptsUnderscoresAndBothSpellingsOfUtilisation(t *testing.T) {
-	path := writeFile(t, t.TempDir(), "sci.json", `{
+	path := testutil.WriteFile(t, t.TempDir(), "sci.json", `{
 	  "functional_unit": {"label": "job", "quantity": 2},
 	  "defaults": {"intensity": 100, "period_hours": 1},
 	  "components": [{"type": "compute", "vcpus": 1, "utilization": 1.0,
@@ -159,7 +152,7 @@ func TestManifestErrorsAreExplicit(t *testing.T) {
 	if _, err := LoadManifest(filepath.Join(t.TempDir(), "missing.yaml")); err == nil {
 		t.Error("a missing manifest should be refused")
 	}
-	broken := writeFile(t, t.TempDir(), "sci.yaml", "components: [oops\n")
+	broken := testutil.WriteFile(t, t.TempDir(), "sci.yaml", "components: [oops\n")
 	if _, err := LoadManifest(broken); err == nil {
 		t.Error("invalid YAML should be refused")
 	}
@@ -190,7 +183,7 @@ func TestComponentOverridesBeatTheDefaults(t *testing.T) {
 
 func TestScaffoldedManifestIsValidInputForEstimate(t *testing.T) {
 	dir := t.TempDir()
-	path := writeFile(t, dir, "sci.yaml", RenderManifest("demo", nil, nil))
+	path := testutil.WriteFile(t, dir, "sci.yaml", discover.RenderManifest("demo", nil, nil))
 	manifest, err := LoadManifest(path)
 	if err != nil {
 		t.Fatal(err)
@@ -202,7 +195,7 @@ func TestScaffoldedManifestIsValidInputForEstimate(t *testing.T) {
 	if report.SCI <= 0 || report.FunctionalUnit.Label != "request" {
 		t.Fatalf("%+v", report.FunctionalUnit)
 	}
-	if !strings.Contains(RenderManifest("demo", nil, nil), "# SCI manifest for demo") {
+	if !strings.Contains(discover.RenderManifest("demo", nil, nil), "# SCI manifest for demo") {
 		t.Error("the scaffold should explain itself")
 	}
 }

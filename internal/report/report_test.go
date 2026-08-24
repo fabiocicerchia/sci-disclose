@@ -1,18 +1,24 @@
-package main
+package report
 
 import (
 	"strings"
 	"testing"
+
+	"github.com/fabiocicerchia/sci-disclose/internal/config"
+	"github.com/fabiocicerchia/sci-disclose/internal/energy"
+	"github.com/fabiocicerchia/sci-disclose/internal/grid"
+	"github.com/fabiocicerchia/sci-disclose/internal/sci"
+	"github.com/fabiocicerchia/sci-disclose/internal/testutil"
 )
 
-func sampleReport(t *testing.T) *Report {
+func sampleReport(t *testing.T) *sci.Report {
 	t.Helper()
-	cfg := testConfig(func(c *Config) {
+	cfg := testutil.Config(func(c *config.Config) {
 		c.VCPUs, c.TotalVCPUs = 1, 4
 		c.Intensity, c.Units, c.UnitLabel = 300, 10, "request"
 	})
-	report, err := SCIReport(Target{Kind: "test", Description: "demo"},
-		Sample{WallS: 60, CPUS: 30, PeakRSSGB: 0.5}, cfg, 0, false, nil)
+	report, err := sci.SCIReport(sci.Target{Kind: "test", Description: "demo"},
+		energy.Sample{WallS: 60, CPUS: 30, PeakRSSGB: 0.5}, cfg, 0, false, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,10 +57,10 @@ func TestNumberFormattingStaysReadable(t *testing.T) {
 }
 
 func TestCompareFlagsARegressionOutsideTolerance(t *testing.T) {
-	before := &Report{SCI: 1.0, SCIUnit: "gCO2e per run"}
-	after := &Report{SCI: 1.2, SCIUnit: "gCO2e per run"}
+	before := &sci.Report{SCI: 1.0, SCIUnit: "gCO2e per run"}
+	after := &sci.Report{SCI: 1.2, SCIUnit: "gCO2e per run"}
 	result := CompareReports(before, after, 0)
-	approx(t, result.DeltaPct, 20, 1e-9, "delta percent")
+	testutil.Approx(t, result.DeltaPct, 20, 1e-9, "delta percent")
 	if !result.Regression {
 		t.Error("a 20% increase is a regression at zero tolerance")
 	}
@@ -67,10 +73,10 @@ func TestCompareFlagsARegressionOutsideTolerance(t *testing.T) {
 }
 
 func TestCompareWarnsWhenTheGridMovedUnderneathTheCode(t *testing.T) {
-	before := &Report{SCI: 1.0, SCIUnit: "gCO2e per run",
-		Intensity: &Intensity{Value: 100}}
-	after := &Report{SCI: 2.0, SCIUnit: "gCO2e per run",
-		Intensity: &Intensity{Value: 200}}
+	before := &sci.Report{SCI: 1.0, SCIUnit: "gCO2e per run",
+		Intensity: &grid.Intensity{Value: 100}}
+	after := &sci.Report{SCI: 2.0, SCIUnit: "gCO2e per run",
+		Intensity: &grid.Intensity{Value: 200}}
 	result := CompareReports(before, after, 0)
 	if !result.IntensityMoved {
 		t.Fatal("a changed intensity should be detected")
@@ -79,7 +85,7 @@ func TestCompareWarnsWhenTheGridMovedUnderneathTheCode(t *testing.T) {
 	if !strings.Contains(rendered, "part of this delta is the grid") {
 		t.Errorf("the warning is missing:\n%s", rendered)
 	}
-	same := CompareReports(before, &Report{SCI: 2.0, Intensity: &Intensity{Value: 100}}, 0)
+	same := CompareReports(before, &sci.Report{SCI: 2.0, Intensity: &grid.Intensity{Value: 100}}, 0)
 	if same.IntensityMoved || strings.Contains(RenderComparison(same), "warning") {
 		t.Error("an unchanged intensity needs no warning")
 	}

@@ -1,13 +1,15 @@
-package main
+package discover
 
 import (
 	"testing"
+
+	"github.com/fabiocicerchia/sci-disclose/internal/testutil"
 )
 
 func TestDetectWorkloadPrefersTheMakefile(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, dir, "Makefile", "test:\n\tpytest -q\n")
-	writeFile(t, dir, "go.mod", "module demo\n")
+	testutil.WriteFile(t, dir, "Makefile", "test:\n\tpytest -q\n")
+	testutil.WriteFile(t, dir, "go.mod", "module demo\n")
 	argv, why, ok := DetectWorkload(dir)
 	if !ok || argv[0] != "make" || argv[1] != "test" {
 		t.Fatalf("got %v (%s)", argv, why)
@@ -16,11 +18,11 @@ func TestDetectWorkloadPrefersTheMakefile(t *testing.T) {
 
 func TestDetectWorkloadFallsThroughToLanguageDefaults(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, dir, "go.mod", "module demo\n")
+	testutil.WriteFile(t, dir, "go.mod", "module demo\n")
 	if argv, _, _ := DetectWorkload(dir); argv[0] != "go" {
 		t.Fatalf("go.mod: %v", argv)
 	}
-	writeFile(t, dir, "package.json", `{"scripts": {"test": "vitest"}}`)
+	testutil.WriteFile(t, dir, "package.json", `{"scripts": {"test": "vitest"}}`)
 	if argv, _, _ := DetectWorkload(dir); argv[0] != "npm" || argv[1] != "test" {
 		t.Fatalf("package.json: %v", argv)
 	}
@@ -56,7 +58,7 @@ func TestKubernetesQuantitiesAndInstanceSizes(t *testing.T) {
 
 func TestScanRepoReadsDeploymentsAndTerraform(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, dir, "deploy.yaml", `apiVersion: apps/v1
+	testutil.WriteFile(t, dir, "deploy.yaml", `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
@@ -71,7 +73,7 @@ spec:
               cpu: 500m
               memory: 512Mi
 `)
-	writeFile(t, dir, "cron.yaml", `apiVersion: batch/v1
+	testutil.WriteFile(t, dir, "cron.yaml", `apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: nightly
@@ -86,8 +88,8 @@ spec:
                 requests:
                   cpu: "2"
 `)
-	writeFile(t, dir, "main.tf", "  instance_type = \"c6i.4xlarge\"\n")
-	writeFile(t, dir, "node_modules/pkg/deploy.yaml", "kind: Deployment\nmetadata:\n  name: skipme\n")
+	testutil.WriteFile(t, dir, "main.tf", "  instance_type = \"c6i.4xlarge\"\n")
+	testutil.WriteFile(t, dir, "node_modules/pkg/deploy.yaml", "kind: Deployment\nmetadata:\n  name: skipme\n")
 
 	found, _ := ScanRepo(dir)
 	byName := map[string]Discovered{}

@@ -1,4 +1,4 @@
-package main
+package energy
 
 import (
 	"fmt"
@@ -10,6 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/fabiocicerchia/sci-disclose/internal/coefficients"
+	"github.com/fabiocicerchia/sci-disclose/internal/config"
 )
 
 // Energy measurement.
@@ -242,21 +245,21 @@ func Utilisation(cpuS, wallS float64, vcpus int) float64 {
 }
 
 // CPUkWh is Cloud Carbon Footprint's linear model: idle draw plus load, per vCPU.
-func CPUkWh(wallH, util float64, vcpus int, profile CPUProfile) float64 {
+func CPUkWh(wallH, util float64, vcpus int, profile coefficients.CPUProfile) float64 {
 	wattsPerVCPU := profile.MinW + util*(profile.MaxW-profile.MinW)
 	return float64(vcpus) * wattsPerVCPU * wallH / 1000
 }
 
 // MemorykWh applies the Cloud Jewels per-GB coefficient.
-func MemorykWh(gb, wallH float64) float64 { return gb * MemoryWPerGB * wallH / 1000 }
+func MemorykWh(gb, wallH float64) float64 { return gb * coefficients.MemoryWPerGB * wallH / 1000 }
 
 // StoragekWh applies the per-terabyte coefficient for the medium.
 func StoragekWh(gb, wallH float64, medium string) float64 {
-	return (gb / 1024) * StorageWPerTB[medium] * wallH / 1000
+	return (gb / 1024) * coefficients.StorageWPerTB[medium] * wallH / 1000
 }
 
 // NetworkkWh applies the per-GB-transferred coefficient.
-func NetworkkWh(gb float64) float64 { return gb * NetworkKWhPerGB }
+func NetworkkWh(gb float64) float64 { return gb * coefficients.NetworkKWhPerGB }
 
 // EnergyPart is one named line of the energy breakdown. A slice rather than a
 // map so both the report and its JSON keep a stable order.
@@ -277,7 +280,7 @@ type Energy struct {
 
 // EnergyForSample turns a measurement into E, from RAPL joules where they were
 // captured and from the model otherwise.
-func EnergyForSample(sample Sample, cfg Config, idleWatts float64, hasIdle bool) (Energy, error) {
+func EnergyForSample(sample Sample, cfg config.Config, idleWatts float64, hasIdle bool) (Energy, error) {
 	wallH := sample.WallS / 3600
 	profile := cfg.Profile()
 	memoryGB := cfg.MemoryGB

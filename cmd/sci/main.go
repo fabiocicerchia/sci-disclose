@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -13,9 +14,19 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+
+	"github.com/fabiocicerchia/sci-disclose/internal/coefficients"
+	"github.com/fabiocicerchia/sci-disclose/internal/config"
+	"github.com/fabiocicerchia/sci-disclose/internal/discover"
+	"github.com/fabiocicerchia/sci-disclose/internal/energy"
+	"github.com/fabiocicerchia/sci-disclose/internal/harness"
+	"github.com/fabiocicerchia/sci-disclose/internal/manifest"
+	"github.com/fabiocicerchia/sci-disclose/internal/report"
+	"github.com/fabiocicerchia/sci-disclose/internal/sci"
+	"github.com/fabiocicerchia/sci-disclose/internal/units"
 )
 
-const usage = `sci — Software Carbon Intensity (SCI) from the command line.
+const usage = `sci — Software Carbon grid.Intensity (SCI) from the command line.
 
 SCI, as specified by the Green Software Foundation and standardised as
 ISO/IEC 21031:2024, is a rate, not a total:
@@ -28,7 +39,7 @@ ISO/IEC 21031:2024, is a rate, not a total:
     R  the functional unit the rate is expressed per     e.g. one API call
 
 A repository, a file or a function has no SCI until something runs. So every
-target either runs a workload and measures it, or reads a manifest in which
+target either runs a workload and measures it, or reads a declared in which
 you declare one. Nothing here infers carbon from source code alone.
 
 Targets:
@@ -38,7 +49,7 @@ Targets:
     sci repo .                         a repo, via its own test/build command
     sci estimate -f sci.yaml           a declared deployment (no execution)
     sci init .                         scaffold sci.yaml from the repo
-    sci units -units N report.json     divide a measurement by a later count
+    sci units -units N disclosure.json     divide a measurement by a later count
     sci compare before.json after.json two runs, as a delta
     sci coefficients                   every constant used, with its source
 
@@ -66,7 +77,7 @@ func Run(args []string, out io.Writer) int {
 		fmt.Fprint(out, usage)
 		return 0
 	case "-v", "--version", "version":
-		fmt.Fprintf(out, "sci-disclose %s\n", Version)
+		fmt.Fprintf(out, "sci-disclose %s\n", coefficients.Version)
 		return 0
 	case "run":
 		return cmdRun(args[1:], out)
@@ -94,7 +105,7 @@ func Run(args []string, out io.Writer) int {
 
 // options holds every flag shared by the measuring commands.
 type options struct {
-	cfg             *Config
+	cfg             *config.Config
 	units           float64
 	unitsSet        bool
 	unitLabel       string
@@ -111,7 +122,7 @@ type options struct {
 }
 
 // addUnitCountingFlags is only for the targets that run a command: `func` gets
-// its count from -n, and `estimate` declares it in the manifest.
+// its count from -n, and `estimate` declares it in the declared.
 func addUnitCountingFlags(fs *flag.FlagSet, opts *options) {
 	fs.BoolVar(&opts.unitsFromStdout, "units-from-stdout", false,
 		"read the unit count from a marker the workload prints (see -units-pattern)")
@@ -119,7 +130,7 @@ func addUnitCountingFlags(fs *flag.FlagSet, opts *options) {
 		"read the unit count from a file the workload wrote")
 	fs.StringVar(&opts.unitsCmd, "units-cmd", "",
 		"run this after the workload and read the unit count from its output")
-	fs.StringVar(&opts.unitsPattern, "units-pattern", DefaultUnitPattern,
+	fs.StringVar(&opts.unitsPattern, "units-pattern", units.DefaultUnitPattern,
 		"regexp whose first group captures the count")
 	fs.StringVar(&opts.unitsMetric, "units-metric", "",
 		"Prometheus counter whose delta across the run is the unit count")
@@ -129,34 +140,34 @@ func addUnitCountingFlags(fs *flag.FlagSet, opts *options) {
 
 // countUnits resolves R from whichever source was asked for. It runs after the
 // workload, so none of it lands in the measurement.
-func (o *options) countUnits(captured string) (UnitSource, error) {
+func (o *options) countUnits(captured string) (units.UnitSource, error) {
 	if !o.unitsFromStdout && o.unitsFile == "" && o.unitsCmd == "" {
-		return UnitSource{}, nil
+		return units.UnitSource{}, nil
 	}
 	pattern, err := regexp.Compile(o.unitsPattern)
 	if err != nil {
-		return UnitSource{}, fmt.Errorf("-units-pattern is not a valid regexp: %w", err)
+		return units.UnitSource{}, fmt.Errorf("-units-pattern is not a valid regexp: %w", err)
 	}
 	switch {
 	case o.unitsFromStdout:
-		count, ok := ScanUnits(captured, pattern)
+		count, ok := units.ScanUnits(captured, pattern)
 		if !ok {
-			return UnitSource{}, fmt.Errorf("the workload printed no unit count "+
+			return units.UnitSource{}, fmt.Errorf("the workload printed no unit count "+
 				"matching %s — have it print e.g. `SCI-UNITS: 5000`", pattern)
 		}
-		return UnitSource{Count: count, Origin: "counted from the workload's stdout"}, nil
+		return units.UnitSource{Count: count, Origin: "counted from the workload's stdout"}, nil
 	case o.unitsFile != "":
-		count, err := UnitsFromFile(o.unitsFile, pattern)
+		count, err := units.UnitsFromFile(o.unitsFile, pattern)
 		if err != nil {
-			return UnitSource{}, err
+			return units.UnitSource{}, err
 		}
-		return UnitSource{Count: count, Origin: "counted from " + o.unitsFile}, nil
+		return units.UnitSource{Count: count, Origin: "counted from " + o.unitsFile}, nil
 	default:
-		count, err := UnitsFromCommand(o.unitsCmd, pattern)
+		count, err := units.UnitsFromCommand(o.unitsCmd, pattern)
 		if err != nil {
-			return UnitSource{}, err
+			return units.UnitSource{}, err
 		}
-		return UnitSource{Count: count, Origin: "counted by `" + o.unitsCmd + "`"}, nil
+		return units.UnitSource{Count: count, Origin: "counted by `" + o.unitsCmd + "`"}, nil
 	}
 }
 
@@ -168,11 +179,11 @@ func envOr(name, fallback string) string {
 }
 
 func addFlags(fs *flag.FlagSet) *options {
-	cfg := NewConfig()
+	cfg := config.NewConfig()
 	opts := &options{cfg: &cfg}
 
 	fs.StringVar(&cfg.Provider, "provider", cfg.Provider,
-		"power profile and PUE to assume: "+strings.Join(ProviderNames, ", "))
+		"power profile and PUE to assume: "+strings.Join(coefficients.ProviderNames, ", "))
 	fs.Float64Var(&cfg.PUE, "pue", 0, "override the profile's PUE")
 	fs.IntVar(&cfg.VCPUs, "vcpus", cfg.VCPUs, "vCPUs reserved for the workload")
 	fs.IntVar(&cfg.TotalVCPUs, "total-vcpus", cfg.TotalVCPUs,
@@ -187,14 +198,14 @@ func addFlags(fs *flag.FlagSet) *options {
 	fs.StringVar(&cfg.Country, "country", "", "ISO-3166 country code, e.g. IE or IRL")
 	fs.StringVar(&cfg.Zone, "zone", "", "bidding zone as COUNTRY/ZONE, e.g. IT/SICI")
 	fs.StringVar(&cfg.IntensityBasis, "intensity-basis", cfg.IntensityBasis,
-		"which figure to use: "+strings.Join(IntensityBases, ", "))
+		"which figure to use: "+strings.Join(coefficients.IntensityBases, ", "))
 	fs.StringVar(&cfg.IntensityAPI, "intensity-api",
-		envOr("SCI_INTENSITY_API", DefaultIntensityAPI), "carbon intensity API base URL")
+		envOr("SCI_INTENSITY_API", coefficients.DefaultIntensityAPI), "carbon intensity API base URL")
 	fs.BoolVar(&cfg.Offline, "offline", false,
 		"never call the intensity API; use the bundled yearly averages")
 
 	fs.StringVar(&cfg.HardwareName, "hardware", cfg.HardwareName,
-		strings.Join(HardwareNames, ", "))
+		strings.Join(coefficients.HardwareNames, ", "))
 	fs.Float64Var(&cfg.EmbodiedKg, "embodied-kg", 0,
 		"total embodied emissions of the whole device")
 	fs.Float64Var(&cfg.LifespanYears, "lifespan-years", 0,
@@ -203,14 +214,14 @@ func addFlags(fs *flag.FlagSet) *options {
 	fs.StringVar(&cfg.EnergySource, "energy", cfg.EnergySource,
 		"auto uses RAPL counters when readable, else the model (auto, rapl, model)")
 	fs.Float64Var(&cfg.IdleSeconds, "idle-seconds", 0,
-		"sample idle draw first and report marginal energy (RAPL only)")
+		"sample idle draw first and disclosure marginal energy (RAPL only)")
 
 	fs.Float64Var(&opts.units, "units", 0, "how many functional units the run delivered")
 	fs.StringVar(&opts.unitLabel, "unit-label", "", "what one functional unit is")
 
 	fs.StringVar(&opts.format, "format", "text", "text, json or markdown")
-	fs.StringVar(&opts.output, "o", "", "write the report to a file")
-	fs.StringVar(&opts.output, "output", "", "write the report to a file")
+	fs.StringVar(&opts.output, "o", "", "write the disclosure to a file")
+	fs.StringVar(&opts.output, "output", "", "write the disclosure to a file")
 	fs.Float64Var(&opts.budget, "budget", 0,
 		"fail (exit 1) if SCI exceeds this many gCO2e per unit")
 	return opts
@@ -249,8 +260,8 @@ func fail(out io.Writer, err error) int {
 
 // energyBackend decides between RAPL and the model, taking an idle baseline
 // first when one was asked for.
-func energyBackend(cfg Config) (useRAPL bool, idleWatts float64, hasIdle bool, err error) {
-	available := RAPLAvailable()
+func energyBackend(cfg config.Config) (useRAPL bool, idleWatts float64, hasIdle bool, err error) {
+	available := energy.RAPLAvailable()
 	if cfg.EnergySource == "rapl" && !available {
 		return false, 0, false, fmt.Errorf(
 			"--energy rapl requested but no readable RAPL counters. They are " +
@@ -259,7 +270,7 @@ func energyBackend(cfg Config) (useRAPL bool, idleWatts float64, hasIdle bool, e
 	}
 	useRAPL = available && cfg.EnergySource != "model"
 	if useRAPL {
-		idleWatts, hasIdle = SampleIdleWatts(cfg.IdleSeconds)
+		idleWatts, hasIdle = energy.SampleIdleWatts(cfg.IdleSeconds)
 	}
 	return useRAPL, idleWatts, hasIdle, nil
 }
@@ -268,7 +279,7 @@ const modelNote = "estimated from CPU time and reserved capacity, not measured a
 	"the socket — see README for the error bars"
 
 // measureCommand runs a workload and turns it into a disclosure.
-func measureCommand(argv []string, dir string, target Target, opts *options,
+func measureCommand(argv []string, dir string, target sci.Target, opts *options,
 	out io.Writer) int {
 	useRAPL, idleWatts, hasIdle, err := energyBackend(*opts.cfg)
 	if err != nil {
@@ -285,12 +296,12 @@ func measureCommand(argv []string, dir string, target Target, opts *options,
 		if opts.unitsURL == "" {
 			return fail(out, fmt.Errorf("-units-metric needs -units-url"))
 		}
-		counterBefore, err = ScrapeCounter(opts.unitsURL, opts.unitsMetric)
+		counterBefore, err = units.ScrapeCounter(opts.unitsURL, opts.unitsMetric)
 		if err != nil {
 			return fail(out, err)
 		}
 	}
-	sample, err := MeasureCommand(argv, dir, useRAPL, tap)
+	sample, err := energy.MeasureCommand(argv, dir, useRAPL, tap)
 	if err != nil {
 		return fail(out, err)
 	}
@@ -301,19 +312,19 @@ func measureCommand(argv []string, dir string, target Target, opts *options,
 			return fail(out, err)
 		}
 		if opts.unitsMetric != "" {
-			after, err := ScrapeCounter(opts.unitsURL, opts.unitsMetric)
+			after, err := units.ScrapeCounter(opts.unitsURL, opts.unitsMetric)
 			if err != nil {
 				return fail(out, err)
 			}
 			delta := after - counterBefore
 			if delta <= 0 {
 				return fail(out, fmt.Errorf("%s did not advance during the run "+
-					"(%g to %g): nothing was served, so there is no rate to report",
+					"(%g to %g): nothing was served, so there is no rate to disclosure",
 					opts.unitsMetric, counterBefore, after))
 			}
-			counted = UnitSource{Count: delta,
+			counted = units.UnitSource{Count: delta,
 				Origin: fmt.Sprintf("%s advanced by %s across the run",
-					opts.unitsMetric, FormatNumber(delta))}
+					opts.unitsMetric, report.FormatNumber(delta))}
 		}
 		if counted.Count > 0 {
 			opts.cfg.Units, opts.cfg.UnitSource = counted.Count, counted.Origin
@@ -334,12 +345,12 @@ func measureCommand(argv []string, dir string, target Target, opts *options,
 	if !useRAPL {
 		notes = append(notes, modelNote)
 	}
-	report, err := SCIReport(target, sample, *opts.cfg, idleWatts, hasIdle, notes)
+	disclosure, err := sci.SCIReport(target, sample, *opts.cfg, idleWatts, hasIdle, notes)
 	if err != nil {
 		return fail(out, err)
 	}
-	within := ApplyBudget(report, opts.budget, opts.budgetSet)
-	if err := Emit(report, opts.format, opts.output, out); err != nil {
+	within := sci.ApplyBudget(disclosure, opts.budget, opts.budgetSet)
+	if err := report.Emit(disclosure, opts.format, opts.output, out); err != nil {
 		return fail(out, err)
 	}
 	switch {
@@ -372,7 +383,7 @@ func cmdRun(args []string, out io.Writer) int {
 	if len(argv) == 0 {
 		return fail(out, fmt.Errorf("nothing to run — `sci run -- pytest -q`"))
 	}
-	target := Target{Kind: "command", Description: strings.Join(argv, " ")}
+	target := sci.Target{Kind: "command", Description: strings.Join(argv, " ")}
 	return measureCommand(argv, "", target, opts, out)
 }
 
@@ -411,7 +422,7 @@ func cmdFile(args []string, out io.Writer) int {
 		return fail(out, fmt.Errorf("interpreter not installed: %s", prefix[0]))
 	}
 	argv := append(append([]string{}, prefix...), append([]string{path}, rest[1:]...)...)
-	target := Target{Kind: "file", Description: strings.Join(argv, " "), Path: path}
+	target := sci.Target{Kind: "file", Description: strings.Join(argv, " "), Path: path}
 	return measureCommand(argv, "", target, opts, out)
 }
 
@@ -443,7 +454,7 @@ func cmdFunc(args []string, out io.Writer) int {
 	if err != nil {
 		return fail(out, err)
 	}
-	sample, err := MeasureFunction(*python, rest[0], *iterations, *warmup, useRAPL)
+	sample, err := harness.MeasureFunction(*python, rest[0], *iterations, *warmup, useRAPL)
 	if err != nil {
 		return fail(out, err)
 	}
@@ -459,13 +470,13 @@ func cmdFunc(args []string, out io.Writer) int {
 		notes = append(notes, "the run was shorter than 50 ms: raise -n until the "+
 			"measurement is stable")
 	}
-	target := Target{Kind: "function", Description: rest[0]}
-	report, err := SCIReport(target, sample, *opts.cfg, idleWatts, hasIdle, notes)
+	target := sci.Target{Kind: "function", Description: rest[0]}
+	disclosure, err := sci.SCIReport(target, sample, *opts.cfg, idleWatts, hasIdle, notes)
 	if err != nil {
 		return fail(out, err)
 	}
-	within := ApplyBudget(report, opts.budget, opts.budgetSet)
-	if err := Emit(report, opts.format, opts.output, out); err != nil {
+	within := sci.ApplyBudget(disclosure, opts.budget, opts.budgetSet)
+	if err := report.Emit(disclosure, opts.format, opts.output, out); err != nil {
 		return fail(out, err)
 	}
 	if !within {
@@ -499,7 +510,7 @@ func cmdRepo(args []string, out io.Writer) int {
 	if *command != "" {
 		argv, why = strings.Fields(*command), "--command"
 	} else {
-		detected, from, ok := DetectWorkload(absolute)
+		detected, from, ok := discover.DetectWorkload(absolute)
 		if !ok {
 			return fail(out, fmt.Errorf(
 				"no workload found in this repo. A repository has no SCI until "+
@@ -515,7 +526,7 @@ func cmdRepo(args []string, out io.Writer) int {
 	if err := opts.finish(fs, 1, strings.Join(argv, " ")+" run"); err != nil {
 		return fail(out, err)
 	}
-	target := Target{
+	target := sci.Target{
 		Kind:         "repo",
 		Description:  filepath.Base(absolute) + ": " + strings.Join(argv, " "),
 		Path:         absolute,
@@ -526,8 +537,8 @@ func cmdRepo(args []string, out io.Writer) int {
 
 func cmdEstimate(args []string, out io.Writer) int {
 	fs := flag.NewFlagSet("estimate", flag.ContinueOnError)
-	file := fs.String("f", "sci.yaml", "manifest to read")
-	fs.StringVar(file, "file", "sci.yaml", "manifest to read")
+	file := fs.String("f", "sci.yaml", "declared to read")
+	fs.StringVar(file, "file", "sci.yaml", "declared to read")
 	opts := addFlags(fs)
 	if err := parse(fs, args, out); err != nil {
 		return 2
@@ -535,16 +546,16 @@ func cmdEstimate(args []string, out io.Writer) int {
 	if err := opts.finish(fs, 1, "run"); err != nil {
 		return fail(out, err)
 	}
-	manifest, err := LoadManifest(*file)
+	declared, err := manifest.LoadManifest(*file)
 	if err != nil {
 		return fail(out, err)
 	}
-	report, err := EstimateManifest(manifest, *opts.cfg, *file)
+	disclosure, err := manifest.EstimateManifest(declared, *opts.cfg, *file)
 	if err != nil {
 		return fail(out, err)
 	}
-	within := ApplyBudget(report, opts.budget, opts.budgetSet)
-	if err := Emit(report, opts.format, opts.output, out); err != nil {
+	within := sci.ApplyBudget(disclosure, opts.budget, opts.budgetSet)
+	if err := report.Emit(disclosure, opts.format, opts.output, out); err != nil {
 		return fail(out, err)
 	}
 	if !within {
@@ -555,9 +566,9 @@ func cmdEstimate(args []string, out io.Writer) int {
 
 func cmdInit(args []string, out io.Writer) int {
 	fs := flag.NewFlagSet("init", flag.ContinueOnError)
-	output := fs.String("o", "sci.yaml", "where to write the manifest")
-	fs.StringVar(output, "output", "sci.yaml", "where to write the manifest")
-	force := fs.Bool("force", false, "overwrite an existing manifest")
+	output := fs.String("o", "sci.yaml", "where to write the declared")
+	fs.StringVar(output, "output", "sci.yaml", "where to write the declared")
+	force := fs.Bool("force", false, "overwrite an existing declared")
 	if err := parse(fs, args, out); err != nil {
 		return 2
 	}
@@ -573,8 +584,8 @@ func cmdInit(args []string, out io.Writer) int {
 		return fail(out, fmt.Errorf("%s already exists (use -force to overwrite)", *output))
 	}
 
-	components, notes := ScanRepo(absolute)
-	text := RenderManifest(filepath.Base(absolute), components, notes)
+	components, notes := discover.ScanRepo(absolute)
+	text := discover.RenderManifest(filepath.Base(absolute), components, notes)
 	if err := os.WriteFile(*output, []byte(text), 0o644); err != nil {
 		return fail(out, err)
 	}
@@ -609,7 +620,7 @@ func cmdCompare(args []string, out io.Writer) int {
 	if err != nil {
 		return fail(out, err)
 	}
-	comparison := CompareReports(before, after, *tolerance)
+	comparison := report.CompareReports(before, after, *tolerance)
 	if *format == "json" {
 		data, err := json.MarshalIndent(comparison, "", "  ")
 		if err != nil {
@@ -617,7 +628,7 @@ func cmdCompare(args []string, out io.Writer) int {
 		}
 		fmt.Fprintln(out, string(data))
 	} else {
-		fmt.Fprintln(out, RenderComparison(comparison))
+		fmt.Fprintln(out, report.RenderComparison(comparison))
 	}
 	if comparison.Regression && *failOnRegression {
 		return 1
@@ -634,40 +645,40 @@ func cmdUnits(args []string, out io.Writer) int {
 	units := fs.Float64("units", 0, "how many functional units that measurement covered")
 	label := fs.String("unit-label", "", "what one functional unit is")
 	format := fs.String("format", "text", "text, json or markdown")
-	output := fs.String("o", "", "write the updated report to a file")
-	fs.StringVar(output, "output", "", "write the updated report to a file")
+	output := fs.String("o", "", "write the updated disclosure to a file")
+	fs.StringVar(output, "output", "", "write the updated disclosure to a file")
 	budget := fs.Float64("budget", 0, "fail (exit 1) if the resulting SCI exceeds this")
 	if err := parse(fs, args, out); err != nil {
 		return 2
 	}
 	rest := fs.Args()
 	if len(rest) != 1 {
-		return fail(out, fmt.Errorf("units takes one JSON report, after its flags: "+
-			"`sci units -units 4300000 -unit-label request report.json`"))
+		return fail(out, fmt.Errorf("units takes one JSON disclosure, after its flags: "+
+			"`sci units -units 4300000 -unit-label request disclosure.json`"))
 	}
 	if *units <= 0 {
 		return fail(out, fmt.Errorf("-units must be a positive count"))
 	}
-	report, err := loadReport(rest[0])
+	disclosure, err := loadReport(rest[0])
 	if err != nil {
 		return fail(out, err)
 	}
-	if report.Total <= 0 {
+	if disclosure.Total <= 0 {
 		return fail(out, fmt.Errorf("%s carries no total to divide", rest[0]))
 	}
 
-	previous := report.FunctionalUnit
-	report.FunctionalUnit = FunctionalUnit{
-		Label:    firstNonEmpty(*label, previous.Label, "run"),
+	previous := disclosure.FunctionalUnit
+	disclosure.FunctionalUnit = sci.FunctionalUnit{
+		Label:    cmp.Or(*label, previous.Label, "run"),
 		Quantity: *units,
 		Source:   "supplied after the measurement by `sci units`",
 	}
-	report.SCI = report.Total / *units
-	report.SCIUnit = "gCO2e per " + report.FunctionalUnit.Label
-	report.Notes = append(report.Notes, fmt.Sprintf(
+	disclosure.SCI = disclosure.Total / *units
+	disclosure.SCIUnit = "gCO2e per " + disclosure.FunctionalUnit.Label
+	disclosure.Notes = append(disclosure.Notes, fmt.Sprintf(
 		"R was reconciled after the fact: the measurement covered %s x %s, and E, I "+
-			"and M are unchanged from it", FormatNumber(*units),
-		report.FunctionalUnit.Label))
+			"and M are unchanged from it", report.FormatNumber(*units),
+		disclosure.FunctionalUnit.Label))
 
 	budgetSet := false
 	fs.Visit(func(f *flag.Flag) {
@@ -675,8 +686,8 @@ func cmdUnits(args []string, out io.Writer) int {
 			budgetSet = true
 		}
 	})
-	within := ApplyBudget(report, *budget, budgetSet)
-	if err := Emit(report, *format, *output, out); err != nil {
+	within := sci.ApplyBudget(disclosure, *budget, budgetSet)
+	if err := report.Emit(disclosure, *format, *output, out); err != nil {
 		return fail(out, err)
 	}
 	if !within {
@@ -685,17 +696,17 @@ func cmdUnits(args []string, out io.Writer) int {
 	return 0
 }
 
-func loadReport(path string) (*Report, error) {
+func loadReport(path string) (*sci.Report, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	var report Report
-	if err := json.Unmarshal(data, &report); err != nil {
-		return nil, fmt.Errorf("%s is not a JSON report from `sci ... -format json`: %w",
+	var disclosure sci.Report
+	if err := json.Unmarshal(data, &disclosure); err != nil {
+		return nil, fmt.Errorf("%s is not a JSON disclosure from `sci ... -format json`: %w",
 			path, err)
 	}
-	return &report, nil
+	return &disclosure, nil
 }
 
 func cmdCoefficients(args []string, out io.Writer) int {
@@ -706,20 +717,20 @@ func cmdCoefficients(args []string, out io.Writer) int {
 	}
 	if *format == "json" {
 		sources := map[string]string{}
-		for _, pair := range CoefficientSources {
+		for _, pair := range coefficients.CoefficientSources {
 			sources[pair[0]] = pair[1]
 		}
 		data, err := json.MarshalIndent(map[string]any{
-			"cpu_profiles":             CPUProfiles,
-			"memory_w_per_gb":          MemoryWPerGB,
-			"network_kwh_per_gb":       NetworkKWhPerGB,
-			"storage_w_per_tb":         StorageWPerTB,
-			"hardware":                 Hardware,
-			"grid_zones_gco2e_per_kwh": GridZones,
-			"region_zone":              RegionZone,
-			"region_country":           RegionCountry,
-			"intensity_api":            DefaultIntensityAPI,
-			"intensity_bases":          IntensityBases,
+			"cpu_profiles":             coefficients.CPUProfiles,
+			"memory_w_per_gb":          coefficients.MemoryWPerGB,
+			"network_kwh_per_gb":       coefficients.NetworkKWhPerGB,
+			"storage_w_per_tb":         coefficients.StorageWPerTB,
+			"hardware":                 coefficients.Hardware,
+			"grid_zones_gco2e_per_kwh": coefficients.GridZones,
+			"region_zone":              coefficients.RegionZone,
+			"region_country":           coefficients.RegionCountry,
+			"intensity_api":            coefficients.DefaultIntensityAPI,
+			"intensity_bases":          coefficients.IntensityBases,
 			"sources":                  sources,
 		}, "", "  ")
 		if err != nil {
@@ -730,44 +741,44 @@ func cmdCoefficients(args []string, out io.Writer) int {
 	}
 
 	fmt.Fprintln(out, "Power and PUE per provider (watts per vCPU):")
-	for _, name := range ProviderNames {
-		profile := CPUProfiles[name]
+	for _, name := range coefficients.ProviderNames {
+		profile := coefficients.CPUProfiles[name]
 		fmt.Fprintf(out, "  %-8s %.2f idle  %.2f full   PUE %g\n",
 			name, profile.MinW, profile.MaxW, profile.PUE)
 	}
 	fmt.Fprintf(out, "\nMemory %g W/GB · network %g kWh/GB · storage %g W/TB ssd, "+
-		"%g W/TB hdd\n", MemoryWPerGB, NetworkKWhPerGB,
-		StorageWPerTB["ssd"], StorageWPerTB["hdd"])
+		"%g W/TB hdd\n", coefficients.MemoryWPerGB, coefficients.NetworkKWhPerGB,
+		coefficients.StorageWPerTB["ssd"], coefficients.StorageWPerTB["hdd"])
 	fmt.Fprintln(out, "\nEmbodied emissions:")
-	for _, name := range HardwareNames {
-		device := Hardware[name]
+	for _, name := range coefficients.HardwareNames {
+		device := coefficients.Hardware[name]
 		fmt.Fprintf(out, "  %-8s %.0f kgCO2e over %.0f years\n",
 			name, device.EmbodiedKg, device.LifespanYears)
 	}
 	fmt.Fprintf(out, "\nCarbon intensity: %s, last-hour readings per country and "+
 		"bidding zone.\n  Default figure: %s. Cached for an hour; falls back to the "+
 		"bundled\n  yearly averages below when unreachable or with -offline.\n",
-		DefaultIntensityAPI, IntensityBases[0])
+		coefficients.DefaultIntensityAPI, coefficients.IntensityBases[0])
 	fmt.Fprintln(out, "\nBundled grid intensity (gCO2e/kWh, yearly averages):")
-	zones := make([]string, 0, len(GridZones))
-	for zone := range GridZones {
+	zones := make([]string, 0, len(coefficients.GridZones))
+	for zone := range coefficients.GridZones {
 		zones = append(zones, zone)
 	}
-	sort.Slice(zones, func(i, j int) bool { return GridZones[zones[i]] < GridZones[zones[j]] })
+	sort.Slice(zones, func(i, j int) bool { return coefficients.GridZones[zones[i]] < coefficients.GridZones[zones[j]] })
 	for i := 0; i < len(zones); i += 4 {
 		var row []string
 		for _, zone := range zones[i:min(i+4, len(zones))] {
-			row = append(row, fmt.Sprintf("%-8s%4.0f", zone, GridZones[zone]))
+			row = append(row, fmt.Sprintf("%-8s%4.0f", zone, coefficients.GridZones[zone]))
 		}
 		fmt.Fprintln(out, "  "+strings.Join(row, "  "))
 	}
 	fmt.Fprintf(out, "\n%d cloud regions map onto those zones and onto countries "+
-		"(`sci coefficients -format json` lists them).\n", len(RegionZone))
+		"(`sci coefficients -format json` lists them).\n", len(coefficients.RegionZone))
 	fmt.Fprintln(out, "\nSources:")
-	for _, pair := range CoefficientSources {
+	for _, pair := range coefficients.CoefficientSources {
 		fmt.Fprintf(out, "  %s\n    %s\n", pair[0], pair[1])
 	}
 	fmt.Fprintf(out, "\nHost: %s %s, %d vCPU. RAPL counters readable: %t\n",
-		runtime.GOOS, runtime.GOARCH, runtime.NumCPU(), RAPLAvailable())
+		runtime.GOOS, runtime.GOARCH, runtime.NumCPU(), energy.RAPLAvailable())
 	return 0
 }

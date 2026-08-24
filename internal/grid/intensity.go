@@ -1,16 +1,20 @@
-package main
+package grid
 
 import (
+	"cmp"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/fabiocicerchia/sci-disclose/internal/coefficients"
+	"github.com/fabiocicerchia/sci-disclose/internal/config"
+	"github.com/fabiocicerchia/sci-disclose/internal/fetch"
 )
 
 // I — carbon intensity.
@@ -20,35 +24,6 @@ import (
 // to one request per ten seconds per IP and its readings only move hourly, so
 // responses are cached on disk for an hour and a failure degrades to the
 // bundled yearly averages rather than failing the run.
-
-// DefaultIntensityAPI is overridable with --intensity-api or $SCI_INTENSITY_API.
-const DefaultIntensityAPI = "https://ci-api.fabiocicerchia.it"
-
-// IntensityBases are the four figures every reading carries, in the order the
-// tool falls back through them. consumption_lifecycle is the default: it counts
-// the whole supply chain of the electricity actually consumed in that country,
-// which is the figure the API's own guidance says to report a footprint with.
-var IntensityBases = []string{"consumption_lifecycle", "lifecycle", "consumption_direct", "direct"}
-
-// RegionCountry maps a cloud region onto the ISO-3166 alpha-2 country the API
-// is keyed by. Sub-national bidding zones are never guessed from a region —
-// pass --zone COUNTRY/ZONE for those.
-var RegionCountry = map[string]string{
-	// AWS
-	"eu-north-1": "SE", "eu-west-1": "IE", "eu-west-2": "GB", "eu-west-3": "FR",
-	"eu-central-1": "DE", "eu-south-1": "IT", "us-east-1": "US", "us-east-2": "US",
-	"us-west-1": "US", "us-west-2": "US", "ca-central-1": "CA", "sa-east-1": "BR",
-	"ap-northeast-1": "JP", "ap-southeast-1": "SG", "ap-southeast-2": "AU",
-	"ap-south-1": "IN",
-	// GCP
-	"europe-north1": "FI", "europe-west1": "BE", "europe-west2": "GB",
-	"europe-west3": "DE", "europe-west4": "NL", "us-central1": "US",
-	"us-east4": "US", "us-west1": "US", "northamerica-northeast1": "CA",
-	// Azure
-	"swedencentral": "SE", "northeurope": "IE", "westeurope": "NL",
-	"uksouth": "GB", "francecentral": "FR", "germanywestcentral": "DE",
-	"eastus": "US", "westus2": "US", "canadaeast": "CA",
-}
 
 // DataSource is the grid operator a reading was computed from.
 type DataSource struct {
@@ -126,7 +101,7 @@ func (r Reading) Value(preferred string) (float64, string, bool) {
 	if value, ok := fields[preferred]; ok && value != nil {
 		return *value, preferred, true
 	}
-	for _, name := range IntensityBases {
+	for _, name := range coefficients.IntensityBases {
 		if value := fields[name]; value != nil {
 			return *value, name, true
 		}
@@ -184,7 +159,7 @@ func (i Intensity) Credit() string {
 
 // ResolveIntensity picks I in this order: an explicit figure, the live API for
 // a known country or zone, the bundled yearly table, then the world average.
-func ResolveIntensity(cfg Config) (Intensity, error) {
+func ResolveIntensity(cfg config.Config) (Intensity, error) {
 	if cfg.Intensity > 0 {
 		return Intensity{Value: cfg.Intensity, Source: "--intensity (user supplied)"}, nil
 	}
@@ -229,16 +204,16 @@ func ResolveIntensity(cfg Config) (Intensity, error) {
 	}
 	if cfg.Region != "" || cfg.Country != "" || cfg.Zone != "" {
 		return Intensity{}, fmt.Errorf("unknown region or zone %q; pass --intensity, "+
-			"or see `sci coefficients`", firstNonEmpty(cfg.Zone, cfg.Country, cfg.Region))
+			"or see `sci coefficients`", cmp.Or(cfg.Zone, cfg.Country, cfg.Region))
 	}
 	return Intensity{
-		Value:  DefaultIntensity,
+		Value:  coefficients.DefaultIntensity,
 		Source: "world average (no --region, --country or --zone given)",
 	}, nil
 }
 
 // apiTarget builds the API path for the configured location, if any.
-func apiTarget(cfg Config) (path, label string) {
+func apiTarget(cfg config.Config) (path, label string) {
 	if cfg.Zone != "" {
 		parts := strings.SplitN(strings.ToUpper(cfg.Zone), "/", 2)
 		if len(parts) == 2 {
@@ -247,7 +222,7 @@ func apiTarget(cfg Config) (path, label string) {
 	}
 	country := strings.ToUpper(cfg.Country)
 	if country == "" {
-		country = RegionCountry[cfg.Region]
+		country = coefficients.RegionCountry[cfg.Region]
 	}
 	if country == "" {
 		return "", ""
@@ -279,10 +254,10 @@ func describeReading(reading Reading, basis, requested, label, from string) stri
 
 // bundledIntensity is the offline fallback: the yearly zone averages shipped
 // with the tool.
-func bundledIntensity(cfg Config) (float64, string, bool) {
+func bundledIntensity(cfg config.Config) (float64, string, bool) {
 	candidates := []string{}
 	if cfg.Region != "" {
-		if zone, ok := RegionZone[cfg.Region]; ok {
+		if zone, ok := coefficients.RegionZone[cfg.Region]; ok {
 			candidates = append(candidates, zone)
 		}
 		candidates = append(candidates, strings.ToUpper(cfg.Region))
@@ -298,7 +273,7 @@ func bundledIntensity(cfg Config) (float64, string, bool) {
 		}
 	}
 	for _, candidate := range candidates {
-		if value, ok := GridZones[candidate]; ok {
+		if value, ok := coefficients.GridZones[candidate]; ok {
 			return value, candidate, true
 		}
 	}
@@ -308,7 +283,7 @@ func bundledIntensity(cfg Config) (float64, string, bool) {
 // fetchReading returns a reading from the on-disk cache when it is fresh, and
 // from the API otherwise. A failed request falls back to an expired cache entry
 // before giving up, so a rate limit or an outage never fails a measurement.
-func fetchReading(cfg Config, path string) (Reading, string, error) {
+func fetchReading(cfg config.Config, path string) (Reading, string, error) {
 	endpoint := strings.TrimSuffix(cfg.IntensityAPI, "/") + path
 	cachePath := cacheFile(endpoint)
 
@@ -352,25 +327,8 @@ func cacheFresh(reading Reading, age time.Duration, now time.Time) bool {
 	return age < time.Hour
 }
 
-// httpGet fetches a URL with a short timeout and a bounded body.
-func httpGet(endpoint string) ([]byte, int, error) {
-	client := &http.Client{Timeout: 5 * time.Second}
-	request, err := http.NewRequest(http.MethodGet, endpoint, nil)
-	if err != nil {
-		return nil, 0, err
-	}
-	request.Header.Set("User-Agent", "sci-disclose/"+Version)
-	response, err := client.Do(request)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer response.Body.Close()
-	body, err := io.ReadAll(io.LimitReader(response.Body, 1<<20))
-	return body, response.StatusCode, err
-}
-
 func getJSON(endpoint string) ([]byte, error) {
-	body, status, err := httpGet(endpoint)
+	body, status, err := fetch.Get(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -411,13 +369,4 @@ func writeCache(path string, body []byte) {
 		return
 	}
 	_ = os.WriteFile(path, body, 0o644)
-}
-
-func firstNonEmpty(values ...string) string {
-	for _, value := range values {
-		if value != "" {
-			return value
-		}
-	}
-	return ""
 }

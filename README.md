@@ -49,7 +49,7 @@ number a reviewer cannot argue with is not a disclosure.
 ## Install
 
 ```sh
-go install github.com/fabiocicerchia/sci-disclose@latest
+go install github.com/fabiocicerchia/sci-disclose/cmd/sci@latest
 ```
 
 Or from a checkout:

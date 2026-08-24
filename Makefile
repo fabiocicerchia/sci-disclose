@@ -7,10 +7,10 @@ help: ## Show this help
 	  awk 'BEGIN {FS = ":.*?## "}; {printf "  %-10s %s\n", $$1, $$2}'
 
 build: ## Compile ./sci
-	go build -o $(BINARY) .
+	go build -o $(BINARY) ./cmd/sci
 
 install: ## go install into $GOBIN
-	go install .
+	go install ./cmd/sci
 
 test: ## Run tests with the race detector
 	go test -race ./...
