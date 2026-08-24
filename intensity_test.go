@@ -135,7 +135,9 @@ func TestLastHourReadingIsUsedWithItsProvenance(t *testing.T) {
 	}
 	// The API is AGPL and asks to be credited; a disclosure quoting it must say so.
 	credit := intensity.Credit()
-	for _, want := range []string{"Carbon Intensity API", "AGPL-3.0-or-later",
+	// "AGPL-3.0-or-later" is an SPDX licence id, not a key -- it just has the
+	// entropy of one, and gitleaks scores it as generic-api-key.
+	for _, want := range []string{"Carbon Intensity API", "AGPL-3.0-or-later", // gitleaks:allow
 		"ENTSO-E", "smartgriddashboard"} {
 		if !strings.Contains(credit, want) {
 			t.Errorf("credit %q is missing %q", credit, want)
