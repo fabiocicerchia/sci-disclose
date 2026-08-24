@@ -91,11 +91,12 @@ together. A version string added anywhere else needs an
 `x-release-please-version` annotation on its line and an entry in
 `extra-files`, or it will silently drift from the tag.
 
-**`release-as: "0.2.0"` in that config is for the first release only.** It pins
-the tag to the version the code already claims instead of release-please's
-default of 1.0.0 for an untagged repo. **Delete it once `v0.2.0` is tagged** —
-left in place it pins every future release to 0.2.0 too, and a `feat:` would
-stop bumping anything.
+The first release was pinned to 0.2.0 with `release-as`, because release-please
+defaults an untagged repo to 1.0.0. That pin is gone now that `v0.2.0` exists —
+left in place it would have pinned every later release to the same number
+and stopped `feat:` bumping anything. Versions are ordinary semver from
+here: `fix:` patch, `feat:` minor, and while this is 0.x a breaking change
+does not need a major bump.
 
 ## Guardrails
 
