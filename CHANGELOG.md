@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Generated from Conventional Commit messages by release-please — don't edit it
 by hand.
 
+## [0.3.0](https://github.com/fabiocicerchia/sci-disclose/compare/v0.2.0...v0.3.0) (2026-08-25)
+
+
+### Features
+
+* **docs:** build the docs site in Actions and drop Read the Docs ([#7](https://github.com/fabiocicerchia/sci-disclose/issues/7)) ([cd5e6c3](https://github.com/fabiocicerchia/sci-disclose/commit/cd5e6c3efe01c09ffdf49f1a32e9ec8c5e7a4e48))
+
 ## [0.2.0](https://github.com/fabiocicerchia/sci-disclose/compare/v0.2.0...v0.2.0) (2026-08-24)
 
 
