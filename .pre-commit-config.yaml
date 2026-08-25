@@ -26,8 +26,10 @@ repos:
         # k8s manifests are legitimately multi-document, and Helm templates are Go
         # templates rather than YAML — the parser cannot read either as-is. The
         # exclude is path-relative so it catches chart/ and charts/<name>/ alike.
+        # mkdocs.yml carries Material's `!!python/name:...` tags, which safe_load
+        # rejects; `mkdocs build --strict` in CI validates it instead.
         args: [--allow-multiple-documents]
-        exclude: (^|/)templates/
+        exclude: (^|/)templates/|^mkdocs\.yml$
       - id: check-json
         # A TypeScript project keeps comments in tsconfig.json (JSONC), which is
         # not JSON — exclude it there:
