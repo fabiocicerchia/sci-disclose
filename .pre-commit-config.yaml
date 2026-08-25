@@ -27,7 +27,7 @@ repos:
         # templates rather than YAML — the parser cannot read either as-is. The
         # exclude is path-relative so it catches chart/ and charts/<name>/ alike.
         args: [--allow-multiple-documents]
-        exclude: (^|/)templates/
+        exclude: (^|/)templates/|^mkdocs\.yml$
       - id: check-json
         # A TypeScript project keeps comments in tsconfig.json (JSONC), which is
         # not JSON — exclude it there:
