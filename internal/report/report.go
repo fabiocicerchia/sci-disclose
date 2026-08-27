@@ -162,7 +162,11 @@ func Emit(report *sci.Report, format, output string, out io.Writer) error {
 		text = RenderText(report)
 	}
 	if output != "" {
-		if err := os.WriteFile(output, []byte(text+"\n"), 0o644); err != nil {
+		// 0644 is deliberate and stays: a disclosure is a document meant to be
+		// read — committed, published, attached to a report. Writing it 0600
+		// would be a worse default than the umask the user already set.
+		// gosec G306.
+		if err := os.WriteFile(output, []byte(text+"\n"), 0o644); err != nil { //nolint:gosec // a disclosure is meant to be readable
 			return err
 		}
 		fmt.Fprintf(out, "sci: wrote %s\n", output)
