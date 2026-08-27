@@ -364,9 +364,18 @@ func readCache(path string) ([]byte, time.Duration, error) {
 	return body, time.Since(info.ModTime()), nil
 }
 
+// writeCache stores one API response for the cache window.
+//
+// 0700/0600, not 0755/0644: cacheFile falls back to os.TempDir() when
+// os.UserCacheDir() fails, and /tmp is shared and world-writable. A
+// group-readable directory there lets any other local user enumerate which
+// grids this host has queried, and — the part that actually bites — a
+// directory they can write to is one they can plant a symlink in, which
+// os.WriteFile would then follow. Nothing but this process reads the cache, so
+// there is nothing to trade away. gosec G301/G306.
 func writeCache(path string, body []byte) {
-	if os.MkdirAll(filepath.Dir(path), 0o755) != nil {
+	if os.MkdirAll(filepath.Dir(path), 0o700) != nil {
 		return
 	}
-	_ = os.WriteFile(path, body, 0o644)
+	_ = os.WriteFile(path, body, 0o600)
 }
