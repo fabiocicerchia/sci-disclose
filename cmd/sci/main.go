@@ -586,7 +586,9 @@ func cmdInit(args []string, out io.Writer) int {
 
 	components, notes := discover.ScanRepo(absolute)
 	text := discover.RenderManifest(filepath.Base(absolute), components, notes)
-	if err := os.WriteFile(*output, []byte(text), 0o644); err != nil {
+	// 0644 like any other scaffolded config: sci.yaml is written to be edited
+	// and committed, not kept private. gosec G306.
+	if err := os.WriteFile(*output, []byte(text), 0o644); err != nil { //nolint:gosec // scaffolded config, meant to be committed
 		return fail(out, err)
 	}
 	found := "nothing discovered — the scaffold has a placeholder component"
