@@ -5,7 +5,7 @@ package coefficients
 // every one of them is overridable from the command line.
 
 // Version is the tool version, reported in every disclosure.
-const Version = "0.3.0" // x-release-please-version
+const Version = "0.3.1" // x-release-please-version
 
 // CPUProfile is the per-vCPU power draw at idle and at full load, plus the
 // datacentre PUE. Source: Cloud Carbon Footprint methodology (provider-averaged
