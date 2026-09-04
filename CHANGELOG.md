@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Generated from Conventional Commit messages by release-please — don't edit it
 by hand.
 
+## [0.3.2](https://github.com/fabiocicerchia/sci-disclose/compare/v0.3.1...v0.3.2) (2026-09-04)
+
+
+### Bug Fixes
+
+* **ci:** pin the editorconfig-checker binary version ([#18](https://github.com/fabiocicerchia/sci-disclose/issues/18)) ([36f7ab6](https://github.com/fabiocicerchia/sci-disclose/commit/36f7ab618543ad8acdaa1cd90ab54cbcd13d75fa))
+
 ## [0.3.1](https://github.com/fabiocicerchia/sci-disclose/compare/v0.3.0...v0.3.1) (2026-08-29)
 
 
