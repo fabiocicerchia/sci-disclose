@@ -32,3 +32,14 @@ jobs:
       # test cache so a green run means the tests actually executed.
       - name: Test
         run: go test -race -count=1 ./...
+
+      # FC-GO-002 wants golangci-lint v2 blocking in CI. The config was already
+      # in the repository but no step ever ran it.
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a  # v9.3.0
+        with:
+          # Pinned per FC-GEN-059; matches the v2 config schema.
+          version: v2.13.2
+          # The house set reports 41 pre-existing findings here. Gating only
+          # changed lines adopts the rules now and leaves the backlog visible.
+          only-new-issues: true
