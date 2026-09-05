@@ -4,7 +4,7 @@ One binary (`sci`) in `cmd/`, the rest under `internal/`, one dependency
 (`gopkg.in/yaml.v3`, for manifests only). Every run assembles the same
 equation:
 
-```
+```text
 SCI = ((E x I) + M) per R
 ```
 
@@ -15,7 +15,7 @@ resolved independently; the report prints the result with the provenance of
 every term attached. Nothing infers carbon from source code — a target either
 runs a workload or declares one.
 
-```
+```text
 target ─┬─ run / file / func / repo ──► execute + observe ──┐
         └─ estimate (sci.yaml) ─────► declared components ──┤
                                                             ▼
@@ -27,25 +27,25 @@ target ─┬─ run / file / func / repo ──► execute + observe ──┐
 
 ## Packages
 
-| Package | Responsibility |
-| --- | --- |
-| `cmd/sci` | CLI: subcommand dispatch, flags, env fallbacks, exit codes |
-| `internal/coefficients` | published constants: provider power profiles, PUE, embodied LCA midpoints, the bundled grid table. Imports nothing. |
-| `internal/config` | `Config`: the boundary, the grid, the hardware and the functional unit, plus validation |
-| `internal/fetch` | the one HTTP client — 5s timeout, 1 MiB bounded read, a User-Agent that names the tool |
-| `internal/energy` | **E**. RAPL backend (powercap sysfs, idle-baseline subtracted), the modelled fallback, and process-tree CPU/peak RSS per platform |
-| `internal/grid` | **I**. Intensity lookup, cache, offline fallback, staleness flagging |
-| `internal/sci` | the equation — combines E, I, M, R into a `Report`. **M** is computed here. |
-| `internal/manifest` | `sci.yaml` parsing and the declared-deployment path |
-| `internal/report` | text, JSON and Markdown disclosures, and `compare` |
-| `internal/units` | **R**. Unit counts from flags, output markers (`SCI-UNITS: N`), a file, a command or a Prometheus counter |
-| `internal/discover` | workload discovery for `sci repo` (Makefile target, package.json script, `go test`, …) and the Kubernetes/Terraform scan behind `sci init` |
-| `internal/harness` | per-language function harnesses; the protocol is one JSON blob on stdout |
-| `internal/testutil` | helpers and verbatim API fixtures shared by several test packages |
+| Package                 | Responsibility                                                                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cmd/sci`               | CLI: subcommand dispatch, flags, env fallbacks, exit codes                                                                                 |
+| `internal/coefficients` | published constants: provider power profiles, PUE, embodied LCA midpoints, the bundled grid table. Imports nothing.                        |
+| `internal/config`       | `Config`: the boundary, the grid, the hardware and the functional unit, plus validation                                                    |
+| `internal/fetch`        | the one HTTP client — 5s timeout, 1 MiB bounded read, a User-Agent that names the tool                                                     |
+| `internal/energy`       | **E**. RAPL backend (powercap sysfs, idle-baseline subtracted), the modelled fallback, and process-tree CPU/peak RSS per platform          |
+| `internal/grid`         | **I**. Intensity lookup, cache, offline fallback, staleness flagging                                                                       |
+| `internal/sci`          | the equation — combines E, I, M, R into a `Report`. **M** is computed here.                                                                |
+| `internal/manifest`     | `sci.yaml` parsing and the declared-deployment path                                                                                        |
+| `internal/report`       | text, JSON and Markdown disclosures, and `compare`                                                                                         |
+| `internal/units`        | **R**. Unit counts from flags, output markers (`SCI-UNITS: N`), a file, a command or a Prometheus counter                                  |
+| `internal/discover`     | workload discovery for `sci repo` (Makefile target, package.json script, `go test`, …) and the Kubernetes/Terraform scan behind `sci init` |
+| `internal/harness`      | per-language function harnesses; the protocol is one JSON blob on stdout                                                                   |
+| `internal/testutil`     | helpers and verbatim API fixtures shared by several test packages                                                                          |
 
 ### The dependency direction
 
-```
+```text
 coefficients ─┬─► config ─┬─► energy ─┬─► sci ─┬─► manifest ─┐
               │           ├─► grid ───┘        ├─► report ───┼─► cmd/sci
               └─► fetch ──┴─► units ───────────┘             │
@@ -64,18 +64,18 @@ edge pointing back up the graph.
 1. **Target** — the subcommand decides whether a workload runs. `run`, `file`,
    `func` and `repo` execute one; `estimate` reads a manifest and executes
    nothing.
-2. **E** — RAPL if the counters are readable, minus an idle baseline; otherwise
+1. **E** — RAPL if the counters are readable, minus an idle baseline; otherwise
    modelled from CPU time, reserved vCPUs, peak RSS and the provider profile.
    Datacentre overhead is applied as PUE, and each contribution is reported
    separately.
-3. **I** — last settlement period for the region, country or bidding zone, from
+1. **I** — last settlement period for the region, country or bidding zone, from
    the Carbon Intensity API, cached. `--offline` or an unreachable API falls
    back to a bundled yearly average, and the report says which was used.
-4. **M** — embodied emissions apportioned by time-share and resource-share of
+1. **M** — embodied emissions apportioned by time-share and resource-share of
    the device.
-5. **R** — the functional unit. Supplied, parsed from the workload's own output,
+1. **R** — the functional unit. Supplied, parsed from the workload's own output,
    or counted by a command.
-6. **Report** — the disclosure, with every assumption that fed it.
+1. **Report** — the disclosure, with every assumption that fed it.
 
 ## Decisions
 

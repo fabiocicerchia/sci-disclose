@@ -12,7 +12,7 @@ it exists for the manifest targets alone.
 
 Where things live:
 
-```
+```text
 cmd/sci/              the CLI: flags, subcommand dispatch, exit codes
 internal/coefficients published constants, each with its source
 internal/config       Config: the boundary, grid, hardware and functional unit

@@ -19,16 +19,16 @@ a reader always knows what the rate is per.
 double?** If it tracks resources or wall-clock time instead, it is not a
 functional unit.
 
-| Kind of software | Good R |
-| --- | --- |
-| HTTP API | per request, or per checkout / per order |
-| Batch job | per record, per image, per file processed |
-| ML inference | per prediction, per 1000 tokens |
-| ML training | per training run, per epoch |
-| Video | per minute streamed |
-| CI/CD | per pipeline run, per commit merged |
-| Database | per query, per GB scanned |
-| SaaS product | per user-month, per active session |
+| Kind of software | Good R                                    |
+| ---------------- | ----------------------------------------- |
+| HTTP API         | per request, or per checkout / per order  |
+| Batch job        | per record, per image, per file processed |
+| ML inference     | per prediction, per 1000 tokens           |
+| ML training      | per training run, per epoch               |
+| Video            | per minute streamed                       |
+| CI/CD            | per pipeline run, per commit merged       |
+| Database         | per query, per GB scanned                 |
+| SaaS product     | per user-month, per active session        |
 
 Three choices that look reasonable and are not:
 
