@@ -1,6 +1,6 @@
 # Methodology
 
-```
+```text
 SCI = ((E x I) + M) per R
 ```
 
@@ -53,7 +53,7 @@ time, CPU time and peak RSS, then applies the Cloud Carbon Footprint linear
 model — per reserved vCPU, watts scale from idle to full load with utilisation
 — plus memory, and optionally storage and network, all multiplied by PUE:
 
-```
+```text
 E = vCPUs x (min_w + utilisation x (max_w - min_w)) x hours / 1000   # compute
   + GB x 0.392 W/GB x hours / 1000                                   # memory
   + TB x 1.2 W/TB x hours / 1000                                     # SSD, if declared
@@ -121,7 +121,7 @@ ranks regions by this number under a latency constraint.
 
 ## M — embodied emissions
 
-```
+```text
 M = TE x (time reserved / expected lifespan) x (resources reserved / total resources)
 ```
 
