@@ -23,6 +23,8 @@ linters:
     - errname
     - exhaustive
     - gocritic
+    - lll               # FC-GEN-045 - 120 columns. gofmt does not wrap, so
+                        # nothing else here holds the line.
     - testifylint
     - unconvert
     - unparam
@@ -30,6 +32,8 @@ linters:
     - wastedassign
 
   settings:
+    lll:
+      line-length: 120
     errcheck:
       check-type-assertions: true
       check-blank: true         # FC-GO-007 - a discarded error must be explicit
@@ -57,6 +61,11 @@ linters:
         linters: [errcheck, gosec, forbidigo]   # tests may freeze the clock directly
       - path: (^|/)(main|cmd)/
         linters: [forbidigo]                    # composition root reads env and the clock
+      # A JSON fixture inside a raw string literal: the long line is one value of
+      # the document under test, and breaking it would change the fixture rather
+      # than reflow it.
+      - path: internal/testutil/fixtures\.go
+        linters: [lll]
 
 formatters:
   enable:
