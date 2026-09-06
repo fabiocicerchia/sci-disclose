@@ -12,7 +12,8 @@ import (
 // Fixtures for the carbon-intensity API: real responses, kept verbatim, and a
 // server that serves one of them while counting what was asked for.
 
-// A real /v1/last-hour/IE response, kept verbatim: the live API carries fields
+// ReadingJSON is a real /v1/last-hour/IE response, kept verbatim: the live
+// API carries fields
 // the documentation page does not show (zone, data_year, estimated,
 // methodology, attribution), and the client must survive all of them.
 func ReadingJSON(basis, generatedAt string) string {
@@ -49,8 +50,8 @@ func ReadingJSON(basis, generatedAt string) string {
 	}`, generatedAt, basis)
 }
 
-// A real /v1/zones/IT/SICI response. Zone readings publish only the
-// production-based pair: no consumption figures at all.
+// ZoneReadingJSON is a real /v1/zones/IT/SICI response. Zone readings
+// publish only the production-based pair: no consumption figures at all.
 func ZoneReadingJSON(generatedAt string) string {
 	return fmt.Sprintf(`{
 	  "generated_at": %q,
@@ -71,7 +72,7 @@ func ZoneReadingJSON(generatedAt string) string {
 	}`, generatedAt)
 }
 
-// intensityServer serves one body and counts requests and paths.
+// IntensityServer serves one body and counts the requests and paths it saw.
 func IntensityServer(t *testing.T, body string, status int) (*httptest.Server, *atomic.Int64, *[]string) {
 	t.Helper()
 	var hits atomic.Int64
@@ -80,11 +81,16 @@ func IntensityServer(t *testing.T, body string, status int) (*httptest.Server, *
 		hits.Add(1)
 		*paths = append(*paths, r.URL.Path)
 		w.WriteHeader(status)
-		fmt.Fprint(w, body)
+		fmt.Fprint(w, body) //nolint:errcheck // a test server writing to a test client
 	}))
 	t.Cleanup(server.Close)
 	t.Setenv("XDG_CACHE_HOME", t.TempDir()) // never touch the developer's real cache
 	return server, &hits, paths
 }
 
+// Now is the current time in the format the intensity fixtures use. A
+// fixture that is stale by construction would test the staleness path
+// rather than the one under test.
+//
+//nolint:forbidigo // see above: a fixture whose whole point is to be fresh
 func Now() string { return time.Now().UTC().Format(time.RFC3339) }

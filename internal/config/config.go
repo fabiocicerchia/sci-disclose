@@ -1,3 +1,6 @@
+// Package config is one measurement's settings: the machine profile, the
+// energy source, the grid zone and the functional unit. Everything a
+// disclosure needs to be reproducible by someone who was not there.
 package config
 
 import (

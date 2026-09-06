@@ -1,6 +1,10 @@
+// Package harness measures one function rather than one process, by running
+// it in a small in-language driver that reports from inside. Process-level
+// measurement cannot see past the interpreter's own startup.
 package harness
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -132,7 +136,9 @@ func MeasureFunction(interpreter, target string, iterations, warmup int,
 	if err != nil {
 		return energy.Sample{}, err
 	}
-	defer os.RemoveAll(dir)
+	// A temp directory that will not delete is a leaked directory in TMPDIR,
+	// not a failed measurement.
+	defer os.RemoveAll(dir) //nolint:errcheck // see above
 
 	script := filepath.Join(dir, "harness.py")
 	result := filepath.Join(dir, "result.json")
@@ -140,7 +146,11 @@ func MeasureFunction(interpreter, target string, iterations, warmup int,
 		return energy.Sample{}, err
 	}
 
-	cmd := exec.Command(interpreter, script, target,
+	//nolint:gosec // the interpreter and the target are the user's arguments;
+	// measuring their function is the point. context.Background(), deliberately: this is a one-shot CLI with no
+	// cancellation to plumb through, and the process the user asked for runs
+	// until it is done or until they interrupt the whole run.
+	cmd := exec.CommandContext(context.Background(), interpreter, script, target,
 		fmt.Sprint(iterations), fmt.Sprint(warmup), result)
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	cmd.Env = os.Environ()
@@ -153,7 +163,7 @@ func MeasureFunction(interpreter, target string, iterations, warmup int,
 		return energy.Sample{}, fmt.Errorf("the %s harness failed: %w", interpreter, err)
 	}
 
-	data, err := os.ReadFile(result)
+	data, err := os.ReadFile(result) //nolint:gosec // the harness's own result file, in a directory this function made
 	if err != nil {
 		return energy.Sample{}, fmt.Errorf("the harness produced no measurement: %w", err)
 	}

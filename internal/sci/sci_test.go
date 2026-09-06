@@ -25,7 +25,7 @@ func TestSCIIsTotalCarbonDividedByTheFunctionalUnit(t *testing.T) {
 		c.Provider, c.Units, c.UnitLabel = "aws", 100, "request"
 	})
 	sample := energy.Sample{WallS: 3600, CPUS: 3600, PeakRSSGB: 1}
-	report, err := SCIReport(Target{Kind: "test"}, sample, cfg, 0, false, nil)
+	report, err := New(Target{Kind: "test"}, sample, cfg, 0, false, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +73,7 @@ func TestOverridesBeatThePresets(t *testing.T) {
 func TestBudgetVerdictIsAttachedAndReturned(t *testing.T) {
 	cfg := testutil.Config(nil)
 	sample := energy.Sample{WallS: 60, CPUS: 30, PeakRSSGB: 0.5}
-	report, err := SCIReport(Target{Kind: "test"}, sample, cfg, 0, false, nil)
+	report, err := New(Target{Kind: "test"}, sample, cfg, 0, false, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

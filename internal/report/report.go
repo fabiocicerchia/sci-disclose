@@ -1,3 +1,6 @@
+// Package report renders a disclosure -- as text, Markdown or JSON -- and
+// compares two of them. The JSON shape is the tool's stable interface, so
+// the renderers here are the only thing that formats it.
 package report
 
 import (
@@ -166,13 +169,16 @@ func Emit(report *sci.Report, format, output string, out io.Writer) error {
 		// read — committed, published, attached to a report. Writing it 0600
 		// would be a worse default than the umask the user already set.
 		// gosec G306.
-		if err := os.WriteFile(output, []byte(text+"\n"), 0o644); err != nil { //nolint:gosec // a disclosure is meant to be readable
+		//nolint:gosec // a disclosure is meant to be readable
+		if err := os.WriteFile(output, []byte(text+"\n"), 0o644); err != nil {
 			return err
 		}
+		//nolint:errcheck // writing to the CLI's own stdout; a failed write has
+		// nowhere left to be reported
 		fmt.Fprintf(out, "sci: wrote %s\n", output)
 		return nil
 	}
-	fmt.Fprintln(out, text)
+	fmt.Fprintln(out, text) //nolint:errcheck // as above
 	return nil
 }
 

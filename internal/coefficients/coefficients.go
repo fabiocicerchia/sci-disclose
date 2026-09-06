@@ -1,3 +1,8 @@
+// Package coefficients holds the published figures every estimate is built
+// from -- power draw per vCPU, embodied emissions per device, grid intensity
+// per zone -- with the source of each recorded beside it. A disclosure is
+// only as defensible as its numbers, so they live in one place and are
+// cited rather than scattered as literals.
 package coefficients
 
 // Coefficients. Every number here is a published estimate, not a measurement

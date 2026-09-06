@@ -1,6 +1,10 @@
+// Package energy measures E: from the RAPL counters where they are readable,
+// and from the coefficient model everywhere else. Which one produced a
+// number is carried with the number, because the two are not comparable.
 package energy
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -80,12 +84,12 @@ func fileExists(path string) bool {
 }
 
 func readable(path string) bool {
-	_, err := os.ReadFile(path)
+	_, err := os.ReadFile(path) //nolint:gosec // a RAPL counter under /sys/class/powercap
 	return err == nil
 }
 
 func domainName(path string) string {
-	data, err := os.ReadFile(filepath.Join(path, "name"))
+	data, err := os.ReadFile(filepath.Join(path, "name")) //nolint:gosec // a RAPL domain name under /sys/class/powercap
 	if err != nil {
 		return filepath.Base(path)
 	}
@@ -93,7 +97,7 @@ func domainName(path string) string {
 }
 
 func readUint(path string) (uint64, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // a RAPL counter under /sys/class/powercap
 	if err != nil {
 		return 0, err
 	}
@@ -169,7 +173,9 @@ func SampleIdleWatts(seconds float64) (float64, bool) {
 		return 0, false
 	}
 	reader := NewRAPLReader()
-	started := time.Now()
+	// Measuring elapsed time IS this function; an injected clock would be a
+	// clock that cannot measure.
+	started := time.Now() //nolint:forbidigo // see above
 	time.Sleep(time.Duration(seconds * float64(time.Second)))
 	elapsed := time.Since(started).Seconds()
 	reader.Stop()
@@ -200,7 +206,13 @@ type Sample struct {
 // That makes the child's stdout a pipe rather than a tty, which some programs
 // notice — hence opt-in.
 func MeasureCommand(argv []string, dir string, useRAPL bool, tap io.Writer) (Sample, error) {
-	cmd := exec.Command(argv[0], argv[1:]...)
+	// Running the command the user asked for is what this tool does; there is
+	// no version of it that does not launch what it was told to launch.
+	//
+	// context.Background(), deliberately: this is a one-shot CLI with no
+	// cancellation to plumb through, and the process the user asked for runs
+	// until it is done or until they interrupt the whole run.
+	cmd := exec.CommandContext(context.Background(), argv[0], argv[1:]...) //nolint:gosec // see above
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	if tap != nil {
 		cmd.Stdout = io.MultiWriter(os.Stdout, tap)
@@ -211,7 +223,7 @@ func MeasureCommand(argv []string, dir string, useRAPL bool, tap io.Writer) (Sam
 	if useRAPL {
 		reader = NewRAPLReader()
 	}
-	started := time.Now()
+	started := time.Now() //nolint:forbidigo // the measurement itself; see SampleIdleWatts
 	err := cmd.Run()
 	wall := time.Since(started).Seconds()
 	if reader != nil {
@@ -261,9 +273,9 @@ func StoragekWh(gb, wallH float64, medium string) float64 {
 // NetworkkWh applies the per-GB-transferred coefficient.
 func NetworkkWh(gb float64) float64 { return gb * coefficients.NetworkKWhPerGB }
 
-// EnergyPart is one named line of the energy breakdown. A slice rather than a
+// Part is one named line of the energy breakdown. A slice rather than a
 // map so both the report and its JSON keep a stable order.
-type EnergyPart struct {
+type Part struct {
 	Name string  `json:"name"`
 	KWh  float64 `json:"kwh"`
 }
@@ -272,15 +284,15 @@ type EnergyPart struct {
 type Energy struct {
 	KWh         float64
 	Source      string
-	Breakdown   []EnergyPart
+	Breakdown   []Part
 	Utilisation float64
 	MemoryGB    float64
 	Notes       []string
 }
 
-// EnergyForSample turns a measurement into E, from RAPL joules where they were
+// ForSample turns a measurement into E, from RAPL joules where they were
 // captured and from the model otherwise.
-func EnergyForSample(sample Sample, cfg config.Config, idleWatts float64, hasIdle bool) (Energy, error) {
+func ForSample(sample Sample, cfg config.Config, idleWatts float64, hasIdle bool) (Energy, error) {
 	wallH := sample.WallS / 3600
 	profile := cfg.Profile()
 	memoryGB := cfg.MemoryGB
@@ -307,7 +319,7 @@ func EnergyForSample(sample Sample, cfg config.Config, idleWatts float64, hasIdl
 				idleWatts))
 		}
 		energy.Source = "rapl"
-		energy.Breakdown = append(energy.Breakdown, EnergyPart{"cpu", joules / 3.6e6})
+		energy.Breakdown = append(energy.Breakdown, Part{"cpu", joules / 3.6e6})
 		energy.Notes = append(energy.Notes,
 			"RAPL counts the whole machine's CPU package, not just this workload — "+
 				"measure on an otherwise idle host")
@@ -316,22 +328,22 @@ func EnergyForSample(sample Sample, cfg config.Config, idleWatts float64, hasIdl
 				"DRAM domain present: memory energy is inside the RAPL figure")
 		} else {
 			energy.Breakdown = append(energy.Breakdown,
-				EnergyPart{"memory", MemorykWh(memoryGB, wallH)})
+				Part{"memory", MemorykWh(memoryGB, wallH)})
 		}
 	} else {
 		energy.Source = "model"
 		energy.Breakdown = append(energy.Breakdown,
-			EnergyPart{"cpu", CPUkWh(wallH, energy.Utilisation, cfg.VCPUs, profile)},
-			EnergyPart{"memory", MemorykWh(memoryGB, wallH)})
+			Part{"cpu", CPUkWh(wallH, energy.Utilisation, cfg.VCPUs, profile)},
+			Part{"memory", MemorykWh(memoryGB, wallH)})
 	}
 
 	if cfg.StorageGB > 0 {
 		energy.Breakdown = append(energy.Breakdown,
-			EnergyPart{"storage", StoragekWh(cfg.StorageGB, wallH, cfg.StorageMedium)})
+			Part{"storage", StoragekWh(cfg.StorageGB, wallH, cfg.StorageMedium)})
 	}
 	if cfg.NetworkGB > 0 {
 		energy.Breakdown = append(energy.Breakdown,
-			EnergyPart{"network", NetworkkWh(cfg.NetworkGB)})
+			Part{"network", NetworkkWh(cfg.NetworkGB)})
 	}
 
 	var subtotal float64
@@ -340,7 +352,7 @@ func EnergyForSample(sample Sample, cfg config.Config, idleWatts float64, hasIdl
 	}
 	overhead := subtotal * (profile.PUE - 1)
 	if overhead != 0 {
-		energy.Breakdown = append(energy.Breakdown, EnergyPart{"datacentre_overhead", overhead})
+		energy.Breakdown = append(energy.Breakdown, Part{"datacentre_overhead", overhead})
 	}
 	energy.KWh = subtotal + overhead
 	return energy, nil

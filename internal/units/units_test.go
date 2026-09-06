@@ -8,13 +8,11 @@ import (
 	"github.com/fabiocicerchia/sci-disclose/internal/testutil"
 )
 
+// The pattern is a constant, so a failure to compile it is a bug in this
+// package rather than something a test can be handed.
 func defaultPattern(t *testing.T) *regexp.Regexp {
 	t.Helper()
-	pattern, err := regexp.Compile(DefaultUnitPattern)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return pattern
+	return regexp.MustCompile(DefaultUnitPattern)
 }
 
 func TestScanUnitsAcceptsTheUsualMarkerSpellings(t *testing.T) {
@@ -51,36 +49,36 @@ func TestUnitsFromFileTakesABareNumberOrAMarker(t *testing.T) {
 	dir := t.TempDir()
 	pattern := defaultPattern(t)
 	bare := testutil.WriteFile(t, dir, "count.txt", "4200\n")
-	if count, err := UnitsFromFile(bare, pattern); err != nil || count != 4200 {
+	if count, err := FromFile(bare, pattern); err != nil || count != 4200 {
 		t.Errorf("bare number: %g (%v)", count, err)
 	}
 	marked := testutil.WriteFile(t, dir, "report.log", "finished\nSCI-UNITS: 77\n")
-	if count, err := UnitsFromFile(marked, pattern); err != nil || count != 77 {
+	if count, err := FromFile(marked, pattern); err != nil || count != 77 {
 		t.Errorf("marker: %g (%v)", count, err)
 	}
 	junk := testutil.WriteFile(t, dir, "junk.txt", "no number at all\n")
-	if _, err := UnitsFromFile(junk, pattern); err == nil {
+	if _, err := FromFile(junk, pattern); err == nil {
 		t.Error("a file with no count should be an error, not a silent 1")
 	}
-	if _, err := UnitsFromFile(filepath.Join(dir, "missing"), pattern); err == nil {
+	if _, err := FromFile(filepath.Join(dir, "missing"), pattern); err == nil {
 		t.Error("a missing file should be an error")
 	}
 }
 
 func TestUnitsFromCommandReadsStdout(t *testing.T) {
 	pattern := defaultPattern(t)
-	if count, err := UnitsFromCommand("echo 640", pattern); err != nil || count != 640 {
+	if count, err := FromCommand("echo 640", pattern); err != nil || count != 640 {
 		t.Errorf("plain command: %g (%v)", count, err)
 	}
 	// Anything shell-shaped goes through sh, so pipes and redirects work.
-	if count, err := UnitsFromCommand("printf 'a\\nb\\n' | wc -l", pattern); err != nil ||
+	if count, err := FromCommand("printf 'a\\nb\\n' | wc -l", pattern); err != nil ||
 		count != 2 {
 		t.Errorf("pipeline: %g (%v)", count, err)
 	}
-	if _, err := UnitsFromCommand("sh -c 'exit 1'", pattern); err == nil {
+	if _, err := FromCommand("sh -c 'exit 1'", pattern); err == nil {
 		t.Error("a failing command should be an error")
 	}
-	if _, err := UnitsFromCommand("echo nothing", pattern); err == nil {
+	if _, err := FromCommand("echo nothing", pattern); err == nil {
 		t.Error("output with no count should be an error")
 	}
 }

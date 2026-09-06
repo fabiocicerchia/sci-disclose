@@ -4,6 +4,7 @@
 package fetch
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"time"
@@ -16,7 +17,11 @@ import (
 // metrics page, and an unbounded read is a memory bug waiting for a bad server.
 func Get(endpoint string) ([]byte, int, error) {
 	client := &http.Client{Timeout: 5 * time.Second}
-	request, err := http.NewRequest(http.MethodGet, endpoint, nil)
+	// Background, deliberately. This is a one-shot CLI: there is no
+	// cancellation to plumb through, the 5s timeout above is the bound on
+	// every call, and a context parameter here would be threaded through six
+	// signatures to carry nothing but this.
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -25,7 +30,7 @@ func Get(endpoint string) ([]byte, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-	defer response.Body.Close()
+	defer response.Body.Close() //nolint:errcheck // the body is read below; a failed close only costs a connection
 	body, err := io.ReadAll(io.LimitReader(response.Body, 1<<20))
 	return body, response.StatusCode, err
 }
