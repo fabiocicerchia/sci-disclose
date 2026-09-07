@@ -1,3 +1,6 @@
+// Package manifest is the multi-component input file: the deployed system
+// described component by component, for a disclosure that covers more than
+// the one process on this machine.
 package manifest
 
 import (
@@ -80,7 +83,7 @@ type Embodied struct {
 // LoadManifest reads a manifest, accepting hyphenated or underscored keys and
 // either spelling of "utilisation".
 func LoadManifest(path string) (Manifest, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // the manifest the user passed to -f
 	if err != nil {
 		return Manifest{}, err
 	}
@@ -156,7 +159,7 @@ func EstimateComponent(component Component, defaults Defaults, base config.Confi
 	}
 	profile := cfg.Profile()
 
-	var parts []energy.EnergyPart
+	var parts []energy.Part
 	switch kind {
 	case "compute":
 		vcpus := component.VCPUs
@@ -168,10 +171,10 @@ func EstimateComponent(component Component, defaults Defaults, base config.Confi
 			util = *component.Utilisation
 		}
 		watts := profile.MinW + util*(profile.MaxW-profile.MinW)
-		parts = append(parts, energy.EnergyPart{Name: "cpu", KWh: vcpus * replicas * watts * hours / 1000})
+		parts = append(parts, energy.Part{Name: "cpu", KWh: vcpus * replicas * watts * hours / 1000})
 		if component.MemoryGB > 0 {
 			parts = append(parts,
-				energy.EnergyPart{Name: "memory", KWh: energy.MemorykWh(component.MemoryGB*replicas, hours)})
+				energy.Part{Name: "memory", KWh: energy.MemorykWh(component.MemoryGB*replicas, hours)})
 		}
 	case "storage":
 		medium := component.Medium
@@ -182,12 +185,12 @@ func EstimateComponent(component Component, defaults Defaults, base config.Confi
 			return sci.ComponentResult{}, fmt.Errorf("unknown storage medium %q (ssd or hdd)", medium)
 		}
 		parts = append(parts,
-			energy.EnergyPart{Name: "storage", KWh: energy.StoragekWh(component.StorageGB*replicas, hours, medium)})
+			energy.Part{Name: "storage", KWh: energy.StoragekWh(component.StorageGB*replicas, hours, medium)})
 	case "network":
-		parts = append(parts, energy.EnergyPart{Name: "network", KWh: energy.NetworkkWh(component.NetworkGB)})
+		parts = append(parts, energy.Part{Name: "network", KWh: energy.NetworkkWh(component.NetworkGB)})
 	case "device":
 		// End-user devices draw from the grid directly: no datacentre PUE.
-		parts = append(parts, energy.EnergyPart{Name: "device", KWh: component.Watts * hours * replicas / 1000})
+		parts = append(parts, energy.Part{Name: "device", KWh: component.Watts * hours * replicas / 1000})
 	default:
 		return sci.ComponentResult{}, fmt.Errorf("unknown component type %q in %q",
 			kind, componentName(component, kind))
@@ -199,7 +202,7 @@ func EstimateComponent(component Component, defaults Defaults, base config.Confi
 	}
 	if kind != "device" {
 		if overhead := subtotal * (profile.PUE - 1); overhead != 0 {
-			parts = append(parts, energy.EnergyPart{Name: "datacentre_overhead", KWh: overhead})
+			parts = append(parts, energy.Part{Name: "datacentre_overhead", KWh: overhead})
 			subtotal += overhead
 		}
 	}
@@ -291,7 +294,7 @@ func EstimateManifest(manifest Manifest, base config.Config, path string) (*sci.
 	cache := map[string]grid.Intensity{}
 	var rows []sci.ComponentResult
 	var energyKWh, operational, embodied float64
-	var breakdown []energy.EnergyPart
+	var breakdown []energy.Part
 	var boundary []string
 	for _, component := range manifest.Components {
 		row, err := EstimateComponent(component, defaults, base, cache)
@@ -302,7 +305,7 @@ func EstimateManifest(manifest Manifest, base config.Config, path string) (*sci.
 		energyKWh += row.EnergyKWh
 		operational += row.Operational
 		embodied += row.Embodied
-		breakdown = append(breakdown, energy.EnergyPart{Name: row.Name, KWh: row.EnergyKWh})
+		breakdown = append(breakdown, energy.Part{Name: row.Name, KWh: row.EnergyKWh})
 		boundary = append(boundary, fmt.Sprintf("%s (%s)", row.Name, row.Type))
 	}
 

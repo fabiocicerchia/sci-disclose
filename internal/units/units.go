@@ -1,6 +1,10 @@
+// Package units reads R, the functional unit count, out of whatever the
+// workload already produces: its stdout, a file it wrote, or a command run
+// after it. Asking the user to type the number is the last resort.
 package units
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -47,10 +51,10 @@ func ScanUnits(text string, pattern *regexp.Regexp) (float64, bool) {
 	return value, true
 }
 
-// UnitsFromFile reads a count from a file the workload wrote: either a bare
+// FromFile reads a count from a file the workload wrote: either a bare
 // number, or any line carrying the marker.
-func UnitsFromFile(path string, pattern *regexp.Regexp) (float64, error) {
-	data, err := os.ReadFile(path)
+func FromFile(path string, pattern *regexp.Regexp) (float64, error) {
+	data, err := os.ReadFile(path) //nolint:gosec // the unit-count file the user named with -units-from-file
 	if err != nil {
 		return 0, fmt.Errorf("cannot read the unit count: %w", err)
 	}
@@ -65,11 +69,11 @@ func UnitsFromFile(path string, pattern *regexp.Regexp) (float64, error) {
 		"matching %s", path, pattern)
 }
 
-// UnitsFromCommand runs a command after the workload has finished and reads the
+// FromCommand runs a command after the workload has finished and reads the
 // count from its output — `wc -l < out.csv`, a jq over a load-test summary, a
 // curl of a metrics endpoint. It runs outside the measured window, so it costs
 // the measurement nothing.
-func UnitsFromCommand(commandLine string, pattern *regexp.Regexp) (float64, error) {
+func FromCommand(commandLine string, pattern *regexp.Regexp) (float64, error) {
 	fields := strings.Fields(commandLine)
 	if len(fields) == 0 {
 		return 0, fmt.Errorf("--units-cmd is empty")
@@ -77,9 +81,13 @@ func UnitsFromCommand(commandLine string, pattern *regexp.Regexp) (float64, erro
 	var command *exec.Cmd
 	if strings.ContainsAny(commandLine, "|<>$*") {
 		// Let a shell handle anything that clearly wants one.
-		command = exec.Command("sh", "-c", commandLine)
+		// -units-cmd is a command line the user wrote, and a shell is what they
+		// wrote it for. There is nothing to sanitise: it is the input. The
+		// context is Background for the same reason as everywhere else here:
+		// a one-shot CLI has no cancellation to pass down.
+		command = exec.CommandContext(context.Background(), "sh", "-c", commandLine) //nolint:gosec // see above
 	} else {
-		command = exec.Command(fields[0], fields[1:]...)
+		command = exec.CommandContext(context.Background(), fields[0], fields[1:]...) //nolint:gosec // see above
 	}
 	command.Stderr = os.Stderr
 	output, err := command.Output()

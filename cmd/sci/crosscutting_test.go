@@ -1,6 +1,7 @@
+// Tests that span more than one internal package.
 package main
 
-// Tests that span more than one internal package. They live here because
+// They span packages They live here because
 // package main is the only place allowed to import all of them at once:
 // sci imports grid, and disclosure imports sci, so neither of those packages
 // can test the whole chain from inside itself.
@@ -23,7 +24,7 @@ func TestAFallenBackBasisIsNotedInTheReport(t *testing.T) {
 		c.Intensity, c.Offline = 0, false
 		c.IntensityAPI, c.Zone = server.URL, "IT/SICI"
 	})
-	disclosure, err := sci.SCIReport(sci.Target{Kind: "test"}, energy.Sample{WallS: 1, CPUS: 1}, cfg, 0, false, nil)
+	disclosure, err := sci.New(sci.Target{Kind: "test"}, energy.Sample{WallS: 1, CPUS: 1}, cfg, 0, false, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

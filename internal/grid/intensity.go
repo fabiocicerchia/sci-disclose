@@ -1,3 +1,6 @@
+// Package grid resolves I, the carbon intensity of the electricity a run
+// consumed: the last-hour figure from the API when it can be reached, the
+// bundled yearly average when it cannot, and a note saying which.
 package grid
 
 import (
@@ -169,12 +172,14 @@ func ResolveIntensity(cfg config.Config) (Intensity, error) {
 		if reading, from, err := fetchReading(cfg, path); err == nil {
 			if value, basis, ok := reading.Value(cfg.IntensityBasis); ok {
 				intensity := Intensity{
-					Value:       value,
-					Source:      describeReading(reading, basis, cfg.IntensityBasis, label, from),
-					Basis:       basis,
-					Window:      reading.Window(),
-					Measured:    reading.Basis == "measured",
-					Estimated:   reading.Estimated,
+					Value:     value,
+					Source:    describeReading(reading, basis, cfg.IntensityBasis, label, from),
+					Basis:     basis,
+					Window:    reading.Window(),
+					Measured:  reading.Basis == "measured",
+					Estimated: reading.Estimated,
+					//nolint:forbidigo // "is this reading stale" is a wall-clock
+					// question; Stale takes the time so a test can answer it
 					Stale:       reading.Stale(time.Now()),
 					DataYear:    reading.DataYear,
 					Methodology: reading.Methodology,
@@ -289,6 +294,8 @@ func fetchReading(cfg config.Config, path string) (Reading, string, error) {
 
 	if body, age, err := readCache(cachePath); err == nil {
 		var reading Reading
+		//nolint:forbidigo // cache freshness is a wall-clock question; cacheFresh
+		// takes the time so a test can answer it
 		if json.Unmarshal(body, &reading) == nil && cacheFresh(reading, age, time.Now()) {
 			return reading, fmt.Sprintf("cached %s ago", age.Round(time.Minute)), nil
 		}
@@ -357,7 +364,7 @@ func readCache(path string) ([]byte, time.Duration, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-	body, err := os.ReadFile(path)
+	body, err := os.ReadFile(path) //nolint:gosec // this tool's own cache file, under its own cache directory
 	if err != nil {
 		return nil, 0, err
 	}
@@ -377,5 +384,7 @@ func writeCache(path string, body []byte) {
 	if os.MkdirAll(filepath.Dir(path), 0o700) != nil {
 		return
 	}
-	_ = os.WriteFile(path, body, 0o600)
+	// A cache that cannot be written is a cache miss next time, which is the
+	// same outcome as no cache at all.
+	_ = os.WriteFile(path, body, 0o600) //nolint:errcheck // see above
 }
