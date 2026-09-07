@@ -26,7 +26,7 @@ func TestUnitsAreReadFromTheWorkloadsOwnOutput(t *testing.T) {
 		t.Fatalf("exit %d: %s", code, stdout)
 	}
 	var report sci.Report
-	if err := json.Unmarshal([]byte(stdout[strings.Index(stdout, "{"):]), &report); err != nil {
+	if err := json.Unmarshal([]byte(jsonPart(t, stdout)), &report); err != nil {
 		t.Fatal(err)
 	}
 	if report.FunctionalUnit.Quantity != 5000 {
@@ -56,7 +56,7 @@ func TestExplicitUnitsBeatTheCounters(t *testing.T) {
 		t.Fatalf("exit %d: %s", code, stdout)
 	}
 	var report sci.Report
-	if err := json.Unmarshal([]byte(stdout[strings.Index(stdout, "{"):]), &report); err != nil {
+	if err := json.Unmarshal([]byte(jsonPart(t, stdout)), &report); err != nil {
 		t.Fatal(err)
 	}
 	if report.FunctionalUnit.Quantity != 10 {
@@ -99,7 +99,7 @@ func TestCounterDeltaAcrossTheRunBecomesR(t *testing.T) {
 		t.Fatalf("exit %d: %s", code, stdout)
 	}
 	var report sci.Report
-	if err := json.Unmarshal([]byte(stdout[strings.Index(stdout, "{"):]), &report); err != nil {
+	if err := json.Unmarshal([]byte(jsonPart(t, stdout)), &report); err != nil {
 		t.Fatal(err)
 	}
 	if report.FunctionalUnit.Quantity != 250 {
@@ -191,4 +191,16 @@ func TestUnitsRefusesWhatItCannotDivide(t *testing.T) {
 			t.Errorf("%v: exit %d\n%s", args, code, out)
 		}
 	}
+}
+
+// jsonPart is the JSON object at the end of a CLI's output, or a failure that
+// shows what it printed instead. Slicing at strings.Index directly panics when
+// there is no JSON, which hides the error message that would explain why.
+func jsonPart(t *testing.T, out string) string {
+	t.Helper()
+	i := strings.Index(out, "{")
+	if i < 0 {
+		t.Fatalf("no JSON in the output: %s", out)
+	}
+	return out[i:]
 }

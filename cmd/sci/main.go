@@ -69,15 +69,15 @@ func main() { os.Exit(Run(os.Args[1:], os.Stdout)) }
 // Run dispatches one invocation and returns its exit code.
 func Run(args []string, out io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprint(out, usage)
+		emit(out, usage)
 		return 2
 	}
 	switch args[0] {
 	case "-h", "--help", "help":
-		fmt.Fprint(out, usage)
+		emit(out, usage)
 		return 0
 	case "-v", "--version", "version":
-		fmt.Fprintf(out, "sci-disclose %s\n", coefficients.Version)
+		emitf(out, "sci-disclose %s\n", coefficients.Version)
 		return 0
 	case "run":
 		return cmdRun(args[1:], out)
@@ -98,7 +98,7 @@ func Run(args []string, out io.Writer) int {
 	case "coefficients":
 		return cmdCoefficients(args[1:], out)
 	default:
-		fmt.Fprintf(out, "sci: unknown command %q\n\n%s", args[0], usage)
+		emitf(out, "sci: unknown command %q\n\n%s", args[0], usage)
 		return 2
 	}
 }
@@ -157,13 +157,13 @@ func (o *options) countUnits(captured string) (units.UnitSource, error) {
 		}
 		return units.UnitSource{Count: count, Origin: "counted from the workload's stdout"}, nil
 	case o.unitsFile != "":
-		count, err := units.UnitsFromFile(o.unitsFile, pattern)
+		count, err := units.FromFile(o.unitsFile, pattern)
 		if err != nil {
 			return units.UnitSource{}, err
 		}
 		return units.UnitSource{Count: count, Origin: "counted from " + o.unitsFile}, nil
 	default:
-		count, err := units.UnitsFromCommand(o.unitsCmd, pattern)
+		count, err := units.FromCommand(o.unitsCmd, pattern)
 		if err != nil {
 			return units.UnitSource{}, err
 		}
@@ -254,7 +254,7 @@ func parse(fs *flag.FlagSet, args []string, out io.Writer) error {
 }
 
 func fail(out io.Writer, err error) int {
-	fmt.Fprintf(out, "sci: %v\n", err)
+	emitf(out, "sci: %v\n", err)
 	return 2
 }
 
@@ -345,7 +345,7 @@ func measureCommand(argv []string, dir string, target sci.Target, opts *options,
 	if !useRAPL {
 		notes = append(notes, modelNote)
 	}
-	disclosure, err := sci.SCIReport(target, sample, *opts.cfg, idleWatts, hasIdle, notes)
+	disclosure, err := sci.New(target, sample, *opts.cfg, idleWatts, hasIdle, notes)
 	if err != nil {
 		return fail(out, err)
 	}
@@ -471,7 +471,7 @@ func cmdFunc(args []string, out io.Writer) int {
 			"measurement is stable")
 	}
 	target := sci.Target{Kind: "function", Description: rest[0]}
-	disclosure, err := sci.SCIReport(target, sample, *opts.cfg, idleWatts, hasIdle, notes)
+	disclosure, err := sci.New(target, sample, *opts.cfg, idleWatts, hasIdle, notes)
 	if err != nil {
 		return fail(out, err)
 	}
@@ -588,15 +588,16 @@ func cmdInit(args []string, out io.Writer) int {
 	text := discover.RenderManifest(filepath.Base(absolute), components, notes)
 	// 0644 like any other scaffolded config: sci.yaml is written to be edited
 	// and committed, not kept private. gosec G306.
-	if err := os.WriteFile(*output, []byte(text), 0o644); err != nil { //nolint:gosec // scaffolded config, meant to be committed
+	//nolint:gosec // scaffolded config, meant to be committed
+	if err := os.WriteFile(*output, []byte(text), 0o644); err != nil {
 		return fail(out, err)
 	}
 	found := "nothing discovered — the scaffold has a placeholder component"
 	if len(components) > 0 {
 		found = fmt.Sprintf("%d component(s) discovered", len(components))
 	}
-	fmt.Fprintf(out, "sci: wrote %s (%s)\n", *output, found)
-	fmt.Fprintf(out, "sci: fill in the functional unit and utilisation, then run "+
+	emitf(out, "sci: wrote %s (%s)\n", *output, found)
+	emitf(out, "sci: fill in the functional unit and utilisation, then run "+
 		"`sci estimate -f %s`\n", *output)
 	return 0
 }
@@ -628,9 +629,9 @@ func cmdCompare(args []string, out io.Writer) int {
 		if err != nil {
 			return fail(out, err)
 		}
-		fmt.Fprintln(out, string(data))
+		emitln(out, string(data))
 	} else {
-		fmt.Fprintln(out, report.RenderComparison(comparison))
+		emitln(out, report.RenderComparison(comparison))
 	}
 	if comparison.Regression && *failOnRegression {
 		return 1
@@ -699,7 +700,7 @@ func cmdUnits(args []string, out io.Writer) int {
 }
 
 func loadReport(path string) (*sci.Report, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // the disclosure the user passed to -f
 	if err != nil {
 		return nil, err
 	}
@@ -738,30 +739,30 @@ func cmdCoefficients(args []string, out io.Writer) int {
 		if err != nil {
 			return fail(out, err)
 		}
-		fmt.Fprintln(out, string(data))
+		emitln(out, string(data))
 		return 0
 	}
 
-	fmt.Fprintln(out, "Power and PUE per provider (watts per vCPU):")
+	emitln(out, "Power and PUE per provider (watts per vCPU):")
 	for _, name := range coefficients.ProviderNames {
 		profile := coefficients.CPUProfiles[name]
-		fmt.Fprintf(out, "  %-8s %.2f idle  %.2f full   PUE %g\n",
+		emitf(out, "  %-8s %.2f idle  %.2f full   PUE %g\n",
 			name, profile.MinW, profile.MaxW, profile.PUE)
 	}
-	fmt.Fprintf(out, "\nMemory %g W/GB · network %g kWh/GB · storage %g W/TB ssd, "+
+	emitf(out, "\nMemory %g W/GB · network %g kWh/GB · storage %g W/TB ssd, "+
 		"%g W/TB hdd\n", coefficients.MemoryWPerGB, coefficients.NetworkKWhPerGB,
 		coefficients.StorageWPerTB["ssd"], coefficients.StorageWPerTB["hdd"])
-	fmt.Fprintln(out, "\nEmbodied emissions:")
+	emitln(out, "\nEmbodied emissions:")
 	for _, name := range coefficients.HardwareNames {
 		device := coefficients.Hardware[name]
-		fmt.Fprintf(out, "  %-8s %.0f kgCO2e over %.0f years\n",
+		emitf(out, "  %-8s %.0f kgCO2e over %.0f years\n",
 			name, device.EmbodiedKg, device.LifespanYears)
 	}
-	fmt.Fprintf(out, "\nCarbon intensity: %s, last-hour readings per country and "+
+	emitf(out, "\nCarbon intensity: %s, last-hour readings per country and "+
 		"bidding zone.\n  Default figure: %s. Cached for an hour; falls back to the "+
 		"bundled\n  yearly averages below when unreachable or with -offline.\n",
 		coefficients.DefaultIntensityAPI, coefficients.IntensityBases[0])
-	fmt.Fprintln(out, "\nBundled grid intensity (gCO2e/kWh, yearly averages):")
+	emitln(out, "\nBundled grid intensity (gCO2e/kWh, yearly averages):")
 	zones := make([]string, 0, len(coefficients.GridZones))
 	for zone := range coefficients.GridZones {
 		zones = append(zones, zone)
@@ -772,15 +773,27 @@ func cmdCoefficients(args []string, out io.Writer) int {
 		for _, zone := range zones[i:min(i+4, len(zones))] {
 			row = append(row, fmt.Sprintf("%-8s%4.0f", zone, coefficients.GridZones[zone]))
 		}
-		fmt.Fprintln(out, "  "+strings.Join(row, "  "))
+		emitln(out, "  "+strings.Join(row, "  "))
 	}
-	fmt.Fprintf(out, "\n%d cloud regions map onto those zones and onto countries "+
+	emitf(out, "\n%d cloud regions map onto those zones and onto countries "+
 		"(`sci coefficients -format json` lists them).\n", len(coefficients.RegionZone))
-	fmt.Fprintln(out, "\nSources:")
+	emitln(out, "\nSources:")
 	for _, pair := range coefficients.CoefficientSources {
-		fmt.Fprintf(out, "  %s\n    %s\n", pair[0], pair[1])
+		emitf(out, "  %s\n    %s\n", pair[0], pair[1])
 	}
-	fmt.Fprintf(out, "\nHost: %s %s, %d vCPU. RAPL counters readable: %t\n",
+	emitf(out, "\nHost: %s %s, %d vCPU. RAPL counters readable: %t\n",
 		runtime.GOOS, runtime.GOARCH, runtime.NumCPU(), energy.RAPLAvailable())
 	return 0
 }
+
+// emit, emitf and emitln write to the CLI's output.
+//
+// A failed write to the process's own stdout cannot be reported: the only
+// place to report it is the stream that just failed. The error is dropped
+// here, once, rather than at each call site.
+
+func emit(w io.Writer, s string) { _, _ = fmt.Fprint(w, s) } //nolint:errcheck // see above
+
+func emitf(w io.Writer, format string, a ...any) { _, _ = fmt.Fprintf(w, format, a...) } //nolint:errcheck // see above
+
+func emitln(w io.Writer, a ...any) { _, _ = fmt.Fprintln(w, a...) } //nolint:errcheck // see above

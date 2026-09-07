@@ -33,7 +33,7 @@ func TestMemoryStorageAndNetworkUseThePublishedCoefficients(t *testing.T) {
 
 func TestPUEShowsUpAsDatacentreOverhead(t *testing.T) {
 	cfg := testutil.Config(func(c *config.Config) { c.Provider, c.PUE, c.MemoryGB = "aws", 2, 0 })
-	energy, err := EnergyForSample(Sample{WallS: 3600, CPUS: 3600}, cfg, 0, false)
+	energy, err := ForSample(Sample{WallS: 3600, CPUS: 3600}, cfg, 0, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +51,7 @@ func TestRAPLJoulesAreConvertedAndPreferredOverTheModel(t *testing.T) {
 	})
 	sample := Sample{WallS: 10, CPUS: 10, PeakRSSGB: 0.5,
 		RAPLJoules: 3.6e6, HasRAPL: true, CoversDRAM: true}
-	energy, err := EnergyForSample(sample, cfg, 0, false)
+	energy, err := ForSample(sample, cfg, 0, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +71,7 @@ func TestRAPLWithoutADRAMDomainAddsModelledMemory(t *testing.T) {
 		c.Provider, c.MemoryGB, c.EnergySource = "laptop", 8, "auto"
 	})
 	sample := Sample{WallS: 3600, CPUS: 3600, RAPLJoules: 3.6e6, HasRAPL: true}
-	energy, err := EnergyForSample(sample, cfg, 0, false)
+	energy, err := ForSample(sample, cfg, 0, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,12 +92,12 @@ func TestIdleBaselineIsSubtractedAndNeverGoesNegative(t *testing.T) {
 		c.Provider, c.MemoryGB, c.EnergySource = "laptop", 0, "auto"
 	})
 	sample := Sample{WallS: 10, RAPLJoules: 1000, HasRAPL: true, CoversDRAM: true}
-	marginal, err := EnergyForSample(sample, cfg, 40, true)
+	marginal, err := ForSample(sample, cfg, 40, true)
 	if err != nil {
 		t.Fatal(err)
 	}
 	testutil.Approx(t, marginal.Breakdown[0].KWh, 600/3.6e6, 1e-12, "1000 J minus 40 W for 10 s")
-	floored, err := EnergyForSample(sample, cfg, 1000, true)
+	floored, err := ForSample(sample, cfg, 1000, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,15 +106,17 @@ func TestIdleBaselineIsSubtractedAndNeverGoesNegative(t *testing.T) {
 
 func TestAskingForRAPLWithoutCountersIsAnError(t *testing.T) {
 	cfg := testutil.Config(func(c *config.Config) { c.EnergySource = "rapl" })
-	if _, err := EnergyForSample(Sample{WallS: 1, CPUS: 1}, cfg, 0, false); err == nil {
+	if _, err := ForSample(Sample{WallS: 1, CPUS: 1}, cfg, 0, false); err == nil {
 		t.Fatal("expected an error when RAPL was demanded but unavailable")
 	}
 }
 
 // fakePowercap builds a sysfs layout like the kernel's: one package, with a
-// core and a DRAM child.
-func fakePowercap(t *testing.T, energyUJ, maxRange uint64) string {
+// core and a DRAM child. The counter's wrap point is the same in every test,
+// so it is fixed here.
+func fakePowercap(t *testing.T, energyUJ uint64) string {
 	t.Helper()
+	const maxEnergyRangeUJ = 1_000_000_000
 	root := t.TempDir()
 	pkg := filepath.Join(root, "intel-rapl:0")
 	core := filepath.Join(pkg, "intel-rapl:0:0")
@@ -131,7 +133,7 @@ func fakePowercap(t *testing.T, energyUJ, maxRange uint64) string {
 	}
 	write(pkg, "name", "package-0")
 	write(pkg, "energy_uj", strconv.FormatUint(energyUJ, 10))
-	write(pkg, "max_energy_range_uj", strconv.FormatUint(maxRange, 10))
+	write(pkg, "max_energy_range_uj", strconv.FormatUint(maxEnergyRangeUJ, 10))
 	write(core, "name", "core")
 	write(core, "energy_uj", "500000")
 	write(dram, "name", "dram")
@@ -144,7 +146,7 @@ func fakePowercap(t *testing.T, energyUJ, maxRange uint64) string {
 }
 
 func TestRAPLCountsPackageAndDRAMButNotTheCoreSubdomain(t *testing.T) {
-	fakePowercap(t, 1_000_000, 1_000_000_000)
+	fakePowercap(t, 1_000_000)
 	var names []string
 	for _, domain := range raplDomains() {
 		names = append(names, domain.name)
@@ -158,7 +160,7 @@ func TestRAPLCountsPackageAndDRAMButNotTheCoreSubdomain(t *testing.T) {
 }
 
 func TestRAPLReaderSumsTheDeltaAcrossDomains(t *testing.T) {
-	pkg := fakePowercap(t, 1_000_000, 1_000_000_000)
+	pkg := fakePowercap(t, 1_000_000)
 	reader := NewRAPLReader()
 	os.WriteFile(filepath.Join(pkg, "energy_uj"), []byte("3000000\n"), 0o644)
 	os.WriteFile(filepath.Join(pkg, "intel-rapl:0:2", "energy_uj"), []byte("400000\n"), 0o644)
@@ -170,7 +172,7 @@ func TestRAPLReaderSumsTheDeltaAcrossDomains(t *testing.T) {
 }
 
 func TestRAPLReaderHandlesCounterWraparound(t *testing.T) {
-	pkg := fakePowercap(t, 999_000_000, 1_000_000_000)
+	pkg := fakePowercap(t, 999_000_000)
 	reader := NewRAPLReader()
 	os.WriteFile(filepath.Join(pkg, "energy_uj"), []byte("500000\n"), 0o644)
 	reader.Stop()
@@ -179,7 +181,7 @@ func TestRAPLReaderHandlesCounterWraparound(t *testing.T) {
 }
 
 func TestUnreadableCountersAreSkippedRatherThanFatal(t *testing.T) {
-	pkg := fakePowercap(t, 1_000_000, 1_000_000_000)
+	pkg := fakePowercap(t, 1_000_000)
 	if err := os.Chmod(filepath.Join(pkg, "energy_uj"), 0o000); err != nil {
 		t.Fatal(err)
 	}

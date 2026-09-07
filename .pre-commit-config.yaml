@@ -98,3 +98,9 @@ repos:
 
   # Flags energy-wasteful patterns (busy loops, every-minute crons, SELECT *,
   # unpinned full-fat base images, missing k8s resource limits, ...). Gating in
+
+  # FC-MD-008 - markdownlint in CI, blocking. Rules live in .markdownlint.jsonc.
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: b82a6c8896e491b9cb377a99ff3412131920681b  # v0.23.2
+    hooks:
+      - id: markdownlint-cli2

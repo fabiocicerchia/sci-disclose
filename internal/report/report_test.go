@@ -17,7 +17,7 @@ func sampleReport(t *testing.T) *sci.Report {
 		c.VCPUs, c.TotalVCPUs = 1, 4
 		c.Intensity, c.Units, c.UnitLabel = 300, 10, "request"
 	})
-	report, err := sci.SCIReport(sci.Target{Kind: "test", Description: "demo"},
+	report, err := sci.New(sci.Target{Kind: "test", Description: "demo"},
 		energy.Sample{WallS: 60, CPUS: 30, PeakRSSGB: 0.5}, cfg, 0, false, nil)
 	if err != nil {
 		t.Fatal(err)

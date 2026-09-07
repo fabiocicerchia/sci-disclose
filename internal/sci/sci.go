@@ -1,3 +1,6 @@
+// Package sci assembles the disclosure itself: (E x I) + M per functional
+// unit, as the Green Software Foundation's SCI specification defines it,
+// with every input it used recorded alongside the result.
 package sci
 
 import (
@@ -83,53 +86,55 @@ type Budget struct {
 	Pass  bool    `json:"pass"`
 }
 
-// Report is one SCI disclosure. Its JSON shape is the tool's stable interface:
-// `sci compare` reads it, and CI keeps it as an artifact.
-// ComponentResult is one component's contribution to the disclosure.
+// ComponentResult is one component's contribution to the disclosure. A
+// multi-component run reports each of these as well as the total, because
+// "where does it come from" is the question that follows the number.
 type ComponentResult struct {
-	Name            string              `json:"name"`
-	Type            string              `json:"type"`
-	Hours           float64             `json:"hours"`
-	Replicas        float64             `json:"replicas"`
-	EnergyKWh       float64             `json:"energy_kwh"`
-	EnergyBreakdown []energy.EnergyPart `json:"energy_breakdown_kwh"`
-	Intensity       grid.Intensity      `json:"intensity"`
-	Operational     float64             `json:"operational_gco2e"`
-	Embodied        float64             `json:"embodied_gco2e"`
-	Total           float64             `json:"total_gco2e"`
+	Name            string         `json:"name"`
+	Type            string         `json:"type"`
+	Hours           float64        `json:"hours"`
+	Replicas        float64        `json:"replicas"`
+	EnergyKWh       float64        `json:"energy_kwh"`
+	EnergyBreakdown []energy.Part  `json:"energy_breakdown_kwh"`
+	Intensity       grid.Intensity `json:"intensity"`
+	Operational     float64        `json:"operational_gco2e"`
+	Embodied        float64        `json:"embodied_gco2e"`
+	Total           float64        `json:"total_gco2e"`
 }
 
+// Report is one SCI disclosure. Its JSON shape is the tool's stable
+// interface: `sci compare` reads it, and CI keeps it as an artifact.
 type Report struct {
-	Tool            string              `json:"tool"`
-	Version         string              `json:"version"`
-	Target          Target              `json:"target"`
-	Measurement     *Measurement        `json:"measurement,omitempty"`
-	Components      []ComponentResult   `json:"components,omitempty"`
-	EnergyKWh       float64             `json:"energy_kwh"`
-	EnergySource    string              `json:"energy_source"`
-	EnergyBreakdown []energy.EnergyPart `json:"energy_breakdown_kwh"`
-	Intensity       *grid.Intensity     `json:"intensity,omitempty"`
-	Operational     float64             `json:"operational_gco2e"`
-	Embodied        float64             `json:"embodied_gco2e"`
-	EmbodiedDetail  *EmbodiedDetail     `json:"embodied_detail,omitempty"`
-	Total           float64             `json:"total_gco2e"`
-	FunctionalUnit  FunctionalUnit      `json:"functional_unit"`
-	SCI             float64             `json:"sci"`
-	SCIUnit         string              `json:"sci_unit"`
-	Boundary        []string            `json:"boundary"`
-	Assumptions     Assumptions         `json:"assumptions"`
-	Notes           []string            `json:"notes"`
-	Budget          *Budget             `json:"budget,omitempty"`
+	Tool            string            `json:"tool"`
+	Version         string            `json:"version"`
+	Target          Target            `json:"target"`
+	Measurement     *Measurement      `json:"measurement,omitempty"`
+	Components      []ComponentResult `json:"components,omitempty"`
+	EnergyKWh       float64           `json:"energy_kwh"`
+	EnergySource    string            `json:"energy_source"`
+	EnergyBreakdown []energy.Part     `json:"energy_breakdown_kwh"`
+	Intensity       *grid.Intensity   `json:"intensity,omitempty"`
+	Operational     float64           `json:"operational_gco2e"`
+	Embodied        float64           `json:"embodied_gco2e"`
+	EmbodiedDetail  *EmbodiedDetail   `json:"embodied_detail,omitempty"`
+	Total           float64           `json:"total_gco2e"`
+	FunctionalUnit  FunctionalUnit    `json:"functional_unit"`
+	SCI             float64           `json:"sci"`
+	SCIUnit         string            `json:"sci_unit"`
+	Boundary        []string          `json:"boundary"`
+	Assumptions     Assumptions       `json:"assumptions"`
+	Notes           []string          `json:"notes"`
+	Budget          *Budget           `json:"budget,omitempty"`
 }
 
-// SCIReport assembles one disclosure from a measured run.
-func SCIReport(target Target, sample energy.Sample, cfg config.Config, idleWatts float64,
+// New assembles one disclosure from a measured run.
+func New(target Target, sample energy.Sample, cfg config.Config, idleWatts float64,
 	hasIdle bool, notes []string) (*Report, error) {
 	intensity, err := grid.ResolveIntensity(cfg)
 	if err != nil {
 		return nil, err
 	}
-	energy, err := energy.EnergyForSample(sample, cfg, idleWatts, hasIdle)
+	energy, err := energy.ForSample(sample, cfg, idleWatts, hasIdle)
 	if err != nil {
 		return nil, err
 	}

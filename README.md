@@ -11,7 +11,7 @@ Measures the **Software Carbon Intensity** — the Green Software Foundation
 specification, standardised as ISO/IEC 21031:2024 — of something you can point
 at: a command, a script, a function, a repo, or a deployment you declare.
 
-```
+```text
 SCI = ((E x I) + M) per R
 ```
 
