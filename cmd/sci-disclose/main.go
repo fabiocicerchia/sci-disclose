@@ -26,7 +26,7 @@ import (
 	"github.com/fabiocicerchia/sci-disclose/internal/units"
 )
 
-const usage = `sci — Software Carbon grid.Intensity (SCI) from the command line.
+const usage = `sci-disclose — Software Carbon grid.Intensity (SCI) from the command line.
 
 SCI, as specified by the Green Software Foundation and standardised as
 ISO/IEC 21031:2024, is a rate, not a total:
@@ -43,15 +43,15 @@ target either runs a workload and measures it, or reads a declared in which
 you declare one. Nothing here infers carbon from source code alone.
 
 Targets:
-    sci run -- pytest -q               a command
-    sci file bench.py                  a script (interpreter by extension)
-    sci func mypkg.bench:main -n 200   a function, per call
-    sci repo .                         a repo, via its own test/build command
-    sci estimate -f sci.yaml           a declared deployment (no execution)
-    sci init .                         scaffold sci.yaml from the repo
-    sci units -units N disclosure.json     divide a measurement by a later count
-    sci compare before.json after.json two runs, as a delta
-    sci coefficients                   every constant used, with its source
+    sci-disclose run -- pytest -q               a command
+    sci-disclose file bench.py                  a script (interpreter by extension)
+    sci-disclose func mypkg.bench:main -n 200   a function, per call
+    sci-disclose repo .                         a repo, via its own test/build command
+    sci-disclose estimate -f sci.yaml           a declared deployment (no execution)
+    sci-disclose init .                         scaffold sci.yaml from the repo
+    sci-disclose units -units N disclosure.json     divide a measurement by a later count
+    sci-disclose compare before.json after.json two runs, as a delta
+    sci-disclose coefficients                   every constant used, with its source
 
 Exit codes: 0 fine · 1 over budget or a regression · 2 usage or config error
 · 3 the measured workload itself failed.
@@ -381,7 +381,7 @@ func cmdRun(args []string, out io.Writer) int {
 	}
 	argv := fs.Args()
 	if len(argv) == 0 {
-		return fail(out, fmt.Errorf("nothing to run — `sci run -- pytest -q`"))
+		return fail(out, fmt.Errorf("nothing to run — `sci-disclose run -- pytest -q`"))
 	}
 	target := sci.Target{Kind: "command", Description: strings.Join(argv, " ")}
 	return measureCommand(argv, "", target, opts, out)
@@ -400,7 +400,7 @@ func cmdFile(args []string, out io.Writer) int {
 	}
 	rest := fs.Args()
 	if len(rest) == 0 {
-		return fail(out, fmt.Errorf("which file? — `sci file bench.py`"))
+		return fail(out, fmt.Errorf("which file? — `sci-disclose file bench.py`"))
 	}
 	path := rest[0]
 	if info, err := os.Stat(path); err != nil || info.IsDir() {
@@ -444,7 +444,7 @@ func cmdFunc(args []string, out io.Writer) int {
 	}
 	rest := fs.Args()
 	if len(rest) == 0 {
-		return fail(out, fmt.Errorf("which function? — `sci func mypkg.bench:main -n 200`"))
+		return fail(out, fmt.Errorf("which function? — `sci-disclose func mypkg.bench:main -n 200`"))
 	}
 	if _, err := exec.LookPath(*python); err != nil {
 		return fail(out, fmt.Errorf("interpreter not installed: %s", *python))
@@ -515,7 +515,7 @@ func cmdRepo(args []string, out io.Writer) int {
 			return fail(out, fmt.Errorf(
 				"no workload found in this repo. A repository has no SCI until "+
 					"something runs — pass -command, or declare the deployment with "+
-					"`sci init` and `sci estimate`"))
+					"`sci-disclose init` and `sci-disclose estimate`"))
 		}
 		argv, why = detected, from
 	}
@@ -598,7 +598,7 @@ func cmdInit(args []string, out io.Writer) int {
 	}
 	emitf(out, "sci: wrote %s (%s)\n", *output, found)
 	emitf(out, "sci: fill in the functional unit and utilisation, then run "+
-		"`sci estimate -f %s`\n", *output)
+		"`sci-disclose estimate -f %s`\n", *output)
 	return 0
 }
 
@@ -657,7 +657,7 @@ func cmdUnits(args []string, out io.Writer) int {
 	rest := fs.Args()
 	if len(rest) != 1 {
 		return fail(out, fmt.Errorf("units takes one JSON disclosure, after its flags: "+
-			"`sci units -units 4300000 -unit-label request disclosure.json`"))
+			"`sci-disclose units -units 4300000 -unit-label request disclosure.json`"))
 	}
 	if *units <= 0 {
 		return fail(out, fmt.Errorf("-units must be a positive count"))
@@ -674,7 +674,7 @@ func cmdUnits(args []string, out io.Writer) int {
 	disclosure.FunctionalUnit = sci.FunctionalUnit{
 		Label:    cmp.Or(*label, previous.Label, "run"),
 		Quantity: *units,
-		Source:   "supplied after the measurement by `sci units`",
+		Source:   "supplied after the measurement by `sci-disclose units`",
 	}
 	disclosure.SCI = disclosure.Total / *units
 	disclosure.SCIUnit = "gCO2e per " + disclosure.FunctionalUnit.Label
@@ -776,7 +776,7 @@ func cmdCoefficients(args []string, out io.Writer) int {
 		emitln(out, "  "+strings.Join(row, "  "))
 	}
 	emitf(out, "\n%d cloud regions map onto those zones and onto countries "+
-		"(`sci coefficients -format json` lists them).\n", len(coefficients.RegionZone))
+		"(`sci-disclose coefficients -format json` lists them).\n", len(coefficients.RegionZone))
 	emitln(out, "\nSources:")
 	for _, pair := range coefficients.CoefficientSources {
 		emitf(out, "  %s\n    %s\n", pair[0], pair[1])

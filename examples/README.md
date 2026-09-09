@@ -5,7 +5,7 @@
   that talk to it.
 
 ```sh
-sci estimate -f examples/sci.yaml
+sci-disclose estimate -f examples/sci.yaml
 ```
 
 Nothing runs: `estimate` is the path for a system that is not in front of you.

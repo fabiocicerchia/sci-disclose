@@ -1,15 +1,15 @@
 # Declared deployments
 
-`sci estimate` computes the SCI of software you are not running right now, from
-a manifest of the boundary. `sci init` scaffolds one from any Kubernetes
+`sci-disclose estimate` computes the SCI of software you are not running right now, from
+a manifest of the boundary. `sci-disclose init` scaffolds one from any Kubernetes
 workloads (replicas and CPU/memory requests) and Terraform `instance_type`s it
 finds in the repo; [`examples/sci.yaml`](https://github.com/fabiocicerchia/sci-disclose/blob/main/examples/sci.yaml)
 is a worked one.
 
 ```sh
-sci init .                              # scaffold sci.yaml from the repo
-sci estimate -f sci.yaml                # compute it
-sci estimate -f sci.yaml --budget 0.5   # ...and gate on it
+sci-disclose init .                              # scaffold sci.yaml from the repo
+sci-disclose estimate -f sci.yaml                # compute it
+sci-disclose estimate -f sci.yaml --budget 0.5   # ...and gate on it
 ```
 
 ## The manifest
@@ -59,7 +59,7 @@ score flatters itself: the server side of a web app is often the smaller half.
 
 ## The two numbers nobody can infer for you
 
-`sci init` reads replicas, requests and instance types out of your manifests,
+`sci-disclose init` reads replicas, requests and instance types out of your manifests,
 but leaves **`utilisation`** and the functional unit's **`quantity`** as
 placeholders. Neither is discoverable from a repository, and the score is more
 sensitive to them than to anything the scaffold did fill in. Guessing them

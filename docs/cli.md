@@ -7,24 +7,24 @@ which you declare one. Nothing infers carbon from source code alone.
 
 | Command                      | What it does                                               | R defaults to        |
 | ---------------------------- | ---------------------------------------------------------- | -------------------- |
-| `sci run -- <cmd>`           | runs the command, measures the process tree                | one run              |
-| `sci file bench.py`          | runs a script (interpreter from the extension)             | one execution        |
-| `sci func pkg.mod:fn -n 500` | calls a function inside its own interpreter                | one call             |
-| `sci repo .`                 | finds the repo's own workload and runs it                  | one `make test` run  |
-| `sci estimate -f sci.yaml`   | a declared deployment; runs nothing                        | whatever you declare |
-| `sci init .`                 | scaffolds `sci.yaml` from Kubernetes/Terraform in the repo | —                    |
-| `sci units -units N r.json`  | divides a measurement by a count learnt later              | the count you supply |
-| `sci compare a.json b.json`  | delta between two disclosures                              | —                    |
-| `sci coefficients`           | every constant used, with its source                       | —                    |
+| `sci-disclose run -- <cmd>`           | runs the command, measures the process tree                | one run              |
+| `sci-disclose file bench.py`          | runs a script (interpreter from the extension)             | one execution        |
+| `sci-disclose func pkg.mod:fn -n 500` | calls a function inside its own interpreter                | one call             |
+| `sci-disclose repo .`                 | finds the repo's own workload and runs it                  | one `make test` run  |
+| `sci-disclose estimate -f sci.yaml`   | a declared deployment; runs nothing                        | whatever you declare |
+| `sci-disclose init .`                 | scaffolds `sci.yaml` from Kubernetes/Terraform in the repo | —                    |
+| `sci-disclose units -units N r.json`  | divides a measurement by a count learnt later              | the count you supply |
+| `sci-disclose compare a.json b.json`  | delta between two disclosures                              | —                    |
+| `sci-disclose coefficients`           | every constant used, with its source                       | —                    |
 
 ```sh
-sci run -- pytest -q                    # the suite, per run
-sci func mypkg.hot:parse -n 10000       # a hot function, per call
-sci repo . --format markdown            # a disclosure to paste into a PR
-sci estimate -f sci.yaml --budget 0.5   # CI gate, exit 1 when over
+sci-disclose run -- pytest -q                    # the suite, per run
+sci-disclose func mypkg.hot:parse -n 10000       # a hot function, per call
+sci-disclose repo . --format markdown            # a disclosure to paste into a PR
+sci-disclose estimate -f sci.yaml --budget 0.5   # CI gate, exit 1 when over
 ```
 
-`sci repo` picks the workload a contributor would run — a `Makefile` `test`,
+`sci-disclose repo` picks the workload a contributor would run — a `Makefile` `test`,
 `check` or `bench` target, a `package.json` script, `go test ./...`,
 `cargo test`, `pytest -q` — and says which one it chose. `--command` overrides
 it. If nothing is found it says so rather than inventing a number.
@@ -63,13 +63,13 @@ Every assumption is overridable, and the report prints the value it used.
 | `--budget N`                                 | off                     | exit 1 when SCI per unit exceeds this                               |
 | `--format text\|json\|markdown`              | `text`                  | JSON is the stable shape `compare` reads                            |
 
-`sci coefficients` prints every constant with its source, so a reviewer can
+`sci-disclose coefficients` prints every constant with its source, so a reviewer can
 argue with the assumptions rather than guess at them.
 
 ## Comparing two runs
 
 ```sh
-sci compare before.json after.json --fail-on-regression --tolerance 5
+sci-disclose compare before.json after.json --fail-on-regression --tolerance 5
 ```
 
 With a live intensity, two runs of *identical* code do not tie, because the

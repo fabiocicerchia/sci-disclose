@@ -209,7 +209,7 @@ func ResolveIntensity(cfg config.Config) (Intensity, error) {
 	}
 	if cfg.Region != "" || cfg.Country != "" || cfg.Zone != "" {
 		return Intensity{}, fmt.Errorf("unknown region or zone %q; pass --intensity, "+
-			"or see `sci coefficients`", cmp.Or(cfg.Zone, cfg.Country, cfg.Region))
+			"or see `sci-disclose coefficients`", cmp.Or(cfg.Zone, cfg.Country, cfg.Region))
 	}
 	return Intensity{
 		Value:  coefficients.DefaultIntensity,

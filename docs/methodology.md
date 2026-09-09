@@ -10,7 +10,7 @@ came from. This page covers **E**, **I** and **M**; **R** has a page of its own,
 
 ## The wrapper is invisible to what it measures
 
-`sci run` starts the workload as a plain child process: it inherits stdin,
+`sci-disclose run` starts the workload as a plain child process: it inherits stdin,
 stdout, stderr, the environment, the working directory and the tty, and its
 exit code is propagated. No `LD_PRELOAD`, no `ptrace`, no injected variable, no
 shim on `$PATH` — a static binary or a setuid one behaves exactly as it would
@@ -75,10 +75,10 @@ intensity for 213 countries and for bidding zones, computed from live
 grid-operator feeds:
 
 ```sh
-sci run --country DE -- ./workload        # ISO-3166 alpha-2 or alpha-3
-sci run --region eu-west-1 -- ./workload  # cloud region, mapped to its country
-sci run --zone IT/SICI -- ./workload      # bidding zone, balancing authority
-sci run --intensity 290 -- ./workload     # pin it yourself; wins over everything
+sci-disclose run --country DE -- ./workload        # ISO-3166 alpha-2 or alpha-3
+sci-disclose run --region eu-west-1 -- ./workload  # cloud region, mapped to its country
+sci-disclose run --zone IT/SICI -- ./workload      # bidding zone, balancing authority
+sci-disclose run --intensity 290 -- ./workload     # pin it yourself; wins over everything
 ```
 
 A country reading carries four figures. The default is **`consumption_lifecycle`**
@@ -114,7 +114,7 @@ Four things the tool does with that data, all visible in the report's `I` line:
 `--intensity-api` (or `$SCI_INTENSITY_API`) points at another deployment; the
 API is AGPL-3.0 and self-hostable, so this is not a hard dependency on anyone's
 uptime. The bundled fallback table covers 28 grid zones and 34 cloud regions,
-printed by `sci coefficients`.
+printed by `sci-disclose coefficients`.
 
 Sibling tool: [carbon-region-picker](https://github.com/fabiocicerchia/carbon-region-picker)
 ranks regions by this number under a latency constraint.
@@ -146,5 +146,5 @@ show you.
 - Embodied defaults are LCA midpoints for a class of device, not your hardware.
 - Therefore: **the same command measured twice on the same host is a sound
   comparison**; the absolute score is a disclosure with assumptions attached,
-  and `sci coefficients` prints every one of them so a reviewer can argue with
+  and `sci-disclose coefficients` prints every one of them so a reviewer can argue with
   it. Every assumption is overridable, and the report carries the ones it used.

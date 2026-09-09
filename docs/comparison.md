@@ -4,8 +4,8 @@ The field is not empty, and the overlaps are worth naming.
 
 [**Impact Framework**](https://if.greensoftware.foundation/) is the GSF's own
 tool and the canonical way to compute an SCI from a **declared** pipeline: a
-YAML manifest, a chain of plugins, no code written. `sci estimate` and
-`sci init` are a single-binary subset of that idea — one number without a Node
+YAML manifest, a chain of plugins, no code written. `sci-disclose estimate` and
+`sci-disclose init` are a single-binary subset of that idea — one number without a Node
 toolchain — not a replacement for an auditable plugin pipeline. Interchange with
 IF is on the [roadmap](roadmap.md); treat them as complementary.
 
@@ -31,7 +31,7 @@ reading the code rather than running it — see
 
 ## What this one does that those do not
 
-- **Wraps anything, installs nothing.** `sci run -- <any command>` — not a
+- **Wraps anything, installs nothing.** `sci-disclose run -- <any command>` — not a
   container, not a language decorator, not a manifest. One static binary, no
   runtime on the host being measured, and the workload cannot tell it is there.
   The things worth measuring are often the ones you cannot easily containerise.

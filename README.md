@@ -21,7 +21,7 @@ So every target either runs a workload and measures it, or reads a manifest in
 which you declare one. Nothing here infers carbon from source code alone.
 
 ```console
-$ sci run --provider aws --region eu-west-1 --vcpus 2 --units 5000 \
+$ sci-disclose run --provider aws --region eu-west-1 --vcpus 2 --units 5000 \
       --unit-label "image resized" -- python3 resize-batch.py
 sci: 1.732e-06 gCO2e per image resized
 
@@ -64,24 +64,24 @@ sudo dpkg -i sci-disclose_*_linux_amd64.deb     # or rpm -i / apk add --allow-un
 Or with Go:
 
 ```sh
-go install github.com/fabiocicerchia/sci-disclose/cmd/sci@latest
+go install github.com/fabiocicerchia/sci-disclose/cmd/sci-disclose@latest
 ```
 
 Or from a checkout:
 
 ```sh
-make build      # -> ./sci
+make build      # -> ./sci-disclose
 ```
 
 ## Usage
 
 ```sh
-sci run -- pytest -q                    # a command, per run
-sci func mypkg.hot:parse -n 10000       # a hot function, per call
-sci repo .                              # this repo's own workload, discovered
-sci estimate -f sci.yaml                # a declared deployment; runs nothing
-sci compare before.json after.json      # the delta between two disclosures
-sci coefficients                        # every constant used, with its source
+sci-disclose run -- pytest -q                    # a command, per run
+sci-disclose func mypkg.hot:parse -n 10000       # a hot function, per call
+sci-disclose repo .                              # this repo's own workload, discovered
+sci-disclose estimate -f sci.yaml                # a declared deployment; runs nothing
+sci-disclose compare before.json after.json      # the delta between two disclosures
+sci-disclose coefficients                        # every constant used, with its source
 ```
 
 More in [`docs/getting-started.md`](docs/getting-started.md) and the
@@ -90,8 +90,8 @@ More in [`docs/getting-started.md`](docs/getting-started.md) and the
 ## In CI
 
 ```yaml
-- run: sci repo . --format json -o sci.json --region eu-west-1
-- run: sci compare main-sci.json sci.json --fail-on-regression --tolerance 5
+- run: sci-disclose repo . --format json -o sci.json --region eu-west-1
+- run: sci-disclose compare main-sci.json sci.json --fail-on-regression --tolerance 5
 ```
 
 `--budget` fails a run that exceeds a threshold and `--format markdown`

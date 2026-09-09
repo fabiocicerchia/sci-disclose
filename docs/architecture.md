@@ -29,7 +29,7 @@ target ─┬─ run / file / func / repo ──► execute + observe ──┐
 
 | Package                 | Responsibility                                                                                                                             |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `cmd/sci`               | CLI: subcommand dispatch, flags, env fallbacks, exit codes                                                                                 |
+| `cmd/sci-disclose`               | CLI: subcommand dispatch, flags, env fallbacks, exit codes                                                                                 |
 | `internal/coefficients` | published constants: provider power profiles, PUE, embodied LCA midpoints, the bundled grid table. Imports nothing.                        |
 | `internal/config`       | `Config`: the boundary, the grid, the hardware and the functional unit, plus validation                                                    |
 | `internal/fetch`        | the one HTTP client — 5s timeout, 1 MiB bounded read, a User-Agent that names the tool                                                     |
@@ -39,7 +39,7 @@ target ─┬─ run / file / func / repo ──► execute + observe ──┐
 | `internal/manifest`     | `sci.yaml` parsing and the declared-deployment path                                                                                        |
 | `internal/report`       | text, JSON and Markdown disclosures, and `compare`                                                                                         |
 | `internal/units`        | **R**. Unit counts from flags, output markers (`SCI-UNITS: N`), a file, a command or a Prometheus counter                                  |
-| `internal/discover`     | workload discovery for `sci repo` (Makefile target, package.json script, `go test`, …) and the Kubernetes/Terraform scan behind `sci init` |
+| `internal/discover`     | workload discovery for `sci-disclose repo` (Makefile target, package.json script, `go test`, …) and the Kubernetes/Terraform scan behind `sci-disclose init` |
 | `internal/harness`      | per-language function harnesses; the protocol is one JSON blob on stdout                                                                   |
 | `internal/testutil`     | helpers and verbatim API fixtures shared by several test packages                                                                          |
 
@@ -47,7 +47,7 @@ target ─┬─ run / file / func / repo ──► execute + observe ──┐
 
 ```text
 coefficients ─┬─► config ─┬─► energy ─┬─► sci ─┬─► manifest ─┐
-              │           ├─► grid ───┘        ├─► report ───┼─► cmd/sci
+              │           ├─► grid ───┘        ├─► report ───┼─► cmd/sci-disclose
               └─► fetch ──┴─► units ───────────┘             │
                               discover ────────────────────  ┘
                               harness ──► energy
@@ -83,7 +83,7 @@ edge pointing back up the graph.
   function has no SCI until something runs. The static side of the same problem
   belongs to a linter, not here.
 - **Provenance travels with the number.** Every term is tagged `[measured]` or
-  `[model]`, and `sci coefficients` prints every constant with its source. A
+  `[model]`, and `sci-disclose coefficients` prints every constant with its source. A
   disclosure a reviewer cannot argue with is not a disclosure.
 - **Every assumption is a flag.** Published coefficients are midpoints for a
   class of hardware; the machine in front of you is not the midpoint.

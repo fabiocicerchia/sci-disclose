@@ -1,9 +1,9 @@
 {
   "Exclude": [
     "^LICENSE$",
-    "^cmd/sci/main\\.go$",
-    "^cmd/sci/main_test\\.go$",
-    "^cmd/sci/units_cli_test\\.go$",
+    "^cmd/sci-disclose/main\\.go$",
+    "^cmd/sci-disclose/main_test\\.go$",
+    "^cmd/sci-disclose/units_cli_test\\.go$",
     "^internal/discover/discover_test\\.go$",
     "^internal/harness/harness\\.go$",
     "^internal/manifest/manifest_test\\.go$",

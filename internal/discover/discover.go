@@ -301,10 +301,10 @@ func round(value float64, places int) float64 {
 // commentary about what still has to be filled in.
 func RenderManifest(name string, components []Discovered, notes []string) string {
 	lines := []string{
-		fmt.Sprintf("# SCI manifest for %s, scaffolded by `sci init`.", name),
+		fmt.Sprintf("# SCI manifest for %s, scaffolded by `sci-disclose init`.", name),
 		"# Every number below is a starting point: utilisation and the",
 		"# functional unit are yours to fill in, and the SCI is only as",
-		"# honest as they are. Compute it with `sci estimate -f sci.yaml`.",
+		"# honest as they are. Compute it with `sci-disclose estimate -f sci.yaml`.",
 		"name: " + name,
 		"",
 		"functional-unit:",

@@ -2,7 +2,7 @@
 # month, with the storage and egress it actually uses and the laptops of the
 # people whose browsers talk to it.
 #
-#   sci estimate -f examples/sci.yaml
+#   sci-disclose estimate -f examples/sci.yaml
 name: checkout-api
 
 functional-unit:
