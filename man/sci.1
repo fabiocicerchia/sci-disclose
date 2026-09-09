@@ -1,0 +1,99 @@
+.TH SCI 1 "2026-09" "sci-disclose" "User Commands"
+.SH NAME
+sci \- Software Carbon Intensity (SCI) from the command line
+.SH SYNOPSIS
+.B sci
+.I target
+.RI [ flags ]
+.RI [ argument ...]
+.SH DESCRIPTION
+.B sci
+measures the Software Carbon Intensity of a workload. SCI, as specified by the
+Green Software Foundation and standardised as ISO/IEC 21031:2024, is a rate,
+not a total:
+.PP
+.RS
+SCI = ((E x I) + M) per R
+.RE
+.PP
+.TP
+.B E
+Energy consumed by the software system, in kWh.
+.TP
+.B I
+Location-based grid carbon intensity, in gCO2e/kWh.
+.TP
+.B M
+Embodied emissions of the hardware it runs on, in gCO2e.
+.TP
+.B R
+The functional unit the rate is expressed per, e.g. one API call.
+.PP
+A repository, a file or a function has no SCI until something runs. Every
+target therefore either runs a workload and measures it, or reads a manifest in
+which one is declared. Nothing here infers carbon from source code alone.
+.SH TARGETS
+.TP
+.B sci run \-\- \fIcommand\fR
+Measure a command.
+.TP
+.B sci file \fIbench.py\fR
+Measure a script; the interpreter is chosen by extension.
+.TP
+.B sci func \fImypkg.bench:main\fR \-n \fI200\fR
+Measure a function, per call.
+.TP
+.B sci repo \fI.\fR
+Measure a repository, via its own test or build command.
+.TP
+.B sci estimate \-f \fIsci.yaml\fR
+Report a declared deployment; nothing is executed.
+.TP
+.B sci init \fI.\fR
+Scaffold
+.I sci.yaml
+from the repository.
+.TP
+.B sci units \-units \fIN\fR \fIdisclosure.json\fR
+Divide an existing measurement by a count established later.
+.TP
+.B sci compare \fIbefore.json\fR \fIafter.json\fR
+Report two runs as a delta.
+.TP
+.B sci coefficients
+Every constant used, with its source.
+.SH EXIT STATUS
+.TP
+.B 0
+Fine.
+.TP
+.B 1
+Over budget, or a regression.
+.TP
+.B 2
+Usage or configuration error.
+.TP
+.B 3
+The measured workload itself failed.
+.SH FILES
+.TP
+.I sci.yaml
+Declared deployment manifest, as written by
+.BR "sci init" .
+.SH EXAMPLES
+.PP
+Measure a test suite:
+.PP
+.RS
+.B sci run \-\- pytest \-q
+.RE
+.PP
+Compare two runs:
+.PP
+.RS
+.B sci compare before.json after.json
+.RE
+.SH SEE ALSO
+ISO/IEC 21031:2024. Project documentation:
+.UR https://github.com/fabiocicerchia/sci-disclose
+.UE

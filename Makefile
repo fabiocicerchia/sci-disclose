@@ -9,8 +9,31 @@ help: ## Show this help
 build: ## Compile ./sci
 	go build -o $(BINARY) ./cmd/sci
 
-install: ## go install into $GOBIN
+## install: install the binary and its man page; PREFIX=/usr/local for a system path
+install:
+ifeq ($(strip $(PREFIX)),)
 	go install ./cmd/sci
+	install -d "$(USER_MANDIR)"
+	install -m 0644 man/$(BINARY).1 "$(USER_MANDIR)/$(BINARY).1"
+	@dir="$$(go env GOBIN)"; [ -n "$$dir" ] || dir="$$(go env GOPATH)/bin"; \
+		echo "installed $$dir/$(BINARY) and $(USER_MANDIR)/$(BINARY).1"
+else
+	@$(MAKE) build
+	install -d "$(DESTDIR)$(PREFIX)/bin" "$(DESTDIR)$(PREFIX)/share/man/man1"
+	install -m 0755 $(BINARY) "$(DESTDIR)$(PREFIX)/bin/$(BINARY)"
+	install -m 0644 man/$(BINARY).1 "$(DESTDIR)$(PREFIX)/share/man/man1/$(BINARY).1"
+	@echo "installed $(DESTDIR)$(PREFIX)/bin/$(BINARY)"
+endif
+
+## uninstall: remove what `make install` put down
+uninstall:
+ifeq ($(strip $(PREFIX)),)
+	@dir="$$(go env GOBIN)"; [ -n "$$dir" ] || dir="$$(go env GOPATH)/bin"; \
+		rm -f "$$dir/$(BINARY)" "$(USER_MANDIR)/$(BINARY).1"
+else
+	rm -f "$(DESTDIR)$(PREFIX)/bin/$(BINARY)" \
+		"$(DESTDIR)$(PREFIX)/share/man/man1/$(BINARY).1"
+endif
 
 test: ## Run tests with the race detector
 	go test -race ./...
