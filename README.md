@@ -48,6 +48,21 @@ number a reviewer cannot argue with is not a disclosure.
 
 ## Install
 
+macOS, via Homebrew:
+
+```sh
+brew install fabiocicerchia/tap/sci-disclose
+```
+
+Linux — a `.deb`, `.rpm`, `.apk` or Arch package from the
+[latest release](https://github.com/fabiocicerchia/sci-disclose/releases/latest):
+
+```sh
+sudo dpkg -i sci-disclose_*_linux_amd64.deb     # or rpm -i / apk add --allow-untrusted
+```
+
+Or with Go:
+
 ```sh
 go install github.com/fabiocicerchia/sci-disclose/cmd/sci@latest
 ```
