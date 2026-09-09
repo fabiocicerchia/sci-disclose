@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Generated from Conventional Commit messages by release-please — don't edit it
 by hand.
 
+## [0.4.0](https://github.com/fabiocicerchia/sci-disclose/compare/v0.3.2...v0.4.0) (2026-09-09)
+
+
+### Features
+
+* **packaging:** man page, OS packages and a staged install ([#28](https://github.com/fabiocicerchia/sci-disclose/issues/28)) ([b0c84f7](https://github.com/fabiocicerchia/sci-disclose/commit/b0c84f72d9161db537cdb8e023df32fcde39eb08))
+
 ## [0.3.2](https://github.com/fabiocicerchia/sci-disclose/compare/v0.3.1...v0.3.2) (2026-09-08)
 
 
