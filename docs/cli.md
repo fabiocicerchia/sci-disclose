@@ -5,17 +5,17 @@ which you declare one. Nothing infers carbon from source code alone.
 
 ## Targets
 
-| Command                      | What it does                                               | R defaults to        |
+| Command | What it does | R defaults to |
 | ---------------------------- | ---------------------------------------------------------- | -------------------- |
-| `sci-disclose run -- <cmd>`           | runs the command, measures the process tree                | one run              |
-| `sci-disclose file bench.py`          | runs a script (interpreter from the extension)             | one execution        |
-| `sci-disclose func pkg.mod:fn -n 500` | calls a function inside its own interpreter                | one call             |
-| `sci-disclose repo .`                 | finds the repo's own workload and runs it                  | one `make test` run  |
-| `sci-disclose estimate -f sci.yaml`   | a declared deployment; runs nothing                        | whatever you declare |
-| `sci-disclose init .`                 | scaffolds `sci.yaml` from Kubernetes/Terraform in the repo | —                    |
-| `sci-disclose units -units N r.json`  | divides a measurement by a count learnt later              | the count you supply |
-| `sci-disclose compare a.json b.json`  | delta between two disclosures                              | —                    |
-| `sci-disclose coefficients`           | every constant used, with its source                       | —                    |
+| `sci-disclose run -- <cmd>` | runs the command, measures the process tree | one run |
+| `sci-disclose file bench.py` | runs a script (interpreter from the extension) | one execution |
+| `sci-disclose func pkg.mod:fn -n 500` | calls a function inside its own interpreter | one call |
+| `sci-disclose repo .` | finds the repo's own workload and runs it | one `make test` run |
+| `sci-disclose estimate -f sci.yaml` | a declared deployment; runs nothing | whatever you declare |
+| `sci-disclose init .` | scaffolds `sci.yaml` from Kubernetes/Terraform in the repo | — |
+| `sci-disclose units -units N r.json` | divides a measurement by a count learnt later | the count you supply |
+| `sci-disclose compare a.json b.json` | delta between two disclosures | — |
+| `sci-disclose coefficients` | every constant used, with its source | — |
 
 ```sh
 sci-disclose run -- pytest -q                    # the suite, per run

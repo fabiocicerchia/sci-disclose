@@ -27,21 +27,21 @@ target ─┬─ run / file / func / repo ──► execute + observe ──┐
 
 ## Packages
 
-| Package                 | Responsibility                                                                                                                             |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `cmd/sci-disclose`               | CLI: subcommand dispatch, flags, env fallbacks, exit codes                                                                                 |
-| `internal/coefficients` | published constants: provider power profiles, PUE, embodied LCA midpoints, the bundled grid table. Imports nothing.                        |
-| `internal/config`       | `Config`: the boundary, the grid, the hardware and the functional unit, plus validation                                                    |
-| `internal/fetch`        | the one HTTP client — 5s timeout, 1 MiB bounded read, a User-Agent that names the tool                                                     |
-| `internal/energy`       | **E**. RAPL backend (powercap sysfs, idle-baseline subtracted), the modelled fallback, and process-tree CPU/peak RSS per platform          |
-| `internal/grid`         | **I**. Intensity lookup, cache, offline fallback, staleness flagging                                                                       |
-| `internal/sci`          | the equation — combines E, I, M, R into a `Report`. **M** is computed here.                                                                |
-| `internal/manifest`     | `sci.yaml` parsing and the declared-deployment path                                                                                        |
-| `internal/report`       | text, JSON and Markdown disclosures, and `compare`                                                                                         |
-| `internal/units`        | **R**. Unit counts from flags, output markers (`SCI-UNITS: N`), a file, a command or a Prometheus counter                                  |
+| Package                 | Responsibility                                                                                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cmd/sci-disclose`      | CLI: subcommand dispatch, flags, env fallbacks, exit codes                                                                                                   |
+| `internal/coefficients` | published constants: provider power profiles, PUE, embodied LCA midpoints, the bundled grid table. Imports nothing.                                          |
+| `internal/config`       | `Config`: the boundary, the grid, the hardware and the functional unit, plus validation                                                                      |
+| `internal/fetch`        | the one HTTP client — 5s timeout, 1 MiB bounded read, a User-Agent that names the tool                                                                       |
+| `internal/energy`       | **E**. RAPL backend (powercap sysfs, idle-baseline subtracted), the modelled fallback, and process-tree CPU/peak RSS per platform                            |
+| `internal/grid`         | **I**. Intensity lookup, cache, offline fallback, staleness flagging                                                                                         |
+| `internal/sci`          | the equation — combines E, I, M, R into a `Report`. **M** is computed here.                                                                                  |
+| `internal/manifest`     | `sci.yaml` parsing and the declared-deployment path                                                                                                          |
+| `internal/report`       | text, JSON and Markdown disclosures, and `compare`                                                                                                           |
+| `internal/units`        | **R**. Unit counts from flags, output markers (`SCI-UNITS: N`), a file, a command or a Prometheus counter                                                    |
 | `internal/discover`     | workload discovery for `sci-disclose repo` (Makefile target, package.json script, `go test`, …) and the Kubernetes/Terraform scan behind `sci-disclose init` |
-| `internal/harness`      | per-language function harnesses; the protocol is one JSON blob on stdout                                                                   |
-| `internal/testutil`     | helpers and verbatim API fixtures shared by several test packages                                                                          |
+| `internal/harness`      | per-language function harnesses; the protocol is one JSON blob on stdout                                                                                     |
+| `internal/testutil`     | helpers and verbatim API fixtures shared by several test packages                                                                                            |
 
 ### The dependency direction
 
