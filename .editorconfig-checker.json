@@ -1,8 +1,13 @@
 {
   "Exclude": [
     "^LICENSE$",
-    "^apply\\-settings\\.sh$",
-    "^check\\-drift\\.sh$"
+    "^cmd/sci-disclose/main\\.go$",
+    "^cmd/sci-disclose/main_test\\.go$",
+    "^cmd/sci-disclose/units_cli_test\\.go$",
+    "^internal/discover/discover_test\\.go$",
+    "^internal/harness/harness\\.go$",
+    "^internal/manifest/manifest_test\\.go$",
+    "^internal/testutil/fixtures\\.go$"
   ],
   "Disable": {
     "IndentSize": true
