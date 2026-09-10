@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>sci-disclose — Measures the Software Carbon Intensity of a command, a function, a repo or a declared deployment.</title>
+<title>
+  sci-disclose — Measures the Software Carbon Intensity of a command, a function, a repo or a declared deployment.
+</title>
 <meta name="description" content="Measures the Software Carbon Intensity — the Green Software Foundation specification, standardised as ISO/IEC 21031:2024 — of something you can point at. SCI is a rate, not a total, so every target either runs a workload and measures it or reads a manifest in which you declare one. Nothing here infers carbon from source code alone.">
 <!-- The palette lives in the docs theme, so the splash and /docs/ cannot drift
      apart. The path is relative to the *deployed* layout: splash at /, rendered
@@ -44,8 +46,15 @@ footer{margin-top:2.2rem;color:#5c6684;font-size:.82rem}
 <body>
 <div class="card">
   <h1>🌱 sci-disclose</h1>
-  <p class="tagline">Measures the Software Carbon Intensity of a command, a function, a repo or a declared deployment.</p>
-  <p class="desc">The Green Software Foundation specification, standardised as ISO/IEC 21031:2024, applied to something you can point at. SCI is a rate, not a total — so every target either runs a workload and measures it, or reads a manifest in which you declare one. Nothing here infers carbon from source code alone, and every number carries the assumption it came from.</p>
+  <p class="tagline">
+    Measures the Software Carbon Intensity of a command, a function, a repo or a declared deployment.
+  </p>
+  <p class="desc">
+    The Green Software Foundation specification, standardised as ISO/IEC 21031:2024, applied to something you can point
+    at. SCI is a rate, not a total — so every target either runs a workload and measures it, or reads a manifest in
+    which you declare one. Nothing here infers carbon from source code alone, and every number carries the assumption it
+    came from.
+  </p>
   <div class="install-label">Install</div>
   <pre><code>go install github.com/fabiocicerchia/sci-disclose@latest</code></pre>
   <p class="alt">or from a checkout: <code>make build</code></p>
