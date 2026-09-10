@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Generated from Conventional Commit messages by release-please — don't edit it
 by hand.
 
+## [1.0.0](https://github.com/fabiocicerchia/sci-disclose/compare/v0.5.0...v1.0.0) (2026-09-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* the command is now `sci-disclose`. `go install .../cmd/sci@latest` becomes `.../cmd/sci-disclose@latest`. The internal/sci package, the sci.yaml manifest, the SCI-UNITS marker convention and the `sci:` report field are all unchanged — they are the metric, not the command.
+
+### Code Refactoring
+
+* rename the `sci` command to `sci-disclose` ([#32](https://github.com/fabiocicerchia/sci-disclose/issues/32)) ([470c1de](https://github.com/fabiocicerchia/sci-disclose/commit/470c1de9a5d9a6c1a1631fd827222422b07533b9))
+
 ## [0.5.0](https://github.com/fabiocicerchia/sci-disclose/compare/v0.4.0...v0.5.0) (2026-09-09)
 
 
