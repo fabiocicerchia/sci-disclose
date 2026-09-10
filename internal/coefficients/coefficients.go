@@ -6,7 +6,7 @@
 package coefficients
 
 // Coefficients. Every number here is a published estimate, not a measurement
-// of your hardware; `sci coefficients` prints this table with its sources and
+// of your hardware; `sci-disclose coefficients` prints this table with its sources and
 // every one of them is overridable from the command line.
 
 // Version is the tool version, reported in every disclosure.

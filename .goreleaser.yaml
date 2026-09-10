@@ -14,9 +14,9 @@ before:
     - go mod tidy
 
 builds:
-  - id: sci
-    main: ./cmd/sci
-    binary: sci
+  - id: sci-disclose
+    main: ./cmd/sci-disclose
+    binary: sci-disclose
     env:
       - CGO_ENABLED=0
     goos: [linux, darwin]
@@ -52,8 +52,8 @@ nfpms:
     bindir: /usr/bin
     section: utils
     contents:
-      - src: man/sci.1
-        dst: /usr/share/man/man1/sci.1
+      - src: man/sci-disclose.1
+        dst: /usr/share/man/man1/sci-disclose.1
         file_info:
           mode: 0644
       - src: LICENSE
@@ -106,12 +106,12 @@ changelog:
 # the deb/rpm/apk above.
 homebrew_casks:
   - name: sci-disclose
-    binaries: [sci]
+    binaries: [sci-disclose]
     # With the release pipe disabled goreleaser cannot derive this, and
     # refuses rather than guessing.
     url:
       template: "https://github.com/fabiocicerchia/sci-disclose/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-    manpages: [man/sci.1]
+    manpages: [man/sci-disclose.1]
     homepage: https://github.com/fabiocicerchia/sci-disclose
     description: Software Carbon Intensity (SCI) from the command line
     repository:

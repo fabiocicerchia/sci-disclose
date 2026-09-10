@@ -103,7 +103,7 @@ type ComponentResult struct {
 }
 
 // Report is one SCI disclosure. Its JSON shape is the tool's stable
-// interface: `sci compare` reads it, and CI keeps it as an artifact.
+// interface: `sci-disclose compare` reads it, and CI keeps it as an artifact.
 type Report struct {
 	Tool            string            `json:"tool"`
 	Version         string            `json:"version"`

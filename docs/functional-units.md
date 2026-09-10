@@ -54,15 +54,15 @@ count come from the run itself:
 
 ```sh
 # 1. the workload says so, in its own output
-sci run --units-from-stdout --unit-label "image resized" -- ./resize-batch
+sci-disclose run --units-from-stdout --unit-label "image resized" -- ./resize-batch
 #    ... the workload prints:  SCI-UNITS: 5000
 
 # 2. from a file it wrote
-sci run --units-file out/processed.count --unit-label record -- ./import
+sci-disclose run --units-file out/processed.count --unit-label record -- ./import
 
 # 3. from a command run afterwards, outside the measured window
-sci run --units-cmd "wc -l < out.csv" --unit-label row -- ./export
-sci run --units-cmd "jq .metrics.iterations.count summary.json" \
+sci-disclose run --units-cmd "wc -l < out.csv" --unit-label row -- ./export
+sci-disclose run --units-cmd "jq .metrics.iterations.count summary.json" \
         --unit-label request -- k6 run load.js
 ```
 
@@ -70,7 +70,7 @@ For a service, the units do not finish — they accrue. Scrape a counter either
 side of the measured window and the delta is R for that window:
 
 ```sh
-sci run --units-metric http_requests_total --units-url http://localhost:9090/metrics \
+sci-disclose run --units-metric http_requests_total --units-url http://localhost:9090/metrics \
         --unit-label request -- k6 run load.js
 ```
 
@@ -83,12 +83,12 @@ A service measured today whose month's requests are counted at the end of it. C
 is fixed the moment the workload ends; only the denominator is late:
 
 ```sh
-sci run --format json -o measured.json -- ./deploy-and-soak    # today
-sci units -units 4300000 -unit-label "checkout request" \
+sci-disclose run --format json -o measured.json -- ./deploy-and-soak    # today
+sci-disclose units -units 4300000 -unit-label "checkout request" \
           --budget 0.01 measured.json                          # a month later
 ```
 
-`sci units` divides an existing disclosure by a count learnt afterwards,
+`sci-disclose units` divides an existing disclosure by a count learnt afterwards,
 leaving E, I and M exactly as measured, recording that R arrived late, and
 re-running the budget gate against the result.
 
@@ -111,6 +111,6 @@ measurement nothing.
 Per target: `run`, `file` and `repo` take `--units` or one of the counters
 above; `func` sets it from `-n`, so the score is per call; `estimate` declares
 it in the manifest as the count over the whole `period-hours` window.
-`sci init` leaves that quantity as a placeholder on purpose — along with
+`sci-disclose init` leaves that quantity as a placeholder on purpose — along with
 utilisation, it is one of the two numbers nobody can infer from your repo, and
 the two the score is most sensitive to.

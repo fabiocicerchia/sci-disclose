@@ -5,7 +5,7 @@
 *.pem
 *.key
 
-# Build output — `make build` writes ./sci; `go build .` writes ./sci-disclose
+# Build output — `make build` writes ./sci-disclose; `go build .` writes ./sci-disclose
 /sci
 /sci-disclose
 dist/

@@ -1,13 +1,13 @@
-.TH SCI 1 "2026-09" "sci-disclose" "User Commands"
+.TH SCI-DISCLOSE 1 "2026-09" "sci-disclose" "User Commands"
 .SH NAME
-sci \- Software Carbon Intensity (SCI) from the command line
+sci-disclose \- Software Carbon Intensity (SCI) from the command line
 .SH SYNOPSIS
-.B sci
+.B sci-disclose
 .I target
 .RI [ flags ]
 .RI [ argument ...]
 .SH DESCRIPTION
-.B sci
+.B sci-disclose
 measures the Software Carbon Intensity of a workload. SCI, as specified by the
 Green Software Foundation and standardised as ISO/IEC 21031:2024, is a rate,
 not a total:
@@ -34,33 +34,33 @@ target therefore either runs a workload and measures it, or reads a manifest in
 which one is declared. Nothing here infers carbon from source code alone.
 .SH TARGETS
 .TP
-.B sci run \-\- \fIcommand\fR
+.B sci-disclose run \-\- \fIcommand\fR
 Measure a command.
 .TP
-.B sci file \fIbench.py\fR
+.B sci-disclose file \fIbench.py\fR
 Measure a script; the interpreter is chosen by extension.
 .TP
-.B sci func \fImypkg.bench:main\fR \-n \fI200\fR
+.B sci-disclose func \fImypkg.bench:main\fR \-n \fI200\fR
 Measure a function, per call.
 .TP
-.B sci repo \fI.\fR
+.B sci-disclose repo \fI.\fR
 Measure a repository, via its own test or build command.
 .TP
-.B sci estimate \-f \fIsci.yaml\fR
+.B sci-disclose estimate \-f \fIsci.yaml\fR
 Report a declared deployment; nothing is executed.
 .TP
-.B sci init \fI.\fR
+.B sci-disclose init \fI.\fR
 Scaffold
 .I sci.yaml
 from the repository.
 .TP
-.B sci units \-units \fIN\fR \fIdisclosure.json\fR
+.B sci-disclose units \-units \fIN\fR \fIdisclosure.json\fR
 Divide an existing measurement by a count established later.
 .TP
-.B sci compare \fIbefore.json\fR \fIafter.json\fR
+.B sci-disclose compare \fIbefore.json\fR \fIafter.json\fR
 Report two runs as a delta.
 .TP
-.B sci coefficients
+.B sci-disclose coefficients
 Every constant used, with its source.
 .SH EXIT STATUS
 .TP
@@ -79,19 +79,19 @@ The measured workload itself failed.
 .TP
 .I sci.yaml
 Declared deployment manifest, as written by
-.BR "sci init" .
+.BR "sci-disclose init" .
 .SH EXAMPLES
 .PP
 Measure a test suite:
 .PP
 .RS
-.B sci run \-\- pytest \-q
+.B sci-disclose run \-\- pytest \-q
 .RE
 .PP
 Compare two runs:
 .PP
 .RS
-.B sci compare before.json after.json
+.B sci-disclose compare before.json after.json
 .RE
 .SH SEE ALSO
 ISO/IEC 21031:2024. Project documentation:

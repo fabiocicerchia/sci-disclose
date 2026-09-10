@@ -1,18 +1,18 @@
 .PHONY: help build install test lint fmt check setup clean run format analyze
 
-BINARY := sci
+BINARY := sci-disclose
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-10s %s\n", $$1, $$2}'
 
-build: ## Compile ./sci
-	go build -o $(BINARY) ./cmd/sci
+build: ## Compile ./sci-disclose
+	go build -o $(BINARY) ./cmd/sci-disclose
 
 ## install: install the binary and its man page; PREFIX=/usr/local for a system path
 install:
 ifeq ($(strip $(PREFIX)),)
-	go install ./cmd/sci
+	go install ./cmd/sci-disclose
 	install -d "$(USER_MANDIR)"
 	install -m 0644 man/$(BINARY).1 "$(USER_MANDIR)/$(BINARY).1"
 	@dir="$$(go env GOBIN)"; [ -n "$$dir" ] || dir="$$(go env GOPATH)/bin"; \
@@ -54,7 +54,7 @@ clean: ## Remove the binary
 	rm -f $(BINARY)
 
 run: ## Run the binary
-	go run ./cmd/sci $(ARGS)
+	go run ./cmd/sci-disclose $(ARGS)
 
 format: ## Rewrite the sources to gofmt form
 	gofmt -w .

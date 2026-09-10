@@ -3,22 +3,22 @@
 ## Prerequisites
 
 - **Go 1.24+** to build. Nothing else at runtime.
-- For `sci func`, the interpreter of the language you are measuring must be on
+- For `sci-disclose func`, the interpreter of the language you are measuring must be on
   `$PATH` — the harness shells out to it.
 - For the RAPL backend, a Linux host with readable `powercap` counters
-  (`/sys/class/powercap/intel-rapl*/energy_uj`). Without them `sci` falls back
+  (`/sys/class/powercap/intel-rapl*/energy_uj`). Without them `sci-disclose` falls back
   to the modelled backend and says so.
 
 ## Setup
 
 ```sh
-go install github.com/fabiocicerchia/sci-disclose/cmd/sci@latest
+go install github.com/fabiocicerchia/sci-disclose/cmd/sci-disclose@latest
 ```
 
 Or from a checkout:
 
 ```sh
-make build     # -> ./sci
+make build     # -> ./sci-disclose
 make test      # go test -race ./... (race detector on)
 make lint      # go vet + gofmt
 ```
@@ -33,34 +33,34 @@ Measure a command. `--units` and `--unit-label` turn the total into the rate
 that SCI actually is:
 
 ```sh
-./sci run --provider aws --region eu-west-1 --vcpus 2 \
+./sci-disclose run --provider aws --region eu-west-1 --vcpus 2 \
     --units 5000 --unit-label "image resized" -- python3 resize-batch.py
 ```
 
-Measure this repo's own workload — `sci` finds it and says which one it picked:
+Measure this repo's own workload — `sci-disclose` finds it and says which one it picked:
 
 ```sh
-./sci repo . --format markdown
+./sci-disclose repo . --format markdown
 ```
 
 Estimate a deployment that isn't running here, from a declaration:
 
 ```sh
-./sci estimate -f examples/sci.yaml
-./sci init .        # scaffold sci.yaml from Kubernetes/Terraform in the repo
+./sci-disclose estimate -f examples/sci.yaml
+./sci-disclose init .        # scaffold sci.yaml from Kubernetes/Terraform in the repo
 ```
 
 See every constant the report used, with its source:
 
 ```sh
-./sci coefficients
+./sci-disclose coefficients
 ```
 
 ## Gate a pull request
 
 ```yaml
-- run: sci repo . --format json -o sci.json --region eu-west-1
-- run: sci compare main-sci.json sci.json --fail-on-regression --tolerance 5
+- run: sci-disclose repo . --format json -o sci.json --region eu-west-1
+- run: sci-disclose compare main-sci.json sci.json --fail-on-regression --tolerance 5
 ```
 
 Two runs of *identical* code do not tie when the intensity is live, because the

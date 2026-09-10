@@ -6,14 +6,14 @@ Guidance for Claude Code (and other AI agents) working in this repo.
 
 `sci-disclose` measures the **Software Carbon Intensity** (Green Software
 Foundation spec, ISO/IEC 21031:2024) of something you can point at: a command,
-a script, a function, a repo, or a manifest you declare. Go, `cmd/sci` +
-`internal/`, binary named `sci`. `gopkg.in/yaml.v3` is the only dependency, and
+a script, a function, a repo, or a manifest you declare. Go, `cmd/sci-disclose` +
+`internal/`, binary named `sci-disclose`. `gopkg.in/yaml.v3` is the only dependency, and
 it exists for the manifest targets alone.
 
 Where things live:
 
 ```text
-cmd/sci/              the CLI: flags, subcommand dispatch, exit codes
+cmd/sci-disclose/              the CLI: flags, subcommand dispatch, exit codes
 internal/coefficients published constants, each with its source
 internal/config       Config: the boundary, grid, hardware and functional unit
 internal/fetch        the one HTTP client (timeout, bounded read, User-Agent)
@@ -31,20 +31,20 @@ internal/testutil     helpers and API fixtures shared by several test packages
 **The import graph is a DAG and must stay one.** `coefficients` imports
 nothing; `config` imports only `coefficients`; `energy` and `grid` sit above
 those; `sci` imports `energy` and `grid` because `SCIReport` resolves both;
-`manifest` and `report` sit above `sci`; `cmd/sci` imports everything. Anything
+`manifest` and `report` sit above `sci`; `cmd/sci-disclose` imports everything. Anything
 shared lower down belongs in `coefficients` or `config`, never in a new
 dependency pointing back up.
 
 A test that needs more than one branch of that graph — say grid *and* report —
-cannot live in either package. Those go in `cmd/sci/crosscutting_test.go`,
+cannot live in either package. Those go in `cmd/sci-disclose/crosscutting_test.go`,
 which is `package main` and may import them all.
 
 ## Commands
 
 ```sh
 make help     # every verb this repo exposes
-make build    # compile ./sci
-make install  # go install ./cmd/sci
+make build    # compile ./sci-disclose
+make install  # go install ./cmd/sci-disclose
 make test     # go test -race ./...
 make lint     # go vet + gofmt check
 make fmt      # gofmt -w .
@@ -60,7 +60,7 @@ make clean    # remove the binary
   manifest. Don't add a path that guesses.
 - Every number in a report carries its provenance (`[measured]`, `[model]`,
   the API reading and its window). A new coefficient or backend ships with the
-  source it came from, and `sci coefficients` prints it.
+  source it came from, and `sci-disclose coefficients` prints it.
 - Every assumption is overridable by a flag, and the report states the value it
   used. The physical world needs tuning a model cannot see.
 - Match existing style; don't reformat unrelated code.
