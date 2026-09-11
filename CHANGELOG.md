@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Generated from Conventional Commit messages by release-please — don't edit it
 by hand.
 
+## [1.0.1](https://github.com/fabiocicerchia/sci-disclose/compare/v1.0.0...v1.0.1) (2026-09-11)
+
+
+### Bug Fixes
+
+* **release:** let the release PR carry a token that isn't GITHUB_TOKEN ([#38](https://github.com/fabiocicerchia/sci-disclose/issues/38)) ([2da8452](https://github.com/fabiocicerchia/sci-disclose/commit/2da845296d7725da153655e9a505608fa363d517))
+
 ## [1.0.0](https://github.com/fabiocicerchia/sci-disclose/compare/v0.5.0...v1.0.0) (2026-09-10)
 
 
