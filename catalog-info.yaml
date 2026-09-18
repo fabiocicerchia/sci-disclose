@@ -1,0 +1,22 @@
+# Backstage catalog entry, read by paved's scorecard plugin.
+#
+# Every check paved scores is derived from this file alone — no cluster
+# access, no CI credentials. What is absent here is absent from the score.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: sci-disclose
+  description: >-
+      Measures the Software Carbon Intensity of a command, a function, a repo or a declared deployment.
+  annotations:
+    github.com/project-slug: fabiocicerchia/sci-disclose
+    backstage.io/source-location: url:https://github.com/fabiocicerchia/sci-disclose/
+    backstage.io/techdocs-ref: dir:.
+  links:
+    - url: https://github.com/fabiocicerchia/sci-disclose
+      title: Source
+spec:
+  type: library
+  lifecycle: production
+  owner: group:default/kodebeat
+  system: oss-tools
