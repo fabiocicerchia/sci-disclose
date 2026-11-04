@@ -37,9 +37,23 @@ jobs:
             --recursive
             ./
 
+      # setup-trivy's install script downloads from get.trivy.dev, which no longer
+      # resolves; the GitHub release is the same binary, checked against its sum.
+      - name: install trivy
+        env:
+          TRIVY_VERSION: 0.70.0
+          TRIVY_SHA256: 8b4376d5d6befe5c24d503f10ff136d9e0c49f9127a4279fd110b727929a5aa9
+        run: |
+          tgz="$RUNNER_TEMP/trivy.tar.gz"
+          curl -fsSL -o "$tgz" "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          echo "${TRIVY_SHA256}  $tgz" | sha256sum -c -
+          tar -xzf "$tgz" -C "$RUNNER_TEMP" trivy
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
       - name: trivy filesystem
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
+          skip-setup-trivy: true
           scan-type: fs
           scan-ref: .
           severity: CRITICAL,HIGH
