@@ -7,10 +7,12 @@ kind: Component
 metadata:
   name: sci-disclose
   description: >-
-      Measures the Software Carbon Intensity of a command, a function, a repo or a declared deployment.
+      Measures the Software Carbon Intensity of a command, a function, a repo
+      or a declared deployment.
   annotations:
     github.com/project-slug: fabiocicerchia/sci-disclose
-    backstage.io/source-location: url:https://github.com/fabiocicerchia/sci-disclose/
+    backstage.io/source-location: >-
+      url:https://github.com/fabiocicerchia/sci-disclose/
     backstage.io/techdocs-ref: dir:.
   links:
     - url: https://github.com/fabiocicerchia/sci-disclose

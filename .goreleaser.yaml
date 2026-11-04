@@ -110,7 +110,8 @@ homebrew_casks:
     # With the release pipe disabled goreleaser cannot derive this, and
     # refuses rather than guessing.
     url:
-      template: "https://github.com/fabiocicerchia/sci-disclose/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+      template: "https://github.com/fabiocicerchia/sci-disclose/releases/\
+        download/{{ .Tag }}/{{ .ArtifactName }}"
     manpages: [man/sci-disclose.1]
     homepage: https://github.com/fabiocicerchia/sci-disclose
     description: Software Carbon Intensity (SCI) from the command line

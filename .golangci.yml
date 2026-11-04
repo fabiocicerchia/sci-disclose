@@ -17,7 +17,7 @@ linters:
     # House set (TOOLING.md). The rules above are kept as they were.
     - contextcheck      # FC-GO-009
     - godox             # FC-GEN-010 - no TODO/FIXME/HACK markers
-    - forbidigo         # FC-GEN-055 - blocks time.Now, os.Getenv outside the root
+    - forbidigo         # FC-GEN-055 - time.Now, os.Getenv only in the root
     - noctx             # FC-GEN-032
     - nilerr
     - errname
@@ -57,13 +57,15 @@ linters:
 
   exclusions:
     rules:
+      # Tests may freeze the clock directly.
       - path: _test\.go
-        linters: [errcheck, gosec, forbidigo]   # tests may freeze the clock directly
+        linters: [errcheck, gosec, forbidigo]
+      # The composition root reads env and the clock.
       - path: (^|/)(main|cmd)/
-        linters: [forbidigo]                    # composition root reads env and the clock
-      # A JSON fixture inside a raw string literal: the long line is one value of
-      # the document under test, and breaking it would change the fixture rather
-      # than reflow it.
+        linters: [forbidigo]
+      # A JSON fixture inside a raw string literal: the long line is one value
+      # of the document under test, and breaking it would change the fixture
+      # rather than reflow it.
       - path: internal/testutil/fixtures\.go
         linters: [lll]
 
