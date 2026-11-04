@@ -1,0 +1,10 @@
+extends: relaxed
+
+rules:
+  line-length:
+    # The workflows and the pre-commit config are portfolio-shared files (see
+    # CLAUDE.md): a local rewrap is drift the next sync undoes. Their long lines
+    # are SHA-pinned `uses:`/`rev:` with the tag comment, and URLs in `run:`.
+    ignore: |
+      .github/workflows/
+      .pre-commit-config.yaml
