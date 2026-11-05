@@ -26,7 +26,7 @@ import (
 	"github.com/fabiocicerchia/sci-disclose/internal/units"
 )
 
-const usage = `sci-disclose — Software Carbon grid.Intensity (SCI) from the command line.
+const usage = `sci-disclose — Software Carbon Intensity (SCI) from the command line.
 
 SCI, as specified by the Green Software Foundation and standardised as
 ISO/IEC 21031:2024, is a rate, not a total:
@@ -39,7 +39,7 @@ ISO/IEC 21031:2024, is a rate, not a total:
     R  the functional unit the rate is expressed per     e.g. one API call
 
 A repository, a file or a function has no SCI until something runs. So every
-target either runs a workload and measures it, or reads a declared in which
+target either runs a workload and measures it, or reads a manifest in which
 you declare one. Nothing here infers carbon from source code alone.
 
 Targets:
@@ -122,7 +122,7 @@ type options struct {
 }
 
 // addUnitCountingFlags is only for the targets that run a command: `func` gets
-// its count from -n, and `estimate` declares it in the declared.
+// its count from -n, and `estimate` declares it in the manifest.
 func addUnitCountingFlags(fs *flag.FlagSet, opts *options) {
 	fs.BoolVar(&opts.unitsFromStdout, "units-from-stdout", false,
 		"read the unit count from a marker the workload prints (see -units-pattern)")
@@ -214,7 +214,7 @@ func addFlags(fs *flag.FlagSet) *options {
 	fs.StringVar(&cfg.EnergySource, "energy", cfg.EnergySource,
 		"auto uses RAPL counters when readable, else the model (auto, rapl, model)")
 	fs.Float64Var(&cfg.IdleSeconds, "idle-seconds", 0,
-		"sample idle draw first and disclosure marginal energy (RAPL only)")
+		"sample idle draw first and report marginal energy (RAPL only)")
 
 	fs.Float64Var(&opts.units, "units", 0, "how many functional units the run delivered")
 	fs.StringVar(&opts.unitLabel, "unit-label", "", "what one functional unit is")
@@ -319,7 +319,7 @@ func measureCommand(argv []string, dir string, target sci.Target, opts *options,
 			delta := after - counterBefore
 			if delta <= 0 {
 				return fail(out, fmt.Errorf("%s did not advance during the run "+
-					"(%g to %g): nothing was served, so there is no rate to disclosure",
+					"(%g to %g): nothing was served, so there is no rate to report",
 					opts.unitsMetric, counterBefore, after))
 			}
 			counted = units.UnitSource{Count: delta,
@@ -537,8 +537,8 @@ func cmdRepo(args []string, out io.Writer) int {
 
 func cmdEstimate(args []string, out io.Writer) int {
 	fs := flag.NewFlagSet("estimate", flag.ContinueOnError)
-	file := fs.String("f", "sci.yaml", "declared to read")
-	fs.StringVar(file, "file", "sci.yaml", "declared to read")
+	file := fs.String("f", "sci.yaml", "manifest to read")
+	fs.StringVar(file, "file", "sci.yaml", "manifest to read")
 	opts := addFlags(fs)
 	if err := parse(fs, args, out); err != nil {
 		return 2
@@ -566,9 +566,9 @@ func cmdEstimate(args []string, out io.Writer) int {
 
 func cmdInit(args []string, out io.Writer) int {
 	fs := flag.NewFlagSet("init", flag.ContinueOnError)
-	output := fs.String("o", "sci.yaml", "where to write the declared")
-	fs.StringVar(output, "output", "sci.yaml", "where to write the declared")
-	force := fs.Bool("force", false, "overwrite an existing declared")
+	output := fs.String("o", "sci.yaml", "where to write the manifest")
+	fs.StringVar(output, "output", "sci.yaml", "where to write the manifest")
+	force := fs.Bool("force", false, "overwrite an existing manifest")
 	if err := parse(fs, args, out); err != nil {
 		return 2
 	}
