@@ -1,6 +1,7 @@
 package grid
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 	"testing"
@@ -286,5 +287,39 @@ func TestALiveFailureFallsBackToTheCacheBeforeTheBundledTable(t *testing.T) {
 	}
 	if hits.Load() != 1 {
 		t.Errorf("requests: %d", hits.Load())
+	}
+}
+
+// memorySource stands in for the API and the disk cache.
+type memorySource struct {
+	body   string
+	cached map[string][]byte
+}
+
+func (m *memorySource) get(string) ([]byte, error) { return []byte(m.body), nil }
+
+func (m *memorySource) readCache(endpoint string) ([]byte, time.Duration, error) {
+	body, ok := m.cached[endpoint]
+	if !ok {
+		return nil, 0, errors.New("miss")
+	}
+	return body, 0, nil
+}
+
+func (m *memorySource) writeCache(endpoint string, body []byte) { m.cached[endpoint] = body }
+
+func TestTheLookupRunsAgainstAnInjectedSource(t *testing.T) {
+	src := &memorySource{body: testutil.ReadingJSON("measured", testutil.Now()), cached: map[string][]byte{}}
+	cfg := config.NewConfig()
+	cfg.IntensityAPI, cfg.Country = "https://api.invalid", "IE"
+	intensity, err := resolveIntensity(cfg, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if intensity.Value != 339 || !strings.Contains(intensity.Source, "fetched") {
+		t.Fatalf("got %g (%s)", intensity.Value, intensity.Source)
+	}
+	if _, ok := src.cached["https://api.invalid/v1/last-hour/IE"]; !ok {
+		t.Fatalf("the reading was not cached: %v", src.cached)
 	}
 }

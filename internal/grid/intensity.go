@@ -5,19 +5,13 @@ package grid
 
 import (
 	"cmp"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/fabiocicerchia/sci-disclose/internal/coefficients"
 	"github.com/fabiocicerchia/sci-disclose/internal/config"
-	"github.com/fabiocicerchia/sci-disclose/internal/fetch"
 )
 
 // I — carbon intensity.
@@ -163,13 +157,17 @@ func (i Intensity) Credit() string {
 // ResolveIntensity picks I in this order: an explicit figure, the live API for
 // a known country or zone, the bundled yearly table, then the world average.
 func ResolveIntensity(cfg config.Config) (Intensity, error) {
+	return resolveIntensity(cfg, liveSource{})
+}
+
+func resolveIntensity(cfg config.Config, src source) (Intensity, error) {
 	if cfg.Intensity > 0 {
 		return Intensity{Value: cfg.Intensity, Source: "--intensity (user supplied)"}, nil
 	}
 
 	path, label := apiTarget(cfg)
 	if path != "" && !cfg.Offline {
-		if reading, from, err := fetchReading(cfg, path); err == nil {
+		if reading, from, err := fetchReading(src, cfg, path); err == nil {
 			if value, basis, ok := reading.Value(cfg.IntensityBasis); ok {
 				intensity := Intensity{
 					Value:     value,
@@ -288,11 +286,10 @@ func bundledIntensity(cfg config.Config) (float64, string, bool) {
 // fetchReading returns a reading from the on-disk cache when it is fresh, and
 // from the API otherwise. A failed request falls back to an expired cache entry
 // before giving up, so a rate limit or an outage never fails a measurement.
-func fetchReading(cfg config.Config, path string) (Reading, string, error) {
+func fetchReading(src source, cfg config.Config, path string) (Reading, string, error) {
 	endpoint := strings.TrimSuffix(cfg.IntensityAPI, "/") + path
-	cachePath := cacheFile(endpoint)
 
-	if body, age, err := readCache(cachePath); err == nil {
+	if body, age, err := src.readCache(endpoint); err == nil {
 		var reading Reading
 		//nolint:forbidigo // cache freshness is a wall-clock question; cacheFresh
 		// takes the time so a test can answer it
@@ -301,9 +298,9 @@ func fetchReading(cfg config.Config, path string) (Reading, string, error) {
 		}
 	}
 
-	body, err := getJSON(endpoint)
+	body, err := src.get(endpoint)
 	if err != nil {
-		if cached, age, cacheErr := readCache(cachePath); cacheErr == nil {
+		if cached, age, cacheErr := src.readCache(endpoint); cacheErr == nil {
 			var reading Reading
 			if json.Unmarshal(cached, &reading) == nil {
 				return reading, fmt.Sprintf("stale cache, %s old, live fetch failed: %v",
@@ -316,7 +313,7 @@ func fetchReading(cfg config.Config, path string) (Reading, string, error) {
 	if err := json.Unmarshal(body, &reading); err != nil {
 		return Reading{}, "", fmt.Errorf("unreadable response from %s: %w", endpoint, err)
 	}
-	writeCache(cachePath, body)
+	src.writeCache(endpoint, body)
 	return reading, "fetched", nil
 }
 
@@ -332,59 +329,4 @@ func cacheFresh(reading Reading, age time.Duration, now time.Time) bool {
 		return now.Sub(generated) < 65*time.Minute
 	}
 	return age < time.Hour
-}
-
-func getJSON(endpoint string) ([]byte, error) {
-	body, status, err := fetch.Get(endpoint)
-	if err != nil {
-		return nil, err
-	}
-	switch {
-	case status == http.StatusTooManyRequests:
-		return nil, fmt.Errorf("rate limited (1 request per 10s per IP)")
-	case status == http.StatusNotFound:
-		return nil, fmt.Errorf("no reading published for that country or zone")
-	case status != http.StatusOK:
-		return nil, fmt.Errorf("HTTP %d", status)
-	}
-	return body, nil
-}
-
-func cacheFile(endpoint string) string {
-	sum := sha256.Sum256([]byte(endpoint))
-	base, err := os.UserCacheDir()
-	if err != nil {
-		base = os.TempDir()
-	}
-	return filepath.Join(base, "sci-disclose", hex.EncodeToString(sum[:8])+".json")
-}
-
-func readCache(path string) ([]byte, time.Duration, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		return nil, 0, err
-	}
-	body, err := os.ReadFile(path) //nolint:gosec // this tool's own cache file, under its own cache directory
-	if err != nil {
-		return nil, 0, err
-	}
-	return body, time.Since(info.ModTime()), nil
-}
-
-// writeCache stores one API response for the cache window.
-//
-// 0700/0600, not 0755/0644: cacheFile falls back to os.TempDir() when
-// os.UserCacheDir() fails, and /tmp is shared and world-writable. A
-// group-readable directory there lets any other local user enumerate which
-// grids this host has queried, and — the part that actually bites — a
-// directory they can write to is one they can plant a symlink in, which
-// os.WriteFile would then follow. Nothing but this process reads the cache, so
-// there is nothing to trade away. gosec G301/G306.
-func writeCache(path string, body []byte) {
-	if os.MkdirAll(filepath.Dir(path), 0o700) != nil {
-		return
-	}
-	// A cache that cannot be written is a cache miss next time, which is the
-	// same outcome as no cache at all.
-	_ = os.WriteFile(path, body, 0o600) //nolint:errcheck // see above
 }
