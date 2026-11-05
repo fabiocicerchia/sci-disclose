@@ -66,6 +66,13 @@ var Interpreters = map[string][]string{
 
 func main() { os.Exit(Run(os.Args[1:], os.Stdout)) }
 
+// subcommands maps each subcommand onto the function that runs it.
+var subcommands = map[string]func([]string, io.Writer) int{
+	"run": cmdRun, "file": cmdFile, "func": cmdFunc, "repo": cmdRepo,
+	"estimate": cmdEstimate, "init": cmdInit, "units": cmdUnits,
+	"compare": cmdCompare, "coefficients": cmdCoefficients,
+}
+
 // Run dispatches one invocation and returns its exit code.
 func Run(args []string, out io.Writer) int {
 	if len(args) == 0 {
@@ -79,28 +86,12 @@ func Run(args []string, out io.Writer) int {
 	case "-v", "--version", "version":
 		emitf(out, "sci-disclose %s\n", coefficients.Version)
 		return 0
-	case "run":
-		return cmdRun(args[1:], out)
-	case "file":
-		return cmdFile(args[1:], out)
-	case "func":
-		return cmdFunc(args[1:], out)
-	case "repo":
-		return cmdRepo(args[1:], out)
-	case "estimate":
-		return cmdEstimate(args[1:], out)
-	case "init":
-		return cmdInit(args[1:], out)
-	case "units":
-		return cmdUnits(args[1:], out)
-	case "compare":
-		return cmdCompare(args[1:], out)
-	case "coefficients":
-		return cmdCoefficients(args[1:], out)
-	default:
-		emitf(out, "sci: unknown command %q\n\n%s", args[0], usage)
-		return 2
 	}
+	if cmd, ok := subcommands[args[0]]; ok {
+		return cmd(args[1:], out)
+	}
+	emitf(out, "sci: unknown command %q\n\n%s", args[0], usage)
+	return 2
 }
 
 // options holds every flag shared by the measuring commands.
@@ -291,60 +282,20 @@ func measureCommand(argv []string, dir string, target sci.Target, opts *options,
 		captured = &bytes.Buffer{}
 		tap = captured
 	}
-	var counterBefore float64
-	if opts.unitsMetric != "" {
-		if opts.unitsURL == "" {
-			return fail(out, fmt.Errorf("-units-metric needs -units-url"))
-		}
-		counterBefore, err = units.ScrapeCounter(opts.unitsURL, opts.unitsMetric)
-		if err != nil {
-			return fail(out, err)
-		}
+	counterBefore, err := scrapeUnitsBaseline(opts)
+	if err != nil {
+		return fail(out, err)
 	}
 	sample, err := energy.MeasureCommand(argv, dir, useRAPL, tap)
 	if err != nil {
 		return fail(out, err)
 	}
-	var notes []string
 	if !opts.unitsSet {
-		counted, err := opts.countUnits(capturedText(captured))
-		if err != nil {
+		if err := countRunUnits(opts, capturedText(captured), counterBefore); err != nil {
 			return fail(out, err)
 		}
-		if opts.unitsMetric != "" {
-			after, err := units.ScrapeCounter(opts.unitsURL, opts.unitsMetric)
-			if err != nil {
-				return fail(out, err)
-			}
-			delta := after - counterBefore
-			if delta <= 0 {
-				return fail(out, fmt.Errorf("%s did not advance during the run "+
-					"(%g to %g): nothing was served, so there is no rate to disclosure",
-					opts.unitsMetric, counterBefore, after))
-			}
-			counted = units.UnitSource{Count: delta,
-				Origin: fmt.Sprintf("%s advanced by %s across the run",
-					opts.unitsMetric, report.FormatNumber(delta))}
-		}
-		if counted.Count > 0 {
-			opts.cfg.Units, opts.cfg.UnitSource = counted.Count, counted.Origin
-		}
-	} else if opts.unitsFromStdout || opts.unitsFile != "" || opts.unitsCmd != "" ||
-		opts.unitsMetric != "" {
-		notes = append(notes, "--units was given explicitly, so the unit count was "+
-			"not read from the workload")
 	}
-	if opts.unitsFromStdout {
-		notes = append(notes, "stdout was duplicated to read the unit count, so the "+
-			"workload saw a pipe rather than a terminal")
-	}
-	if sample.ExitCode != 0 {
-		notes = append(notes, fmt.Sprintf("the workload exited %d: a failed run is not "+
-			"a representative measurement", sample.ExitCode))
-	}
-	if !useRAPL {
-		notes = append(notes, modelNote)
-	}
+	notes := commandNotes(opts, sample.ExitCode, useRAPL)
 	disclosure, err := sci.New(target, sample, *opts.cfg, idleWatts, hasIdle, notes)
 	if err != nil {
 		return fail(out, err)
@@ -360,6 +311,67 @@ func measureCommand(argv []string, dir string, target sci.Target, opts *options,
 		return 1
 	}
 	return 0
+}
+
+// scrapeUnitsBaseline reads -units-metric before the run, so its delta can be
+// taken afterwards. Without -units-metric there is nothing to read.
+func scrapeUnitsBaseline(opts *options) (float64, error) {
+	if opts.unitsMetric == "" {
+		return 0, nil
+	}
+	if opts.unitsURL == "" {
+		return 0, fmt.Errorf("-units-metric needs -units-url")
+	}
+	return units.ScrapeCounter(opts.unitsURL, opts.unitsMetric)
+}
+
+// countRunUnits reads the unit count from the finished workload into opts.cfg.
+func countRunUnits(opts *options, stdout string, counterBefore float64) error {
+	counted, err := opts.countUnits(stdout)
+	if err != nil {
+		return err
+	}
+	if opts.unitsMetric != "" {
+		after, err := units.ScrapeCounter(opts.unitsURL, opts.unitsMetric)
+		if err != nil {
+			return err
+		}
+		delta := after - counterBefore
+		if delta <= 0 {
+			return fmt.Errorf("%s did not advance during the run "+
+				"(%g to %g): nothing was served, so there is no rate to disclosure",
+				opts.unitsMetric, counterBefore, after)
+		}
+		counted = units.UnitSource{Count: delta,
+			Origin: fmt.Sprintf("%s advanced by %s across the run",
+				opts.unitsMetric, report.FormatNumber(delta))}
+	}
+	if counted.Count > 0 {
+		opts.cfg.Units, opts.cfg.UnitSource = counted.Count, counted.Origin
+	}
+	return nil
+}
+
+// commandNotes lists the caveats a measured command's disclosure carries.
+func commandNotes(opts *options, exitCode int, useRAPL bool) []string {
+	var notes []string
+	if opts.unitsSet && (opts.unitsFromStdout || opts.unitsFile != "" ||
+		opts.unitsCmd != "" || opts.unitsMetric != "") {
+		notes = append(notes, "--units was given explicitly, so the unit count was "+
+			"not read from the workload")
+	}
+	if opts.unitsFromStdout {
+		notes = append(notes, "stdout was duplicated to read the unit count, so the "+
+			"workload saw a pipe rather than a terminal")
+	}
+	if exitCode != 0 {
+		notes = append(notes, fmt.Sprintf("the workload exited %d: a failed run is not "+
+			"a representative measurement", exitCode))
+	}
+	if !useRAPL {
+		notes = append(notes, modelNote)
+	}
+	return notes
 }
 
 func capturedText(buffer *bytes.Buffer) string {
@@ -458,18 +470,7 @@ func cmdFunc(args []string, out io.Writer) int {
 	if err != nil {
 		return fail(out, err)
 	}
-	notes := []string{fmt.Sprintf("%d call(s) measured inside the interpreter, so "+
-		"startup and import time are outside the bracket", *iterations)}
-	if *warmup > 0 {
-		notes = append(notes, fmt.Sprintf("%d warmup call(s) discarded first", *warmup))
-	}
-	if !sample.HasRAPL {
-		notes = append(notes, modelNote)
-	}
-	if sample.WallS < 0.05 {
-		notes = append(notes, "the run was shorter than 50 ms: raise -n until the "+
-			"measurement is stable")
-	}
+	notes := funcNotes(*iterations, *warmup, sample)
 	target := sci.Target{Kind: "function", Description: rest[0]}
 	disclosure, err := sci.New(target, sample, *opts.cfg, idleWatts, hasIdle, notes)
 	if err != nil {
@@ -483,6 +484,23 @@ func cmdFunc(args []string, out io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+// funcNotes lists the caveats a measured function's disclosure carries.
+func funcNotes(iterations, warmup int, sample energy.Sample) []string {
+	notes := []string{fmt.Sprintf("%d call(s) measured inside the interpreter, so "+
+		"startup and import time are outside the bracket", iterations)}
+	if warmup > 0 {
+		notes = append(notes, fmt.Sprintf("%d warmup call(s) discarded first", warmup))
+	}
+	if !sample.HasRAPL {
+		notes = append(notes, modelNote)
+	}
+	if sample.WallS < 0.05 {
+		notes = append(notes, "the run was shorter than 50 ms: raise -n until the "+
+			"measurement is stable")
+	}
+	return notes
 }
 
 func cmdRepo(args []string, out io.Writer) int {
