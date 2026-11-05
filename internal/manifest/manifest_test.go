@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -178,6 +179,35 @@ func TestComponentOverridesBeatTheDefaults(t *testing.T) {
 	// Two different grids means no single headline figure.
 	if report.Intensity != nil {
 		t.Error("a mixed-grid manifest should not claim one intensity")
+	}
+}
+
+// TestDocumentedManifestIsValidInputForEstimate keeps the worked example in
+// docs/manifests.md loadable: a reader copying it must get a report back.
+func TestDocumentedManifestIsValidInputForEstimate(t *testing.T) {
+	data, err := os.ReadFile("../../docs/manifests.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, block, found := strings.Cut(string(data), "```yaml\n")
+	block, _, closed := strings.Cut(block, "```")
+	if !found || !closed {
+		t.Fatal("docs/manifests.md has no ```yaml block; did its format change?")
+	}
+	path := testutil.WriteFile(t, t.TempDir(), "sci.yaml", block)
+	manifest, err := LoadManifest(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, err := EstimateManifest(manifest, offlineConfig(), path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(report.Components) != 4 || report.SCI <= 0 {
+		t.Fatalf("components: %d, SCI: %g", len(report.Components), report.SCI)
+	}
+	if report.SCIUnit != "gCO2e per checkout request" {
+		t.Errorf("unit: %s", report.SCIUnit)
 	}
 }
 
