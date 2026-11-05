@@ -2,10 +2,13 @@ package main
 
 import (
 	"flag"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/fabiocicerchia/sci-disclose/internal/testutil"
 )
 
 // TestDocumentedFlagsExist keeps docs/cli.md's "Flags that change the
@@ -33,5 +36,34 @@ func TestDocumentedFlagsExist(t *testing.T) {
 	}
 	if seen < 20 {
 		t.Fatalf("found only %d flags in docs/cli.md's table; did its format change?", seen)
+	}
+}
+
+// TestDocumentedIntensityAPIPrecedence holds docs/getting-started.md to its
+// word against real HTTP servers: "$SCI_INTENSITY_API sets the API base URL
+// when you run your own instance; --intensity-api wins over it."
+func TestDocumentedIntensityAPIPrecedence(t *testing.T) {
+	body := testutil.ReadingJSON("measured", testutil.Now())
+	fromEnv, envHits, _ := testutil.IntensityServer(t, body, http.StatusOK)
+	fromFlag, flagHits, _ := testutil.IntensityServer(t, body, http.StatusOK)
+	t.Setenv("SCI_INTENSITY_API", fromEnv.URL)
+
+	measure := func(extra ...string) {
+		t.Helper()
+		args := append([]string{"run", "-region", "eu-west-1", "-format", "json"}, extra...)
+		if code, out := runCLI(t, append(append(args, "--"), busyWork...)...); code != 0 {
+			t.Fatalf("run %v: exit %d\n%s", extra, code, out)
+		}
+	}
+
+	measure()
+	if envHits.Load() != 1 || flagHits.Load() != 0 {
+		t.Fatalf("$SCI_INTENSITY_API alone: env server hit %d times, flag server %d; want 1 and 0",
+			envHits.Load(), flagHits.Load())
+	}
+	measure("-intensity-api", fromFlag.URL)
+	if envHits.Load() != 1 || flagHits.Load() != 1 {
+		t.Fatalf("--intensity-api should win: env server hit %d times, flag server %d; want 1 and 1",
+			envHits.Load(), flagHits.Load())
 	}
 }
