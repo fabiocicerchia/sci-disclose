@@ -1,4 +1,4 @@
-.PHONY: help build install test lint fmt check setup clean run format analyze
+.PHONY: help build install test cover lint fmt check setup clean run format analyze
 
 BINARY := sci-disclose
 
@@ -37,6 +37,10 @@ endif
 
 test: ## Run tests with the race detector
 	go test -race ./...
+
+cover: ## Run tests and write coverage.out, printing the total
+	go test -race -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out | tail -n 1
 
 lint: ## Run the whole gate — every hook, every file
 	pre-commit run --all-files

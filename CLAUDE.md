@@ -46,6 +46,7 @@ make help     # every verb this repo exposes
 make build    # compile ./sci-disclose
 make install  # go install ./cmd/sci-disclose
 make test     # go test -race ./...
+make cover    # same, plus coverage.out and the total
 make lint     # go vet + gofmt check
 make fmt      # gofmt -w .
 make setup    # install the pre-commit hook
