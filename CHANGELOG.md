@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Generated from Conventional Commit messages by release-please — don't edit it
 by hand.
 
+## [1.0.3](https://github.com/fabiocicerchia/sci-disclose/compare/v1.0.2...v1.0.3) (2026-11-06)
+
+
+### Bug Fixes
+
+* 3 issues found by code-atlas (code design) ([#70](https://github.com/fabiocicerchia/sci-disclose/issues/70)) ([6a721fe](https://github.com/fabiocicerchia/sci-disclose/commit/6a721fe8d30606a903a49a247b0c4e528b990c51))
+* 3 issues found by code-atlas (silenced checks) ([#69](https://github.com/fabiocicerchia/sci-disclose/issues/69)) ([5a2234d](https://github.com/fabiocicerchia/sci-disclose/commit/5a2234d07a9ae403da1d309a17dceb17918bbed3))
+* 5 issues found by code-atlas (quality gates) ([#62](https://github.com/fabiocicerchia/sci-disclose/issues/62)) ([582afd1](https://github.com/fabiocicerchia/sci-disclose/commit/582afd12001a24b4ad2634e5b68c70e1190afd71))
+* 6 issues found by code-atlas (test suites) ([#68](https://github.com/fabiocicerchia/sci-disclose/issues/68)) ([5e7a047](https://github.com/fabiocicerchia/sci-disclose/commit/5e7a047ea7d1e4a7f0f604950e0207e9677f4e26))
+* govulncheck fails in the repository ([#66](https://github.com/fabiocicerchia/sci-disclose/issues/66)) ([860f70d](https://github.com/fabiocicerchia/sci-disclose/commit/860f70d1b455e9d145b3bec88c4f01258c89e55c))
+* The usage banner shows the damage from a search-and-replace ([#65](https://github.com/fabiocicerchia/sci-disclose/issues/65)) ([08f5f2f](https://github.com/fabiocicerchia/sci-disclose/commit/08f5f2f2a5c8f2cd2a1a1af484b1b08fad61cf08))
+* yamllint warns in the repository ([#63](https://github.com/fabiocicerchia/sci-disclose/issues/63)) ([21f07c2](https://github.com/fabiocicerchia/sci-disclose/commit/21f07c21c4535a7aafbc381f2fb3f82f15324580))
+
 ## [1.0.2](https://github.com/fabiocicerchia/sci-disclose/compare/v1.0.1...v1.0.2) (2026-09-20)
 
 
