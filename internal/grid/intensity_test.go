@@ -1,6 +1,7 @@
 package grid
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -291,11 +292,47 @@ func TestALiveFailureFallsBackToTheCacheBeforeTheBundledTable(t *testing.T) {
 	}
 }
 
+// memorySource stands in for the API and the disk cache.
+type memorySource struct {
+	body   string
+	cached map[string][]byte
+}
+
+func (m *memorySource) get(string) ([]byte, error) { return []byte(m.body), nil }
+
+func (m *memorySource) readCache(endpoint string) ([]byte, time.Duration, error) {
+	body, ok := m.cached[endpoint]
+	if !ok {
+		return nil, 0, errors.New("miss")
+	}
+	return body, 0, nil
+}
+
+func (m *memorySource) writeCache(endpoint string, body []byte) { m.cached[endpoint] = body }
+
+func TestTheLookupRunsAgainstAnInjectedSource(t *testing.T) {
+	src := &memorySource{body: testutil.ReadingJSON("measured", testutil.Now()), cached: map[string][]byte{}}
+	cfg := config.NewConfig()
+	cfg.IntensityAPI, cfg.Country = "https://api.invalid", "IE"
+	intensity, err := resolveIntensity(cfg, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if intensity.Value != 339 || !strings.Contains(intensity.Source, "fetched") {
+		t.Fatalf("got %g (%s)", intensity.Value, intensity.Source)
+	}
+	if _, ok := src.cached["https://api.invalid/v1/last-hour/IE"]; !ok {
+		t.Fatalf("the reading was not cached: %v", src.cached)
+	}
+}
+
 // Regression test for #9: the cache may land under a shared /tmp, so neither
 // the directory nor the file may be readable or writable by anyone else.
 func TestTheCacheIsPrivateToThisUser(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "sci-disclose", "reading.json")
-	writeCache(path, []byte("{}"))
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	const endpoint = "https://api.invalid/v1/last-hour/IE"
+	liveSource{}.writeCache(endpoint, []byte("{}"))
+	path := cacheFile(endpoint)
 	for name, want := range map[string]os.FileMode{filepath.Dir(path): 0o700, path: 0o600} {
 		info, err := os.Stat(name)
 		if err != nil {
