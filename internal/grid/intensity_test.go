@@ -3,6 +3,8 @@ package grid
 import (
 	"errors"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -321,5 +323,23 @@ func TestTheLookupRunsAgainstAnInjectedSource(t *testing.T) {
 	}
 	if _, ok := src.cached["https://api.invalid/v1/last-hour/IE"]; !ok {
 		t.Fatalf("the reading was not cached: %v", src.cached)
+	}
+}
+
+// Regression test for #9: the cache may land under a shared /tmp, so neither
+// the directory nor the file may be readable or writable by anyone else.
+func TestTheCacheIsPrivateToThisUser(t *testing.T) {
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	const endpoint = "https://api.invalid/v1/last-hour/IE"
+	liveSource{}.writeCache(endpoint, []byte("{}"))
+	path := cacheFile(endpoint)
+	for name, want := range map[string]os.FileMode{filepath.Dir(path): 0o700, path: 0o600} {
+		info, err := os.Stat(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := info.Mode().Perm(); got != want {
+			t.Errorf("%s: mode %o, want %o", name, got, want)
+		}
 	}
 }

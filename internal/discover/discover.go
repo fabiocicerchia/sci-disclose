@@ -27,9 +27,9 @@ var skipDirs = map[string]bool{
 // DetectWorkload returns the command a contributor would run, and where that
 // choice came from. Nothing is invented: an empty repo returns false.
 func DetectWorkload(root string) ([]string, string, bool) {
+	repo := os.DirFS(root)
 	for _, name := range []string{"Makefile", "makefile", "GNUmakefile"} {
-		//nolint:gosec // a Makefile inside the repository the user asked to scan
-		data, err := os.ReadFile(filepath.Join(root, name))
+		data, err := fs.ReadFile(repo, name)
 		if err != nil {
 			continue
 		}
@@ -42,8 +42,7 @@ func DetectWorkload(root string) ([]string, string, bool) {
 		}
 		break
 	}
-	//nolint:gosec // a package.json inside the repository the user asked to scan
-	if data, err := os.ReadFile(filepath.Join(root, "package.json")); err == nil {
+	if data, err := fs.ReadFile(repo, "package.json"); err == nil {
 		var pkg struct {
 			Scripts map[string]string `json:"scripts"`
 		}
@@ -205,11 +204,11 @@ func ScanRepo(root string) ([]Discovered, []string) {
 }
 
 func scanKubernetes(path, relative string) []Discovered {
-	file, err := os.Open(path) //nolint:gosec // a file found by walking the repository the user asked to scan
+	file, err := os.Open(path) //nolint:gosec // G304: a file found by walking the repository the user asked to scan
 	if err != nil {
 		return nil
 	}
-	defer file.Close() //nolint:errcheck // read-only: a failed close has nothing to report
+	defer file.Close() //nolint:errcheck // unchecked Close: read-only: a failed close has nothing to report
 
 	var found []Discovered
 	decoder := yaml.NewDecoder(file)
@@ -261,7 +260,7 @@ func scanKubernetes(path, relative string) []Discovered {
 }
 
 func scanTerraform(path, relative string) []Discovered {
-	data, err := os.ReadFile(path) //nolint:gosec // a file found by walking the repository the user asked to scan
+	data, err := os.ReadFile(path) //nolint:gosec // G304: a file found by walking the repository the user asked to scan
 	if err != nil {
 		return nil
 	}

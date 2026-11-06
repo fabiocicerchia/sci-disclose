@@ -116,7 +116,7 @@ func countRunUnits(opts *options, stdout string, counterBefore float64) error {
 		delta := after - counterBefore
 		if delta <= 0 {
 			return fmt.Errorf("%s did not advance during the run "+
-				"(%g to %g): nothing was served, so there is no rate to disclosure",
+				"(%g to %g): nothing was served, so there is no rate to report",
 				opts.unitsMetric, counterBefore, after)
 		}
 		counted = units.UnitSource{Count: delta,

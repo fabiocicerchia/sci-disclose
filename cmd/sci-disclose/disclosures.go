@@ -22,8 +22,8 @@ import (
 
 func cmdEstimate(args []string, out io.Writer) int {
 	fs := flag.NewFlagSet("estimate", flag.ContinueOnError)
-	file := fs.String("f", "sci.yaml", "declared to read")
-	fs.StringVar(file, "file", "sci.yaml", "declared to read")
+	file := fs.String("f", "sci.yaml", "manifest to read")
+	fs.StringVar(file, "file", "sci.yaml", "manifest to read")
 	opts := addFlags(fs)
 	if err := parse(fs, args, out); err != nil {
 		return 2
@@ -51,9 +51,9 @@ func cmdEstimate(args []string, out io.Writer) int {
 
 func cmdInit(args []string, out io.Writer) int {
 	fs := flag.NewFlagSet("init", flag.ContinueOnError)
-	output := fs.String("o", "sci.yaml", "where to write the declared")
-	fs.StringVar(output, "output", "sci.yaml", "where to write the declared")
-	force := fs.Bool("force", false, "overwrite an existing declared")
+	output := fs.String("o", "sci.yaml", "where to write the manifest")
+	fs.StringVar(output, "output", "sci.yaml", "where to write the manifest")
+	force := fs.Bool("force", false, "overwrite an existing manifest")
 	if err := parse(fs, args, out); err != nil {
 		return 2
 	}
@@ -73,7 +73,7 @@ func cmdInit(args []string, out io.Writer) int {
 	text := discover.RenderManifest(filepath.Base(absolute), components, notes)
 	// 0644 like any other scaffolded config: sci.yaml is written to be edited
 	// and committed, not kept private. gosec G306.
-	//nolint:gosec // scaffolded config, meant to be committed
+	//nolint:gosec // G306: scaffolded config, meant to be committed
 	if err := os.WriteFile(*output, []byte(text), 0o644); err != nil {
 		return fail(out, err)
 	}
@@ -185,7 +185,7 @@ func cmdUnits(args []string, out io.Writer) int {
 }
 
 func loadReport(path string) (*sci.Report, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // the disclosure the user passed to -f
+	data, err := os.ReadFile(path) //nolint:gosec // G304: the disclosure the user passed to -f
 	if err != nil {
 		return nil, err
 	}

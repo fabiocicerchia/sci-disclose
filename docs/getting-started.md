@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Go 1.24+** to build. Nothing else at runtime.
+- **Go 1.26+** to build. Nothing else at runtime.
 - For `sci-disclose func`, the interpreter of the language you are measuring must be on
   `$PATH` — the harness shells out to it.
 - For the RAPL backend, a Linux host with readable `powercap` counters

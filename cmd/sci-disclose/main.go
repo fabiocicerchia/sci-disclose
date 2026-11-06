@@ -9,7 +9,7 @@ import (
 	"github.com/fabiocicerchia/sci-disclose/internal/coefficients"
 )
 
-const usage = `sci-disclose — Software Carbon grid.Intensity (SCI) from the command line.
+const usage = `sci-disclose — Software Carbon Intensity (SCI) from the command line.
 
 SCI, as specified by the Green Software Foundation and standardised as
 ISO/IEC 21031:2024, is a rate, not a total:
@@ -22,7 +22,7 @@ ISO/IEC 21031:2024, is a rate, not a total:
     R  the functional unit the rate is expressed per     e.g. one API call
 
 A repository, a file or a function has no SCI until something runs. So every
-target either runs a workload and measures it, or reads a declared in which
+target either runs a workload and measures it, or reads a manifest in which
 you declare one. Nothing here infers carbon from source code alone.
 
 Targets:
@@ -88,6 +88,6 @@ func fail(out io.Writer, err error) int {
 
 func emit(w io.Writer, s string) { _, _ = fmt.Fprint(w, s) } //nolint:errcheck // see above
 
-func emitf(w io.Writer, format string, a ...any) { _, _ = fmt.Fprintf(w, format, a...) } //nolint:errcheck // see above
+func emitf(w io.Writer, format string, a ...any) { emit(w, fmt.Sprintf(format, a...)) }
 
-func emitln(w io.Writer, a ...any) { _, _ = fmt.Fprintln(w, a...) } //nolint:errcheck // see above
+func emitln(w io.Writer, a ...any) { emit(w, fmt.Sprintln(a...)) }

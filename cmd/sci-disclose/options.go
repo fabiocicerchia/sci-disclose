@@ -31,7 +31,7 @@ type options struct {
 }
 
 // addUnitCountingFlags is only for the targets that run a command: `func` gets
-// its count from -n, and `estimate` declares it in the declared.
+// its count from -n, and `estimate` declares it in the manifest.
 func addUnitCountingFlags(fs *flag.FlagSet, opts *options) {
 	fs.BoolVar(&opts.unitsFromStdout, "units-from-stdout", false,
 		"read the unit count from a marker the workload prints (see -units-pattern)")
@@ -123,7 +123,7 @@ func addFlags(fs *flag.FlagSet) *options {
 	fs.StringVar(&cfg.EnergySource, "energy", cfg.EnergySource,
 		"auto uses RAPL counters when readable, else the model (auto, rapl, model)")
 	fs.Float64Var(&cfg.IdleSeconds, "idle-seconds", 0,
-		"sample idle draw first and disclosure marginal energy (RAPL only)")
+		"sample idle draw first and report marginal energy (RAPL only)")
 
 	fs.Float64Var(&opts.units, "units", 0, "how many functional units the run delivered")
 	fs.StringVar(&opts.unitLabel, "unit-label", "", "what one functional unit is")
