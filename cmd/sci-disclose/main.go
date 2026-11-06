@@ -588,7 +588,7 @@ func cmdInit(args []string, out io.Writer) int {
 	text := discover.RenderManifest(filepath.Base(absolute), components, notes)
 	// 0644 like any other scaffolded config: sci.yaml is written to be edited
 	// and committed, not kept private. gosec G306.
-	//nolint:gosec // scaffolded config, meant to be committed
+	//nolint:gosec // G306: scaffolded config, meant to be committed
 	if err := os.WriteFile(*output, []byte(text), 0o644); err != nil {
 		return fail(out, err)
 	}
@@ -700,7 +700,7 @@ func cmdUnits(args []string, out io.Writer) int {
 }
 
 func loadReport(path string) (*sci.Report, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // the disclosure the user passed to -f
+	data, err := os.ReadFile(path) //nolint:gosec // G304: the disclosure the user passed to -f
 	if err != nil {
 		return nil, err
 	}
@@ -794,6 +794,6 @@ func cmdCoefficients(args []string, out io.Writer) int {
 
 func emit(w io.Writer, s string) { _, _ = fmt.Fprint(w, s) } //nolint:errcheck // see above
 
-func emitf(w io.Writer, format string, a ...any) { _, _ = fmt.Fprintf(w, format, a...) } //nolint:errcheck // see above
+func emitf(w io.Writer, format string, a ...any) { emit(w, fmt.Sprintf(format, a...)) }
 
-func emitln(w io.Writer, a ...any) { _, _ = fmt.Fprintln(w, a...) } //nolint:errcheck // see above
+func emitln(w io.Writer, a ...any) { emit(w, fmt.Sprintln(a...)) }

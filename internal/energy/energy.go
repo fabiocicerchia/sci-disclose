@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -83,13 +84,22 @@ func fileExists(path string) bool {
 	return err == nil
 }
 
+// readRAPL reads a file under RAPLRoot, which path must be inside.
+func readRAPL(path string) ([]byte, error) {
+	rel, err := filepath.Rel(RAPLRoot, path)
+	if err != nil {
+		return nil, err
+	}
+	return fs.ReadFile(os.DirFS(RAPLRoot), filepath.ToSlash(rel))
+}
+
 func readable(path string) bool {
-	_, err := os.ReadFile(path) //nolint:gosec // a RAPL counter under /sys/class/powercap
+	_, err := readRAPL(path)
 	return err == nil
 }
 
 func domainName(path string) string {
-	data, err := os.ReadFile(filepath.Join(path, "name")) //nolint:gosec // a RAPL domain name under /sys/class/powercap
+	data, err := readRAPL(filepath.Join(path, "name"))
 	if err != nil {
 		return filepath.Base(path)
 	}
@@ -97,7 +107,7 @@ func domainName(path string) string {
 }
 
 func readUint(path string) (uint64, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // a RAPL counter under /sys/class/powercap
+	data, err := readRAPL(path)
 	if err != nil {
 		return 0, err
 	}
@@ -175,7 +185,7 @@ func SampleIdleWatts(seconds float64) (float64, bool) {
 	reader := NewRAPLReader()
 	// Measuring elapsed time IS this function; an injected clock would be a
 	// clock that cannot measure.
-	started := time.Now() //nolint:forbidigo // see above
+	started := time.Now() //nolint:forbidigo // time.Now: see above
 	time.Sleep(time.Duration(seconds * float64(time.Second)))
 	elapsed := time.Since(started).Seconds()
 	reader.Stop()
@@ -212,7 +222,7 @@ func MeasureCommand(argv []string, dir string, useRAPL bool, tap io.Writer) (Sam
 	// context.Background(), deliberately: this is a one-shot CLI with no
 	// cancellation to plumb through, and the process the user asked for runs
 	// until it is done or until they interrupt the whole run.
-	cmd := exec.CommandContext(context.Background(), argv[0], argv[1:]...) //nolint:gosec // see above
+	cmd := exec.CommandContext(context.Background(), argv[0], argv[1:]...) //nolint:gosec // G204: see above
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	if tap != nil {
 		cmd.Stdout = io.MultiWriter(os.Stdout, tap)
@@ -223,7 +233,7 @@ func MeasureCommand(argv []string, dir string, useRAPL bool, tap io.Writer) (Sam
 	if useRAPL {
 		reader = NewRAPLReader()
 	}
-	started := time.Now() //nolint:forbidigo // the measurement itself; see SampleIdleWatts
+	started := time.Now() //nolint:forbidigo // time.Now: the measurement itself; see SampleIdleWatts
 	err := cmd.Run()
 	wall := time.Since(started).Seconds()
 	if reader != nil {
