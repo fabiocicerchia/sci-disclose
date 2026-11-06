@@ -17,7 +17,7 @@ func buildBinary(t *testing.T) string {
 		t.Skip("builds the binary")
 	}
 	bin := filepath.Join(t.TempDir(), "sci-disclose")
-	if out, err := exec.Command("go", "build", "-o", bin, ".").CombinedOutput(); err != nil {
+	if out, err := exec.CommandContext(t.Context(), "go", "build", "-o", bin, ".").CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
 	}
 	return bin
@@ -25,7 +25,7 @@ func buildBinary(t *testing.T) string {
 
 func runBinary(t *testing.T, bin string, args ...string) (int, string) {
 	t.Helper()
-	out, err := exec.Command(bin, args...).CombinedOutput()
+	out, err := exec.CommandContext(t.Context(), bin, args...).CombinedOutput()
 	var exit *exec.ExitError
 	if errors.As(err, &exit) {
 		return exit.ExitCode(), string(out)
