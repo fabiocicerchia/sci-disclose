@@ -3,7 +3,7 @@ Feature: Counting functional units from a service's metrics endpoint
   Lets an operator measuring a live service take R from a Prometheus-style counter it already publishes, so requests served during the run become the denominator.
 
   Background:
-    Given Given the operator measures a run with the counter "http_requests_total" scraped from "http://metrics.example.com/metrics"
+    Given the operator measures a run with the counter "http_requests_total" scraped from "http://metrics.example.com/metrics"
 
   @id:functional-units.metrics-scraping.001 @rule:units.metrics.counter-sums-every-series @verified @source:internal/units/units.go#ScrapeCounter @test:internal/units/units_test.go#TestScrapeCounterSumsEverySeriesOfTheMetric @test:cmd/sci-disclose/units_cli_test.go#TestCounterDeltaAcrossTheRunBecomesR
   Scenario: Every labelled series of the counter adds up to the count

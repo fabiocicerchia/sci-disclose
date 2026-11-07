@@ -22,7 +22,7 @@ Feature: Measuring a function per call
       | situation                                                | message                                                       |
       | -n 0 was given                                           | -n must be at least 1                                         |
       | no function reference was given                          | which function? — `sci-disclose func mypkg.bench:main -n 200` |
-      | the -python interpreter is not installed                 | interpreter not installed: python3                            |
+      | the -python interpreter is not installed                 | interpreter not installed: <the -python value, python3 by default> |
       | the reference names a missing module (no_such_module:go) | the harness's error                                           |
       | the reference has no function part (os.path)             | the harness's error                                           |
 

@@ -12,7 +12,7 @@ Feature: Failing a run that exceeds its carbon budget
     Examples:
       | budget  | verdict       | status |
       | 0       | OVER          | 1      |
-      | 1000000 | within budget | 0      |
+      | 1000000 | within        | 0      |
 
   @id:sci-score.carbon-budgets.002 @rule:budgets.gate.no-budget-never-fails @verified @source:cmd/sci-disclose/options.go#finish @test:cmd/sci-disclose/main_test.go#TestRunMeasuresACommandAndEmitsJSON
   Scenario: Without a budget, no score fails the run

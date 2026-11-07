@@ -9,7 +9,7 @@ Feature: Rendering a disclosure
   Scenario: The text disclosure shows every term of the equation next to the score
     Given the disclosure has an energy of 0.000500 kWh from the model, an intensity of 300 gCO2e/kWh and 10 functional units of "request"
     When the operator asks for the disclosure in text format
-    Then the first line reads "sci: <score> <unit>"
+    Then the first line reads "sci:" followed by the score and "gCO2e per request"
     And the output lists E energy with its source, I intensity with its source, O operational (E x I), M embodied, C total (O + M) and R per "10 x request"
     And the output ends its equation block with an "SCI" line repeating the score
     And each note in the disclosure is printed on its own line prefixed with "!"
@@ -29,10 +29,10 @@ Feature: Rendering a disclosure
   Scenario: The Markdown disclosure is a headed table of terms with its boundary and assumptions folded away
     Given the disclosure declares its software boundary and carries notes
     When the operator asks for the disclosure in markdown format
-    Then the output starts with "### SCI: <score> <unit>"
+    Then the output starts with "### SCI:" followed by the score and its unit
     And a table lists E energy, I intensity, O operational, M embodied, C total and R functional unit, each with its value and source
     And a collapsed "Software boundary and assumptions" section lists every boundary item and note
-    And the output ends with "Measured with sci-disclose <version>; SCI per ISO/IEC 21031:2024."
+    And the output ends with the italic footer "_Measured with sci-disclose" followed by the tool version and "; SCI per ISO/IEC 21031:2024._"
 
   @id:disclosure.report-formats.004 @rule:disclosure.formats.write-to-file @inferred @source:internal/report/report.go#Emit
   Scenario: A disclosure written to a file is confirmed on the console instead of printed

@@ -33,6 +33,6 @@ Feature: Counting functional units from a measured run
     Examples:
       | situation                                                             | message                                                                                                       |
       | -units-from-stdout is set but the workload printed no matching marker | the workload printed no unit count matching <pattern> — have it print e.g. `SCI-UNITS: 5000`                  |
-      | -units-pattern is not a valid regular expression                      | -units-pattern is not a valid regexp: <reason>                                                                |
+      | -units-from-stdout is set and -units-pattern is not a valid regular expression | -units-pattern is not a valid regexp: <reason>                                                                |
       | -units-metric is set without -units-url                               | -units-metric needs -units-url                                                                                |
       | the counter requests_total stayed at 120 during the run               | requests_total did not advance during the run (120 to 120): nothing was served, so there is no rate to report |

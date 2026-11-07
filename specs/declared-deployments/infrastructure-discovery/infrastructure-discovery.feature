@@ -56,5 +56,5 @@ Feature: Discovering the deployed boundary from infrastructure files
   Scenario: A path the scan could not read is disclosed rather than silently left out
     Given the repository has a subdirectory "secrets" the operator cannot read
     When the operator scaffolds the manifest
-    Then the manifest ends with a note "skipped <path>/secrets: permission denied"
+    Then the manifest ends with a note "skipped <path>/secrets: open <path>/secrets: permission denied"
     And components from the readable files are still listed

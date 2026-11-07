@@ -20,7 +20,7 @@ Feature: Invoking sci-disclose and reading its exit status
   @id:configuration.cli-dispatch.002 @rule:cli.dispatch.usage-errors-exit-two @verified @source:cmd/sci-disclose/main.go#Run @test:cmd/sci-disclose/main_test.go#TestUsageErrorsExitTwo
   Scenario Outline: A usage or configuration mistake is refused with exit status 2
     When the operator runs sci-disclose <invocation>
-    Then an error explaining the mistake is printed, prefixed "sci:" or followed by the usage text
+    Then an error prefixed "sci:" or the usage text is printed
     And no disclosure is produced
     And the exit status is 2
 

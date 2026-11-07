@@ -2,12 +2,10 @@
 Feature: Reporting marginal energy above the idle baseline
   Operators on a shared machine can subtract the host's idle draw, so the disclosure attributes only the workload's own share of energy.
 
-  Background:
-    Given the host's RAPL energy counters are readable
-
   @id:energy.idle-baseline.001 @rule:energy.idle.baseline-subtracted-floored-at-zero @verified @source:internal/energy/energy.go#ForSample @test:internal/energy/energy_test.go#TestIdleBaselineIsSubtractedAndNeverGoesNegative
   Scenario Outline: The idle draw is subtracted from measured energy, never below zero
-    Given the host idles at <idle_w> W
+    Given the host's RAPL energy counters are readable
+    And the host idles at <idle_w> W
     When the operator measures a 10-second workload that records 1000 joules, with an idle baseline
     Then the CPU line of the energy breakdown is <joules> joules expressed in kWh
     And the report notes the idle baseline of <idle_w> W was subtracted and that the reported energy is marginal, not total

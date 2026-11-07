@@ -10,7 +10,7 @@ Feature: Presenting the documentation in one consistent theme
     Given the project's accent pair is the GreenOps green #34d399 and #059669
     When a reader opens the splash page and then the rendered docs
     Then the splash title gradient runs from #34d399 to #059669
-    And the docs header and navigation chrome use #059669
+    And the docs primary colour and light-mode links use #059669
     And the docs interactive accent is #34d399
 
   @id:docs.documentation-site.site-theme.002 @rule:docs.theme.no-external-font-requests @inferred @source:docs/stylesheets/extra.css#:root

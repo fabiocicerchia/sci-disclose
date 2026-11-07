@@ -10,7 +10,7 @@ Feature: Detecting a repository's own workload
     Given the repository contains only <marker>
     When the operator measures the repository
     Then the measured command is "<command>"
-    And the report says the workload was detected from "<detected_from>"
+    And the JSON report's target detected_from is "<detected_from>"
 
     Examples:
       | marker                                                  | command       | detected_from               |
@@ -32,7 +32,7 @@ Feature: Detecting a repository's own workload
 
   @id:measurement.repo-workloads.006 @rule:repo.workload.none-found-is-refused @verified @source:internal/discover/discover.go#DetectWorkload @test:internal/discover/discover_test.go#TestDetectWorkloadReturnsNothingForAnEmptyRepo @test:cmd/sci-disclose/main_test.go#TestRepoTargetSaysSoWhenThereIsNoWorkload
   Scenario: A repository with no recognisable workload is refused, not guessed
-    Given the repository has no Makefile target, package.json script, go.mod, Cargo.toml or Python test layout
+    Given the repository has no Makefile test/check/bench target, no package.json test/bench/build script, no go.mod, no Cargo.toml and no pytest.ini, tox.ini, pyproject.toml or tests directory
     When the operator measures the repository
     Then the command exits with status 2
     And the output says "no workload found in this repo"

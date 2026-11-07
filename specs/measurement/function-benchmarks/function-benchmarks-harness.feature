@@ -4,7 +4,7 @@ Feature: Benchmarking a single function
 
   Background:
     Given python3 is installed
-    And the developer's working directory holds a Python module workload_under_test.py defining a function go
+    And the developer's working directory holds a Python module workload_under_test.py defining a function go and a non-callable value CONSTANT
 
   @id:measurement.function-benchmarks.004 @rule:measurement.function-benchmarks.per-call-measurement @verified @source:internal/harness/harness.go#MeasureFunction @test:cmd/sci-disclose/main_test.go#TestFuncTargetDividesByTheIterationCount
   Scenario: A function is scored per measured call, with warmup, startup and imports left out

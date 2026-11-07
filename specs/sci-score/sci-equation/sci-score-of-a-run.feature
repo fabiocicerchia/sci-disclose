@@ -40,9 +40,9 @@ Feature: Scoring a measured run
 
     Examples:
       | condition                                                                        | note                                                                                         |
-      | older than the current hour or on a non-measured basis                           | the intensity reading is not a current measured hour (basis or age); see its source line     |
-      | modelled rather than measured                                                    | the intensity reading is modelled rather than measured from a live grid feed                 |
-      | on the lifecycle basis because the requested basis is not published for the zone | intensity basis fell back to lifecycle: <requested basis> is not published for this location |
+      | generated more than 65 minutes ago or on a non-measured basis                                         | the intensity reading is not a current measured hour (basis or age); see its source line                  |
+      | modelled rather than measured                                                                         | the intensity reading is modelled rather than measured from a live grid feed                              |
+      | on the lifecycle basis because the requested consumption_lifecycle is not published for the zone | intensity basis fell back to lifecycle: consumption_lifecycle is not published for this location |
 
   @id:sci-score.sci-equation.004 @rule:sci.equation.boundary-and-assumptions-stated @inferred @source:internal/sci/sci.go#New
   Scenario: Every score states its boundary and the assumptions it used

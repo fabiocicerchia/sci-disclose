@@ -8,13 +8,13 @@ Feature: Keeping a measurement going when live intensity is unavailable
     And no earlier reading for Ireland is available
     When the operator measures a workload with --region eu-west-1 <offline_flag>
     Then the report uses the bundled yearly average for zone IE
-    And the intensity source reads "bundled yearly average, zone IE<suffix>"
+    And the intensity source reads "<source>"
     And the Carbon Intensity API was asked <requests>
 
     Examples:
-      | api_state                | offline_flag | suffix                              | requests |
-      | answers 429 rate limited |              | (the intensity API was unreachable) | once     |
-      | is reachable             | --offline    |                                     | never    |
+      | api_state                | offline_flag | source                                                                 | requests |
+      | answers 429 rate limited |              | bundled yearly average, zone IE (the intensity API was unreachable) | once     |
+      | is reachable             | --offline    | bundled yearly average, zone IE                                        | never    |
 
   @id:carbon-intensity.intensity-cache-fallback.002 @rule:carbon-intensity.fallback.recent-reading-reused @verified @source:internal/grid/intensity.go#fetchReading @test:internal/grid/intensity_test.go#TestReadingsAreCachedSoTheRateLimitIsNotHammered @test:internal/grid/intensity_test.go#TestAStaleCachedReadingIsRefetched @test:internal/grid/intensity_test.go#TestCacheFreshnessFollowsTheReadingNotTheFile
   Scenario: A reading that still describes the current hour is reused instead of asking the API again

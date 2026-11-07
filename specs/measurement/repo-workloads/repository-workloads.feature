@@ -26,6 +26,6 @@ Feature: Measuring a repository through its own workload
 
     Examples:
       | situation                                     | message                                                                                                                                                                      |
-      | the path is not a directory                   | not a directory: <path>                                                                                                                                                      |
+      | the path is not a directory                   | not a directory: <absolute path>                                                                                                                                             |
       | no test or build workload can be detected     | no workload found in this repo. A repository has no SCI until something runs — pass -command, or declare the deployment with `sci-disclose init` and `sci-disclose estimate` |
       | the detected workload's tool is not installed | "make" is not installed, so the detected workload (make test) cannot run                                                                                                     |

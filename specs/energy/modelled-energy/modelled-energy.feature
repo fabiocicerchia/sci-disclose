@@ -46,7 +46,7 @@ Feature: Estimating energy from utilisation and power profiles
   Scenario Outline: Memory energy uses the workload's peak memory unless the operator reserves an amount
     Given the workload's peak resident memory is 0.5 GB
     When the operator measures the workload for one hour with the model <flag>
-    Then the report states <memory_gb> GB of memory
+    Then memory energy is modelled on <memory_gb> GB of memory
     And the memory line of the energy breakdown is <kwh> kWh
 
     Examples:

@@ -14,9 +14,9 @@ Feature: Gating a run on a carbon budget
 
     Examples:
       | limit | verdict | exit |
-      | 2.4   | pass    | 0    |
-      | 1.2   | pass    | 0    |
-      | 0.6   | fail    | 1    |
+      | 2.4   | within  | 0    |
+      | 1.2   | within  | 0    |
+      | 0.6   | OVER    | 1    |
 
   @id:sci-score.carbon-budgets.004 @rule:sci.budget.no-verdict-without-budget @verified @source:internal/sci/sci.go#ApplyBudget @test:internal/sci/sci_test.go#TestBudgetVerdictIsAttachedAndReturned
   Scenario: A run without a budget carries no budget verdict and is never failed for carbon

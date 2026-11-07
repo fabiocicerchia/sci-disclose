@@ -21,10 +21,10 @@ Feature: Comparing two disclosures to catch regressions
   @id:disclosure.report-comparison.002 @rule:compare.inputs.two-json-disclosures-required @verified @source:cmd/sci-disclose/disclosures.go#loadReport @test:cmd/sci-disclose/main_test.go#TestUsageErrorsExitTwo @questionable
   Scenario Outline: Compare is refused unless given exactly two readable JSON disclosures
     When the operator runs sci-disclose compare with <inputs>
-    Then the message "<message>" is shown
+    Then a message prefixed "sci: " containing "<message>" is shown
     And the exit status is 2
 
     Examples:
-      | inputs                          | message                                                                  |
-      | only one file                   | compare takes two JSON reports: before and after                         |
-      | a text report as the after file | after.txt is not a JSON disclosure from `sci ... -format json`: <reason> |
+      | inputs                          | message                                                         |
+      | only one file                   | compare takes two JSON reports: before and after                |
+      | a text report as the after file | after.txt is not a JSON disclosure from `sci ... -format json`: |

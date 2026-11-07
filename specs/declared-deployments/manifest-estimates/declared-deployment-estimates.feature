@@ -24,8 +24,8 @@ Feature: Estimating the SCI of a declared deployment
   Scenario Outline: A compute component is estimated with the same power model as measured runs, plus datacentre overhead
     Given a compute component with <vcpus> vCPUs, <replicas> replicas, utilisation <util> and <memory> GB of memory running <hours> hours on provider <provider>
     When the operator estimates the manifest
-    Then its CPU energy is vCPUs × replicas × (idle watts + utilisation × (max watts − idle watts)) × hours for that provider
-    And its memory energy covers memory × replicas for the same hours
+    Then its CPU energy is vCPUs × replicas × (idle watts + utilisation × (max watts − idle watts)) × hours / 1000 kWh for that provider
+    And any declared memory adds memory energy for memory × replicas over the same hours
     And a datacentre overhead line adds the provider's PUE share on top
 
     Examples:

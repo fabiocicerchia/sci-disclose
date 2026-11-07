@@ -3,7 +3,7 @@ Feature: Counting functional units from the workload's own output
   Lets an operator take R, the functional unit count, from what the measured workload already prints, writes or can be asked for, so the SCI rate is traceable instead of typed in by hand.
 
   Background:
-    Given Given the operator measures a workload with the run command
+    Given the operator measures a workload with the run command
 
   @id:functional-units.unit-counting.004 @rule:units.counting.marker-spellings @verified @source:internal/units/units.go#ScanUnits @test:internal/units/units_test.go#TestScanUnitsAcceptsTheUsualMarkerSpellings @test:cmd/sci-disclose/units_cli_test.go#TestUnitsAreReadFromTheWorkloadsOwnOutput
   Scenario Outline: The workload's unit marker is recognised in its usual spellings
@@ -77,7 +77,7 @@ Feature: Counting functional units from the workload's own output
     Examples:
       | command                 | count |
       | echo 640                | 640   |
-      | printf 'a\nb\n' | wc -l | 2     |
+      | printf 'a\nb\n' \| wc -l | 2     |
 
   @id:functional-units.unit-counting.010 @rule:units.counting.failed-follow-up-command-is-refused @verified @source:internal/units/units.go#FromCommand @test:internal/units/units_test.go#TestUnitsFromCommandReadsStdout
   Scenario Outline: A follow-up count command that fails or prints no count is refused

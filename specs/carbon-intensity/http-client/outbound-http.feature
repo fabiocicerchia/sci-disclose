@@ -3,7 +3,7 @@ Feature: Calling external services
   Serves operators running sci-disclose and the operators of the intensity APIs and metrics endpoints it calls: every outbound call names the tool, cannot hang the run, and cannot exhaust memory.
 
   Background:
-    Given Given sci-disclose version 0.2.0 is installed
+    Given sci-disclose version 0.2.0 is installed
 
   @id:carbon-intensity.http-client.001 @rule:http.outbound.identifies-tool-and-version @inferred @source:internal/fetch/fetch.go#Get
   Scenario: Every outbound request names sci-disclose and its version
@@ -17,7 +17,7 @@ Feature: Calling external services
     Given an endpoint at https://api.example.com that accepts the connection but never finishes responding
     When sci-disclose calls the endpoint
     Then the call gives up within 5 seconds
-    And the operator sees an error for that call instead of a hung run
+    And the call fails with an error instead of hanging the run
 
   @id:carbon-intensity.http-client.003 @rule:http.outbound.response-capped-at-1mib @inferred @source:internal/fetch/fetch.go#Get @questionable
   Scenario Outline: Only the first 1 MiB of a response is read
