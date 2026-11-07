@@ -1,0 +1,2308 @@
+{
+ "excluded": {
+  "cmd/sci-disclose": [
+   {
+    "candidate": "emit/emitf/emitln drop write errors to stdout",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "cmd/sci-disclose/main.go#emit"
+   },
+   {
+    "candidate": "subcommands map dispatch table",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "cmd/sci-disclose/main.go#Run"
+   },
+   {
+    "candidate": "-intensity-api defaults from SCI_INTENSITY_API env var",
+    "covered_by": "belongs to carbon-intensity lookup; only the flag default is set here, and the lookup lives in internal/grid",
+    "reason": "UNVERIFIABLE",
+    "source": "cmd/sci-disclose/options.go#addFlags"
+   },
+   {
+    "candidate": "Every assumption flag (provider, pue, vcpus, memory-gb, region, zone, hardware, embodied-kg, lifespan-years, idle-seconds...) overrides the default",
+    "covered_by": "flag wiring only; validation and reporting of the values used live in internal/config and internal/sci",
+    "reason": "TRIVIAL",
+    "source": "cmd/sci-disclose/options.go#addFlags"
+   },
+   {
+    "candidate": "-o and -output write the disclosure to a file in text/json/markdown",
+    "covered_by": "rendering and file writing live in report.Emit (internal/report)",
+    "reason": "UNVERIFIABLE",
+    "source": "cmd/sci-disclose/measure.go#measureCommand"
+   },
+   {
+    "candidate": "Modelled-energy caveat note when RAPL is not used",
+    "covered_by": "provenance is the energy/sci-equation modules' rule; here it is only the note text",
+    "reason": "UNVERIFIABLE",
+    "source": "cmd/sci-disclose/measure.go#commandNotes"
+   },
+   {
+    "candidate": "estimate reads sci.yaml by default and gates on budget",
+    "covered_by": "budgets.gate.over-budget-exits-one",
+    "reason": "DUPLICATE_OF",
+    "source": "cmd/sci-disclose/disclosures.go#cmdEstimate"
+   },
+   {
+    "candidate": "compare -format json output",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "cmd/sci-disclose/disclosures.go#cmdCompare"
+   },
+   {
+    "candidate": "func -iterations alias for -n and -python interpreter choice",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "cmd/sci-disclose/measure.go#cmdFunc"
+   },
+   {
+    "candidate": "file -interpreter override splits on whitespace",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "cmd/sci-disclose/measure.go#cmdFile"
+   },
+   {
+    "candidate": "Unit counting happens after the workload so it is outside the measurement",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "cmd/sci-disclose/options.go#countUnits"
+   },
+   {
+    "candidate": "Bundled grid zones in the coefficients listing are sorted by intensity, four per row",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "cmd/sci-disclose/disclosures.go#cmdCoefficients"
+   }
+  ],
+  "coefficients/coefficients": [
+   {
+    "candidate": "Version constant reported by --version, in reports and the User-Agent",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "internal/coefficients/coefficients.go#Version"
+   },
+   {
+    "candidate": "Memory 0.392 W/GB, network 0.001 kWh/GB, storage 1.2/0.65 W/TB values used in modelled energy",
+    "covered_by": "energy/modelled-energy (their citations are covered by disclosure.coefficients.every-figure-cited)",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/coefficients/coefficients.go#MemoryWPerGB"
+   },
+   {
+    "candidate": "World average 481 gCO2e/kWh used when no region or zone is given",
+    "covered_by": "enforced in internal/grid (carbon-intensity/intensity-cache-fallback)",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/coefficients/coefficients.go#DefaultIntensity"
+   },
+   {
+    "candidate": "Cloud region maps to a country, sub-national zones never guessed",
+    "covered_by": "enforced in internal/grid (carbon-intensity/intensity-lookup)",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/coefficients/coefficients.go#RegionCountry"
+   },
+   {
+    "candidate": "Fallback order through intensity bases",
+    "covered_by": "enforced in internal/grid (carbon-intensity/intensity-lookup)",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/coefficients/coefficients.go#IntensityBases"
+   },
+   {
+    "candidate": "Unknown --provider / --hardware refused listing valid names",
+    "covered_by": "enforced in internal/config (configuration/assumptions)",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/coefficients/coefficients.go#ProviderNames"
+   },
+   {
+    "candidate": "HoursPerYear amortisation constant",
+    "covered_by": "sci-score/embodied-emissions",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/coefficients/coefficients.go#HoursPerYear"
+   }
+  ],
+  "config/config": [
+   {
+    "candidate": "NewConfig defaults Units to 1 and UnitLabel to \"run\"",
+    "covered_by": "each command overwrites both in options.finish with its own default (run, execution, call, \u2026); the observable rule belongs to the CLI/functional-units modules",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/config/config.go#NewConfig"
+   },
+   {
+    "candidate": "--intensity-api default and SCI_INTENSITY_API environment override",
+    "covered_by": "carbon-intensity/intensity-lookup (the API base URL is a grid lookup concern, set in the CLI, not config)",
+    "reason": "DUPLICATE_OF",
+    "source": "cmd/sci-disclose/options.go#addFlags"
+   },
+   {
+    "candidate": "Unknown provider/hardware lookups return zero-valued presets if Validate is skipped",
+    "covered_by": "every caller validates first (options.finish, manifest.EstimateComponent)",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/config/config.go#Config.Profile"
+   },
+   {
+    "candidate": "Config field layout and comments",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/config/config.go#Config"
+   },
+   {
+    "candidate": "Unknown choices in a declared manifest component are refused",
+    "covered_by": "configuration.assumptions.unknown-choice-refused",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/manifest/manifest.go#EstimateComponent"
+   },
+   {
+    "candidate": "A setting outside the known choices is refused before anything runs",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/config/config.go#Config.Validate"
+   },
+   {
+    "candidate": "An override replaces only the preset value it names",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/config/config.go#Config.Profile"
+   },
+   {
+    "candidate": "A zero or negative override silently falls back to the preset",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/config/config.go#Config.DeviceSpec"
+   },
+   {
+    "candidate": "An unknown intensity basis is accepted and the default fallback order is used",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/config/config.go#Config.Validate"
+   }
+  ],
+  "discover/discover": [
+   {
+    "candidate": "Memory quantity without a suffix is read as bytes; decimal and binary suffixes use different factors",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/discover/discover.go#ParseMemoryQuantity"
+   },
+   {
+    "candidate": "Component name falls back to the YAML file name when metadata.name is empty",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/discover/discover.go#ScanRepo"
+   },
+   {
+    "candidate": "Values are rounded to 3 decimal places",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/discover/discover.go#round"
+   },
+   {
+    "candidate": "Non-workload YAML kinds (Service, ConfigMap) are ignored",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/discover/discover.go#ScanRepo"
+   },
+   {
+    "candidate": "Manifest text is assembled by hand rather than marshalled",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/discover/discover.go#RenderManifest"
+   },
+   {
+    "candidate": "Discovered struct fields",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/discover/discover.go#Discovered"
+   }
+  ],
+  "energy/energy": [
+   {
+    "candidate": "MeasureCommand: a command that cannot be started returns \"could not run <cmd>\"",
+    "covered_by": "measurement/command-runs (owned by the run/file command module)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/energy/energy.go#MeasureCommand"
+   },
+   {
+    "candidate": "MeasureCommand: the child inherits stdin/stdout/stderr, env and working directory; stdout is duplicated when units are read from it",
+    "covered_by": "measurement/command-runs and functional-units/unit-counting",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/energy/energy.go#MeasureCommand"
+   },
+   {
+    "candidate": "Sample fields (wall, CPU, peak RSS, exit code, iterations = 1)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/energy/energy.go#Sample"
+   },
+   {
+    "candidate": "readRAPL confines reads to the RAPLRoot tree",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/energy/energy.go#readRAPL"
+   },
+   {
+    "candidate": "Domain name falls back to the directory name when the name file is missing",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/energy/energy.go#domainName"
+   },
+   {
+    "candidate": "The energy breakdown keeps a stable order (a slice, not a map)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/energy/energy.go#Part"
+   },
+   {
+    "candidate": "RAPLRoot can be overridden for the fake powercap tree",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/energy/energy.go#RAPLRoot"
+   },
+   {
+    "candidate": "A counter that wraps during the run still yields its true energy",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/energy/energy.go#RAPLReader.Stop"
+   }
+  ],
+  "energy/usage-other": [
+   {
+    "candidate": "processUsage is selected by a !unix build tag instead of the Unix rusage implementation",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/energy/usage_other.go#processUsage"
+   }
+  ],
+  "energy/usage-unix": [
+   {
+    "candidate": "When the operating system gives no detailed usage record, CPU comes from the runtime's user+system times and peak memory is 0",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/energy/usage_unix.go#processUsage"
+   },
+   {
+    "candidate": "The command is measured from outside, so nothing in the process tree has to cooperate",
+    "covered_by": "measurement.process-usage.cpu-covers-process-tree",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/energy/usage_unix.go#processUsage"
+   }
+  ],
+  "fetch/fetch": [
+   {
+    "candidate": "Status code returned to caller without being treated as an error (callers map 429/404/other to messages)",
+    "covered_by": "carbon-intensity/intensity-lookup and functional-units/metrics-scraping (status-to-message mapping belongs to those callers)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/grid/source.go#liveSource.get"
+   },
+   {
+    "candidate": "Request built with context.Background and no cancellation plumbing",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/fetch/fetch.go#Get"
+   },
+   {
+    "candidate": "Malformed endpoint URL returns an error before any request",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/fetch/fetch.go#Get"
+   },
+   {
+    "candidate": "Response body close error ignored",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/fetch/fetch.go#Get"
+   },
+   {
+    "candidate": "A new http.Client per call (no connection reuse)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/fetch/fetch.go#Get"
+   }
+  ],
+  "grid/intensity": [
+   {
+    "candidate": "Lookup runs against an injected source (memorySource) for tests",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/grid/intensity_test.go#TestTheLookupRunsAgainstAnInjectedSource"
+   },
+   {
+    "candidate": "Cache file and directory are private to the user (0600/0700)",
+    "covered_by": "enforced in the grid cache code (liveSource.writeCache), outside this module's source file",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/grid/intensity_test.go#TestTheCacheIsPrivateToThisUser"
+   },
+   {
+    "candidate": "Location label narrows country to bidding zone (Reading.Where)",
+    "covered_by": "carbon-intensity.lookup.basis-selectable-with-visible-substitution",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/grid/intensity.go#Reading.Where"
+   },
+   {
+    "candidate": "Annual-average readings have no window and say 'no particular hour'",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/grid/intensity.go#describeReading"
+   },
+   {
+    "candidate": "API path construction /v1/last-hour/<CODE> and /v1/zones/<C>/<Z>",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/grid/intensity.go#apiTarget"
+   },
+   {
+    "candidate": "Unreadable API response becomes an error then bundled fallback",
+    "covered_by": "carbon-intensity.fallback.bundled-average-when-unreachable",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/grid/intensity.go#fetchReading"
+   },
+   {
+    "candidate": "JSON field names of the Intensity provenance object",
+    "covered_by": "report formats are specified under disclosure/report-formats",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/grid/intensity.go#Intensity"
+   },
+   {
+    "candidate": "The operator chooses the intensity basis, and a basis the zone does not publish is substituted visibly",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/grid/intensity.go#Reading.Value"
+   },
+   {
+    "candidate": "A reading that does not describe the current hour is used but flagged stale",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/grid/intensity.go#Reading.Stale"
+   }
+  ],
+  "grid/source": [
+   {
+    "candidate": "Saved readings live under the user cache directory in sci-disclose/<hash>.json, falling back to the temp directory",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/grid/source.go#cacheFile"
+   },
+   {
+    "candidate": "Saved readings are keyed by a SHA-256 prefix of the endpoint URL",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/grid/source.go#cacheFile"
+   },
+   {
+    "candidate": "A saved reading's age is taken from the file's modification time",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/grid/source.go#liveSource.readCache"
+   },
+   {
+    "candidate": "A failure to save a reading is ignored silently and counts as a miss next time",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/grid/source.go#liveSource.writeCache"
+   },
+   {
+    "candidate": "The lookup takes a swappable source so tests avoid the network and the disk",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/grid/source.go#source"
+   },
+   {
+    "candidate": "A network-level failure (timeout, refused connection) is passed on as the fetch client's error",
+    "covered_by": "carbon-intensity.cache-fallback.stale-reading-states-why-live-failed",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/grid/source.go#liveSource.get"
+   },
+   {
+    "candidate": "An earlier reading used after a failed live lookup names the reason the lookup failed",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/grid/source.go#liveSource.get"
+   },
+   {
+    "candidate": "Saved intensity readings cannot be read or changed by other local users",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/grid/source.go#liveSource.writeCache"
+   }
+  ],
+  "harness/harness": [
+   {
+    "candidate": "Energy counter wraparound inside the function driver (adds max_energy_range_uj once when the end reading is below the start)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/harness/harness.go#pythonHarness"
+   },
+   {
+    "candidate": "DRAM sub-domain is counted and reported as covers_dram",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/harness/harness.go#pythonHarness"
+   },
+   {
+    "candidate": "Peak memory converted to GB with the platform's ru_maxrss unit (bytes on macOS, KiB elsewhere)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/harness/harness.go#pythonHarness"
+   },
+   {
+    "candidate": "Harness exits cleanly but writes no result: 'the harness produced no measurement'",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/harness/harness.go#MeasureFunction"
+   },
+   {
+    "candidate": "Driver script and result file live in a temp directory that is removed afterwards",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/harness/harness.go#MeasureFunction"
+   },
+   {
+    "candidate": "Result JSON shape exchanged between driver and CLI",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/harness/harness.go#harnessResult"
+   }
+  ],
+  "manifest/manifest": [
+   {
+    "candidate": "Grid intensity is looked up once per distinct region/country/zone/intensity within a manifest",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/manifest/manifest.go#resolveCached"
+   },
+   {
+    "candidate": "Storage energy = storage-gb \u00d7 replicas \u00d7 hours by medium, default ssd",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/manifest/manifest.go#EstimateComponent"
+   },
+   {
+    "candidate": "Network energy uses network-gb only, ignoring replicas and hours",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/manifest/manifest.go#EstimateComponent"
+   },
+   {
+    "candidate": "Component name defaults to its type; report boundary lists name (type); target description name (path) with defaults 'software system' and 'manifest'",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/manifest/manifest.go#EstimateManifest"
+   },
+   {
+    "candidate": "Report assumptions carry provider, component count and period hours",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/manifest/manifest.go#EstimateManifest"
+   },
+   {
+    "candidate": "Documented and scaffolded manifests stay loadable",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/manifest/manifest_test.go#TestDocumentedManifestIsValidInputForEstimate"
+   },
+   {
+    "candidate": "Budget check and exit status of the estimate command",
+    "covered_by": "sci-score/carbon-budgets (owned by the sci module)",
+    "reason": "UNVERIFIABLE",
+    "source": "cmd/sci-disclose/disclosures.go#cmdEstimate"
+   }
+  ],
+  "report/report": [
+   {
+    "candidate": "Comparison unit falls back from after to before to \"gCO2e\"",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/report/report.go#CompareReports"
+   },
+   {
+    "candidate": "Text disclosure lists per-component totals for manifest estimates",
+    "covered_by": "disclosure.formats.text-shows-the-working",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/report/report.go#RenderText"
+   },
+   {
+    "candidate": "Text disclosure prints the run's wall, CPU, utilisation and peak RSS line",
+    "covered_by": "disclosure.formats.text-shows-the-working",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/report/report.go#RenderText"
+   },
+   {
+    "candidate": "Intensity credit and methodology lines in text and Markdown",
+    "covered_by": "disclosure.formats.markdown-for-pull-requests",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/report/report.go#RenderMarkdown"
+   },
+   {
+    "candidate": "JSON disclosure is the indented serialisation of the report",
+    "covered_by": "disclosure.formats.write-to-file",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/report/report.go#Emit"
+   },
+   {
+    "candidate": "Comparison JSON field names (before, after, delta, delta_pct, regression...)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/report/report.go#Comparison"
+   },
+   {
+    "candidate": "Trailing newlines trimmed from text output",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/report/report.go#RenderText"
+   }
+  ],
+  "sci-disclose/makefile": [
+   {
+    "candidate": "build compiles ./sci-disclose",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#build"
+   },
+   {
+    "candidate": "test runs go test -race",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "Makefile#test"
+   },
+   {
+    "candidate": "cover writes coverage.out and prints total",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "Makefile#cover"
+   },
+   {
+    "candidate": "lint and check both run pre-commit on all files (CLAUDE.md says lint is go vet + gofmt)",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#lint"
+   },
+   {
+    "candidate": "fmt and format both run gofmt -w",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "Makefile#fmt"
+   },
+   {
+    "candidate": "setup installs the pre-commit hook",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "Makefile#setup"
+   },
+   {
+    "candidate": "clean removes the binary",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#clean"
+   },
+   {
+    "candidate": "run passes ARGS to go run",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "Makefile#run"
+   },
+   {
+    "candidate": "analyze runs golangci-lint",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#analyze"
+   },
+   {
+    "candidate": "uninstall missing from .PHONY",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#uninstall"
+   }
+  ],
+  "sci/sci": [
+   {
+    "candidate": "JSON field names and shape of the Report types",
+    "covered_by": "disclosure/report-formats and disclosure/report-comparison own the rendered contract",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/sci/sci.go#Report"
+   },
+   {
+    "candidate": "Report records tool name and version",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/sci/sci.go#New"
+   },
+   {
+    "candidate": "Energy notes come before caller and intensity notes",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/sci/sci.go#New"
+   },
+   {
+    "candidate": "Config validation rejects unknown provider, hardware, medium or energy source (tested in sci_test.go)",
+    "covered_by": "configuration/assumptions (internal/config#Validate)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/sci/sci_test.go#TestConfigValidationRejectsUnknownInputs"
+   },
+   {
+    "candidate": "PUE and embodied overrides beat the presets (tested in sci_test.go)",
+    "covered_by": "configuration/assumptions (internal/config#Profile, DeviceSpec)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/sci/sci_test.go#TestOverridesBeatThePresets"
+   },
+   {
+    "candidate": "A failed workload exits 3 ahead of a budget failure",
+    "covered_by": "configuration/cli-dispatch exit-code rules",
+    "reason": "DUPLICATE_OF",
+    "source": "cmd/sci-disclose/measure.go"
+   }
+  ],
+  "testutil/fixtures": [
+   {
+    "candidate": "ReadingJSON returns a verbatim country-level intensity API response (IE) with extra undocumented fields and a chosen basis and generation time",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/testutil/fixtures.go#ReadingJSON"
+   },
+   {
+    "candidate": "ZoneReadingJSON returns a verbatim zone-level response (IT/SICI) with only production-based figures and no consumption fields",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/testutil/fixtures.go#ZoneReadingJSON"
+   },
+   {
+    "candidate": "IntensityServer serves one fixed body and status, counts the requests and records the paths it was asked for",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/testutil/fixtures.go#IntensityServer"
+   },
+   {
+    "candidate": "IntensityServer points the cache directory at a temporary folder so tests never touch the developer's real cache",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/testutil/fixtures.go#IntensityServer"
+   },
+   {
+    "candidate": "Now returns the current UTC time in RFC 3339 so intensity fixtures are always fresh",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/testutil/fixtures.go#Now"
+   }
+  ],
+  "testutil/testutil": [
+   {
+    "candidate": "WriteFile writes a fixture file under a directory, creating parents, and fails the test on any error",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/testutil/testutil.go#WriteFile"
+   },
+   {
+    "candidate": "Approx fails the test when a float differs from the expected value by more than a tolerance",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/testutil/testutil.go#Approx"
+   },
+   {
+    "candidate": "Config builds a deterministic test configuration (1 vCPU, intensity 500, offline, modelled energy) with an optional mutation",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/testutil/testutil.go#Config"
+   }
+  ],
+  "units/units": [
+   {
+    "candidate": "UnitSource carries a count and its origin string",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/units/units.go#UnitSource"
+   },
+   {
+    "candidate": "A follow-up command containing |<>$* is run through sh, otherwise exec'd directly",
+    "covered_by": "units.counting.from-follow-up-command",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/units/units.go#FromCommand"
+   },
+   {
+    "candidate": "An empty follow-up command is an error",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/units/units.go#FromCommand"
+   },
+   {
+    "candidate": "The follow-up command's stderr is passed through to the terminal",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/units/units.go#FromCommand"
+   },
+   {
+    "candidate": "The follow-up command runs outside the measured window",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/units/units.go#FromCommand"
+   },
+   {
+    "candidate": "Scrape goes through the shared bounded HTTP client",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/units/units.go#ScrapeCounter"
+   },
+   {
+    "candidate": "A bare number in the file or command output is preferred over the marker",
+    "covered_by": "units.counting.from-written-file",
+    "reason": "TRIVIAL",
+    "source": "internal/units/units.go#FromFile"
+   }
+  ]
+ },
+ "lifted": {
+  "cmd/sci-disclose": [],
+  "coefficients/coefficients": [],
+  "config/config": [],
+  "discover/discover": [],
+  "energy/energy": [],
+  "energy/usage-other": [],
+  "energy/usage-unix": [],
+  "fetch/fetch": [],
+  "grid/intensity": [
+   {
+    "from_source": "internal/grid/intensity.go#cacheFresh",
+    "rule": "carbon-intensity.fallback.recent-reading-reused"
+   },
+   {
+    "from_source": "internal/grid/intensity.go#fetchReading",
+    "rule": "carbon-intensity.fallback.last-reading-before-bundled-table"
+   }
+  ],
+  "grid/source": [
+   {
+    "from_source": "internal/grid/source.go#liveSource.writeCache",
+    "rule": "Saved grid-intensity readings are private to the operator's account, even when they are stored in the shared temporary directory"
+   }
+  ],
+  "harness/harness": [],
+  "manifest/manifest": [],
+  "report/report": [],
+  "sci-disclose/makefile": [],
+  "sci/sci": [],
+  "testutil/fixtures": [],
+  "testutil/testutil": [],
+  "units/units": []
+ },
+ "retired": [],
+ "scenarios": {
+  "carbon-intensity.http-client.001": {
+   "file": "specs/carbon-intensity/http-client/outbound-http.feature",
+   "fingerprint": "b744b3db5cdb",
+   "human": false,
+   "rule": "http.outbound.identifies-tool-and-version",
+   "source": "internal/fetch/fetch.go#Get",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "carbon-intensity.http-client.002": {
+   "file": "specs/carbon-intensity/http-client/outbound-http.feature",
+   "fingerprint": "b744b3db5cdb",
+   "human": false,
+   "rule": "http.outbound.five-second-timeout",
+   "source": "internal/fetch/fetch.go#Get",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "carbon-intensity.http-client.003": {
+   "file": "specs/carbon-intensity/http-client/outbound-http.feature",
+   "fingerprint": "b744b3db5cdb",
+   "human": false,
+   "rule": "http.outbound.response-capped-at-1mib",
+   "source": "internal/fetch/fetch.go#Get",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "carbon-intensity.intensity-cache-fallback.001": {
+   "file": "specs/carbon-intensity/intensity-cache-fallback/intensity-fallback.feature",
+   "fingerprint": "7df7029ba2f5",
+   "human": false,
+   "rule": "carbon-intensity.fallback.bundled-average-when-unreachable",
+   "source": "internal/grid/intensity.go#resolveIntensity",
+   "status": "verified",
+   "test": "internal/grid/intensity_test.go#TestAnUnreachableAPIFallsBackToTheBundledTable",
+   "tests": [
+    "internal/grid/intensity_test.go#TestAnUnreachableAPIFallsBackToTheBundledTable",
+    "internal/grid/intensity_test.go#TestOfflineNeverCallsOut"
+   ]
+  },
+  "carbon-intensity.intensity-cache-fallback.002": {
+   "file": "specs/carbon-intensity/intensity-cache-fallback/intensity-fallback.feature",
+   "fingerprint": "d1f3a84d83cf",
+   "human": false,
+   "rule": "carbon-intensity.fallback.recent-reading-reused",
+   "source": "internal/grid/intensity.go#fetchReading",
+   "status": "verified",
+   "test": "internal/grid/intensity_test.go#TestReadingsAreCachedSoTheRateLimitIsNotHammered",
+   "tests": [
+    "internal/grid/intensity_test.go#TestReadingsAreCachedSoTheRateLimitIsNotHammered",
+    "internal/grid/intensity_test.go#TestAStaleCachedReadingIsRefetched",
+    "internal/grid/intensity_test.go#TestCacheFreshnessFollowsTheReadingNotTheFile"
+   ]
+  },
+  "carbon-intensity.intensity-cache-fallback.003": {
+   "file": "specs/carbon-intensity/intensity-cache-fallback/intensity-fallback.feature",
+   "fingerprint": "d1f3a84d83cf",
+   "human": false,
+   "rule": "carbon-intensity.fallback.last-reading-before-bundled-table",
+   "source": "internal/grid/intensity.go#fetchReading",
+   "status": "verified",
+   "test": "internal/grid/intensity_test.go#TestALiveFailureFallsBackToTheCacheBeforeTheBundledTable",
+   "tests": [
+    "internal/grid/intensity_test.go#TestALiveFailureFallsBackToTheCacheBeforeTheBundledTable"
+   ]
+  },
+  "carbon-intensity.intensity-cache-fallback.004": {
+   "file": "specs/carbon-intensity/intensity-cache-fallback/intensity-fallback.feature",
+   "fingerprint": "7df7029ba2f5",
+   "human": false,
+   "rule": "carbon-intensity.fallback.unknown-location-refused",
+   "source": "internal/grid/intensity.go#resolveIntensity",
+   "status": "verified",
+   "test": "internal/grid/intensity_test.go#TestUnknownRegionIsRefusedRatherThanGuessed",
+   "tests": [
+    "internal/grid/intensity_test.go#TestUnknownRegionIsRefusedRatherThanGuessed",
+    "internal/grid/intensity_test.go#TestNoLocationFallsBackToTheWorldAverage",
+    "internal/grid/intensity_test.go#TestEveryCloudRegionResolvesOfflineToo"
+   ]
+  },
+  "carbon-intensity.intensity-lookup.001": {
+   "file": "specs/carbon-intensity/intensity-lookup/live-grid-intensity.feature",
+   "fingerprint": "7df7029ba2f5",
+   "human": false,
+   "rule": "carbon-intensity.lookup.explicit-figure-wins",
+   "source": "internal/grid/intensity.go#resolveIntensity",
+   "status": "verified",
+   "test": "internal/grid/intensity_test.go#TestExplicitIntensityBeatsEveryLookup",
+   "tests": [
+    "internal/grid/intensity_test.go#TestExplicitIntensityBeatsEveryLookup"
+   ]
+  },
+  "carbon-intensity.intensity-lookup.002": {
+   "file": "specs/carbon-intensity/intensity-lookup/live-grid-intensity.feature",
+   "fingerprint": "7df7029ba2f5",
+   "human": false,
+   "rule": "carbon-intensity.lookup.live-reading-with-provenance",
+   "source": "internal/grid/intensity.go#resolveIntensity",
+   "status": "verified",
+   "test": "internal/grid/intensity_test.go#TestLastHourReadingIsUsedWithItsProvenance",
+   "tests": [
+    "internal/grid/intensity_test.go#TestLastHourReadingIsUsedWithItsProvenance"
+   ]
+  },
+  "configuration.assumptions.001": {
+   "file": "specs/configuration/assumptions/measurement-assumptions.feature",
+   "fingerprint": "2a6c2de70c5d",
+   "human": false,
+   "rule": "configuration.assumptions.stated-defaults",
+   "source": "internal/config/config.go#NewConfig",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "configuration.cli-dispatch.001": {
+   "file": "specs/configuration/cli-dispatch/cli-commands-and-exit-codes.feature",
+   "fingerprint": "1506ce15c2d3",
+   "human": false,
+   "rule": "cli.dispatch.help-and-version",
+   "source": "cmd/sci-disclose/main.go#Run",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestHelpAndVersion",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestHelpAndVersion"
+   ]
+  },
+  "configuration.cli-dispatch.002": {
+   "file": "specs/configuration/cli-dispatch/cli-commands-and-exit-codes.feature",
+   "fingerprint": "1506ce15c2d3",
+   "human": false,
+   "rule": "cli.dispatch.usage-errors-exit-two",
+   "source": "cmd/sci-disclose/main.go#Run",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestUsageErrorsExitTwo",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestUsageErrorsExitTwo"
+   ]
+  },
+  "configuration.cli-dispatch.003": {
+   "file": "specs/configuration/cli-dispatch/cli-commands-and-exit-codes.feature",
+   "fingerprint": "803fef405d33",
+   "human": false,
+   "rule": "cli.exit-codes.failed-workload-exit-three",
+   "source": "cmd/sci-disclose/measure.go#measureCommand",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestRunReportsAFailedWorkloadAsExitCodeThree",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestRunReportsAFailedWorkloadAsExitCodeThree"
+   ]
+  },
+  "declared-deployments.infrastructure-discovery.001": {
+   "file": "specs/declared-deployments/infrastructure-discovery/infrastructure-discovery.feature",
+   "fingerprint": "4351b08375fe",
+   "human": false,
+   "rule": "discovery.kubernetes.requests-become-components",
+   "source": "internal/discover/discover.go#ScanRepo",
+   "status": "verified",
+   "test": "internal/discover/discover_test.go#TestScanRepoReadsDeploymentsAndTerraform",
+   "tests": [
+    "internal/discover/discover_test.go#TestScanRepoReadsDeploymentsAndTerraform",
+    "internal/discover/discover_test.go#TestKubernetesQuantitiesAndInstanceSizes"
+   ]
+  },
+  "declared-deployments.infrastructure-discovery.002": {
+   "file": "specs/declared-deployments/infrastructure-discovery/infrastructure-discovery.feature",
+   "fingerprint": "4351b08375fe",
+   "human": false,
+   "rule": "discovery.kubernetes.missing-cpu-request-assumed-and-stated",
+   "source": "internal/discover/discover.go#ScanRepo",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "declared-deployments.infrastructure-discovery.003": {
+   "file": "specs/declared-deployments/infrastructure-discovery/infrastructure-discovery.feature",
+   "fingerprint": "4351b08375fe",
+   "human": false,
+   "rule": "discovery.terraform.instance-size-to-vcpus",
+   "source": "internal/discover/discover.go#ScanRepo",
+   "status": "verified",
+   "test": "internal/discover/discover_test.go#TestScanRepoReadsDeploymentsAndTerraform",
+   "tests": [
+    "internal/discover/discover_test.go#TestScanRepoReadsDeploymentsAndTerraform",
+    "internal/discover/discover_test.go#TestKubernetesQuantitiesAndInstanceSizes"
+   ]
+  },
+  "declared-deployments.infrastructure-discovery.004": {
+   "file": "specs/declared-deployments/infrastructure-discovery/infrastructure-discovery.feature",
+   "fingerprint": "4351b08375fe",
+   "human": false,
+   "rule": "discovery.scan.skips-dependency-and-build-dirs",
+   "source": "internal/discover/discover.go#ScanRepo",
+   "status": "verified",
+   "test": "internal/discover/discover_test.go#TestScanRepoReadsDeploymentsAndTerraform",
+   "tests": [
+    "internal/discover/discover_test.go#TestScanRepoReadsDeploymentsAndTerraform"
+   ]
+  },
+  "declared-deployments.infrastructure-discovery.005": {
+   "file": "specs/declared-deployments/infrastructure-discovery/infrastructure-discovery.feature",
+   "fingerprint": "4351b08375fe",
+   "human": false,
+   "rule": "discovery.scan.partial-scan-is-disclosed",
+   "source": "internal/discover/discover.go#ScanRepo",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "declared-deployments.manifest-estimates.001": {
+   "file": "specs/declared-deployments/manifest-estimates/declared-deployment-estimates.feature",
+   "fingerprint": "0ecde950053e",
+   "human": false,
+   "rule": "manifests.estimate.sci-is-total-per-declared-unit",
+   "source": "internal/manifest/manifest.go#EstimateManifest",
+   "status": "verified",
+   "test": "internal/manifest/manifest_test.go#TestManifestTotalsAreTheSumOfTheComponents",
+   "tests": [
+    "internal/manifest/manifest_test.go#TestManifestTotalsAreTheSumOfTheComponents",
+    "internal/manifest/manifest_test.go#TestDocumentedManifestIsValidInputForEstimate"
+   ]
+  },
+  "declared-deployments.manifest-estimates.002": {
+   "file": "specs/declared-deployments/manifest-estimates/declared-deployment-estimates.feature",
+   "fingerprint": "75d7d717858a",
+   "human": false,
+   "rule": "manifests.estimate.compute-uses-measured-power-model",
+   "source": "internal/manifest/manifest.go#EstimateComponent",
+   "status": "verified",
+   "test": "internal/manifest/manifest_test.go#TestManifestComputeMatchesTheModelUsedForMeasuredRuns",
+   "tests": [
+    "internal/manifest/manifest_test.go#TestManifestComputeMatchesTheModelUsedForMeasuredRuns"
+   ]
+  },
+  "declared-deployments.manifest-estimates.003": {
+   "file": "specs/declared-deployments/manifest-estimates/declared-deployment-estimates.feature",
+   "fingerprint": "75d7d717858a",
+   "human": false,
+   "rule": "manifests.estimate.devices-carry-no-datacentre-overhead",
+   "source": "internal/manifest/manifest.go#EstimateComponent",
+   "status": "verified",
+   "test": "internal/manifest/manifest_test.go#TestEndUserDevicesCarryNoDatacentreOverhead",
+   "tests": [
+    "internal/manifest/manifest_test.go#TestEndUserDevicesCarryNoDatacentreOverhead"
+   ]
+  },
+  "declared-deployments.manifest-estimates.004": {
+   "file": "specs/declared-deployments/manifest-estimates/declared-deployment-estimates.feature",
+   "fingerprint": "7a5a3334d2f8",
+   "human": false,
+   "rule": "manifests.estimate.component-grid-overrides-default",
+   "source": "internal/manifest/manifest.go#componentConfig",
+   "status": "verified",
+   "test": "internal/manifest/manifest_test.go#TestComponentOverridesBeatTheDefaults",
+   "tests": [
+    "internal/manifest/manifest_test.go#TestComponentOverridesBeatTheDefaults"
+   ]
+  },
+  "declared-deployments.manifest-estimates.005": {
+   "file": "specs/declared-deployments/manifest-estimates/declared-deployment-estimates.feature",
+   "fingerprint": "c0f1e2d3b77f",
+   "human": false,
+   "rule": "manifests.estimate.embodied-share-of-declared-hardware",
+   "source": "internal/manifest/manifest.go#componentEmbodied",
+   "status": "verified",
+   "test": "internal/manifest/manifest_test.go#TestManifestEmbodiedUsesVCPUsOverTotalVCPUs",
+   "tests": [
+    "internal/manifest/manifest_test.go#TestManifestEmbodiedUsesVCPUsOverTotalVCPUs"
+   ]
+  },
+  "declared-deployments.manifest-estimates.006": {
+   "file": "specs/declared-deployments/manifest-estimates/declared-deployment-estimates.feature",
+   "fingerprint": "0ecde950053e",
+   "human": false,
+   "rule": "manifests.estimate.refuses-invalid-manifest",
+   "source": "internal/manifest/manifest.go#EstimateManifest",
+   "status": "verified",
+   "test": "internal/manifest/manifest_test.go#TestManifestErrorsAreExplicit",
+   "tests": [
+    "internal/manifest/manifest_test.go#TestManifestErrorsAreExplicit"
+   ]
+  },
+  "declared-deployments.manifest-estimates.007": {
+   "file": "specs/declared-deployments/manifest-estimates/declared-deployment-estimates.feature",
+   "fingerprint": "70bd53584cd5",
+   "human": false,
+   "rule": "manifests.format.lenient-key-spelling",
+   "source": "internal/manifest/manifest.go#LoadManifest",
+   "status": "verified",
+   "test": "internal/manifest/manifest_test.go#TestManifestAcceptsUnderscoresAndBothSpellingsOfUtilisation",
+   "tests": [
+    "internal/manifest/manifest_test.go#TestManifestAcceptsUnderscoresAndBothSpellingsOfUtilisation"
+   ]
+  },
+  "declared-deployments.manifest-generation.001": {
+   "file": "specs/declared-deployments/manifest-generation/scaffolding-a-manifest.feature",
+   "fingerprint": "ecc4b46a2eeb",
+   "human": false,
+   "rule": "manifests.init.scaffold-from-discovered-components",
+   "source": "cmd/sci-disclose/disclosures.go#cmdInit",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestInitThenEstimateRoundTrips",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestInitThenEstimateRoundTrips"
+   ]
+  },
+  "declared-deployments.manifest-generation.002": {
+   "file": "specs/declared-deployments/manifest-generation/scaffolding-a-manifest.feature",
+   "fingerprint": "ecc4b46a2eeb",
+   "human": false,
+   "rule": "manifests.init.never-overwrites-without-force",
+   "source": "cmd/sci-disclose/disclosures.go#cmdInit",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestInitRefusesToClobber",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestInitRefusesToClobber"
+   ]
+  },
+  "declared-deployments.manifest-generation.003": {
+   "file": "specs/declared-deployments/manifest-generation/manifest-scaffold.feature",
+   "fingerprint": "9df339b39a6b",
+   "human": false,
+   "rule": "manifest-scaffold.discovered-components-with-starting-values",
+   "source": "internal/discover/discover.go#RenderManifest",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestInitThenEstimateRoundTrips",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestInitThenEstimateRoundTrips"
+   ]
+  },
+  "declared-deployments.manifest-generation.004": {
+   "file": "specs/declared-deployments/manifest-generation/manifest-scaffold.feature",
+   "fingerprint": "9df339b39a6b",
+   "human": false,
+   "rule": "manifest-scaffold.placeholder-when-nothing-discovered",
+   "source": "internal/discover/discover.go#RenderManifest",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "declared-deployments.manifest-generation.005": {
+   "file": "specs/declared-deployments/manifest-generation/manifest-scaffold.feature",
+   "fingerprint": "9df339b39a6b",
+   "human": false,
+   "rule": "manifest-scaffold.provenance-and-notes-carried",
+   "source": "internal/discover/discover.go#RenderManifest",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "developer-tooling.build-tasks.001": {
+   "file": "specs/developer-tooling/build-tasks/installing-sci-disclose.feature",
+   "fingerprint": "bdf4593a239f",
+   "human": false,
+   "rule": "tooling.install.system-prefix-layout",
+   "source": "Makefile#install",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "developer-tooling.build-tasks.002": {
+   "file": "specs/developer-tooling/build-tasks/installing-sci-disclose.feature",
+   "fingerprint": "bdf4593a239f",
+   "human": false,
+   "rule": "tooling.install.per-user-default",
+   "source": "Makefile#install",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "developer-tooling.build-tasks.003": {
+   "file": "specs/developer-tooling/build-tasks/installing-sci-disclose.feature",
+   "fingerprint": "95efe0f7efc1",
+   "human": false,
+   "rule": "tooling.install.uninstall-removes-installed-files",
+   "source": "Makefile#uninstall",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "developer-tooling.build-tasks.004": {
+   "file": "specs/developer-tooling/build-tasks/installing-sci-disclose.feature",
+   "fingerprint": "517de792f113",
+   "human": false,
+   "rule": "tooling.help.lists-install-verbs",
+   "source": "Makefile#help",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "disclosure.coefficient-sources.001": {
+   "file": "specs/disclosure/coefficient-sources/publishing-coefficients.feature",
+   "fingerprint": "071e50f511f4",
+   "human": false,
+   "rule": "coefficients.listing.every-constant-with-source",
+   "source": "cmd/sci-disclose/disclosures.go#cmdCoefficients",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources"
+   ]
+  },
+  "disclosure.coefficient-sources.002": {
+   "file": "specs/disclosure/coefficient-sources/publishing-coefficients.feature",
+   "fingerprint": "071e50f511f4",
+   "human": false,
+   "rule": "coefficients.listing.machine-readable-form",
+   "source": "cmd/sci-disclose/disclosures.go#cmdCoefficients",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources"
+   ]
+  },
+  "disclosure.coefficient-sources.003": {
+   "file": "specs/disclosure/coefficient-sources/coefficient-sources.feature",
+   "fingerprint": "69322ba2cc85",
+   "human": false,
+   "rule": "disclosure.coefficients.every-figure-cited",
+   "source": "internal/coefficients/coefficients.go#CoefficientSources",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources"
+   ]
+  },
+  "disclosure.coefficient-sources.004": {
+   "file": "specs/disclosure/coefficient-sources/coefficient-sources.feature",
+   "fingerprint": "a0a2a8084fd5",
+   "human": false,
+   "rule": "disclosure.coefficients.provider-power-profiles",
+   "source": "internal/coefficients/coefficients.go#CPUProfiles",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "disclosure.coefficient-sources.005": {
+   "file": "specs/disclosure/coefficient-sources/coefficient-sources.feature",
+   "fingerprint": "6589500bc068",
+   "human": false,
+   "rule": "disclosure.coefficients.embodied-hardware-figures",
+   "source": "internal/coefficients/coefficients.go#Hardware",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "disclosure.coefficient-sources.006": {
+   "file": "specs/disclosure/coefficient-sources/coefficient-sources.feature",
+   "fingerprint": "2fe67c9d9d30",
+   "human": false,
+   "rule": "disclosure.coefficients.bundled-grid-intensity",
+   "source": "internal/coefficients/coefficients.go#GridZones",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "disclosure.coefficient-sources.007": {
+   "file": "specs/disclosure/coefficient-sources/coefficient-sources.feature",
+   "fingerprint": "601bc0296cdf",
+   "human": false,
+   "rule": "disclosure.coefficients.live-intensity-source-stated",
+   "source": "internal/coefficients/coefficients.go#DefaultIntensityAPI",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources"
+   ]
+  },
+  "disclosure.coefficient-sources.008": {
+   "file": "specs/disclosure/coefficient-sources/coefficient-sources.feature",
+   "fingerprint": "bbc3b43bfe5f",
+   "human": false,
+   "rule": "disclosure.coefficients.machine-readable-table",
+   "source": "internal/coefficients/coefficients.go#CPUProfile",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources"
+   ]
+  },
+  "disclosure.report-comparison.001": {
+   "file": "specs/disclosure/report-comparison/comparing-disclosures.feature",
+   "fingerprint": "0d8d7301d5fb",
+   "human": false,
+   "rule": "compare.gate.regression-fails-only-when-asked",
+   "source": "cmd/sci-disclose/disclosures.go#cmdCompare",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestCompareCommandGatesOnRegression",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestCompareCommandGatesOnRegression"
+   ]
+  },
+  "disclosure.report-comparison.002": {
+   "file": "specs/disclosure/report-comparison/comparing-disclosures.feature",
+   "fingerprint": "8f1d9eb83ad7",
+   "human": false,
+   "rule": "compare.inputs.two-json-disclosures-required",
+   "source": "cmd/sci-disclose/disclosures.go#loadReport",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestUsageErrorsExitTwo",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestUsageErrorsExitTwo"
+   ]
+  },
+  "disclosure.report-comparison.003": {
+   "file": "specs/disclosure/report-comparison/disclosure-comparison.feature",
+   "fingerprint": "e0aa13177634",
+   "human": false,
+   "rule": "disclosure.compare.regression-beyond-tolerance",
+   "source": "internal/report/report.go#CompareReports",
+   "status": "verified",
+   "test": "internal/report/report_test.go#TestCompareFlagsARegressionOutsideTolerance",
+   "tests": [
+    "internal/report/report_test.go#TestCompareFlagsARegressionOutsideTolerance"
+   ]
+  },
+  "disclosure.report-comparison.004": {
+   "file": "specs/disclosure/report-comparison/disclosure-comparison.feature",
+   "fingerprint": "0d8d7301d5fb",
+   "human": false,
+   "rule": "disclosure.compare.fail-on-regression-gate",
+   "source": "cmd/sci-disclose/disclosures.go#cmdCompare",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestCompareCommandGatesOnRegression",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestCompareCommandGatesOnRegression",
+    "cmd/sci-disclose/e2e_test.go#TestBinaryMeasuresThenGatesARegression"
+   ]
+  },
+  "disclosure.report-comparison.005": {
+   "file": "specs/disclosure/report-comparison/disclosure-comparison.feature",
+   "fingerprint": "7c14aeee7be1",
+   "human": false,
+   "rule": "disclosure.compare.warns-when-grid-moved",
+   "source": "internal/report/report.go#RenderComparison",
+   "status": "verified",
+   "test": "internal/report/report_test.go#TestCompareWarnsWhenTheGridMovedUnderneathTheCode",
+   "tests": [
+    "internal/report/report_test.go#TestCompareWarnsWhenTheGridMovedUnderneathTheCode"
+   ]
+  },
+  "disclosure.report-comparison.006": {
+   "file": "specs/disclosure/report-comparison/disclosure-comparison.feature",
+   "fingerprint": "e0aa13177634",
+   "human": false,
+   "rule": "disclosure.compare.zero-baseline",
+   "source": "internal/report/report.go#CompareReports",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "disclosure.report-formats.001": {
+   "file": "specs/disclosure/report-formats/disclosure-formats.feature",
+   "fingerprint": "9f66cb1c5cff",
+   "human": false,
+   "rule": "disclosure.formats.text-shows-the-working",
+   "source": "internal/report/report.go#RenderText",
+   "status": "verified",
+   "test": "internal/report/report_test.go#TestTextAndMarkdownShowTheWorking",
+   "tests": [
+    "internal/report/report_test.go#TestTextAndMarkdownShowTheWorking"
+   ]
+  },
+  "disclosure.report-formats.002": {
+   "file": "specs/disclosure/report-formats/disclosure-formats.feature",
+   "fingerprint": "9f66cb1c5cff",
+   "human": false,
+   "rule": "disclosure.formats.text-states-budget-verdict",
+   "source": "internal/report/report.go#RenderText",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "disclosure.report-formats.003": {
+   "file": "specs/disclosure/report-formats/disclosure-formats.feature",
+   "fingerprint": "9576add539da",
+   "human": false,
+   "rule": "disclosure.formats.markdown-for-pull-requests",
+   "source": "internal/report/report.go#RenderMarkdown",
+   "status": "verified",
+   "test": "internal/report/report_test.go#TestTextAndMarkdownShowTheWorking",
+   "tests": [
+    "internal/report/report_test.go#TestTextAndMarkdownShowTheWorking"
+   ]
+  },
+  "disclosure.report-formats.004": {
+   "file": "specs/disclosure/report-formats/disclosure-formats.feature",
+   "fingerprint": "198c22cc6bd9",
+   "human": false,
+   "rule": "disclosure.formats.write-to-file",
+   "source": "internal/report/report.go#Emit",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "disclosure.report-formats.005": {
+   "file": "specs/disclosure/report-formats/disclosure-formats.feature",
+   "fingerprint": "198c22cc6bd9",
+   "human": false,
+   "rule": "disclosure.formats.unknown-format-falls-back-to-text",
+   "source": "internal/report/report.go#Emit",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "disclosure.report-formats.006": {
+   "file": "specs/disclosure/report-formats/disclosure-formats.feature",
+   "fingerprint": "3a9a20ac0a87",
+   "human": false,
+   "rule": "disclosure.formats.readable-numbers",
+   "source": "internal/report/report.go#FormatNumber",
+   "status": "verified",
+   "test": "internal/report/report_test.go#TestNumberFormattingStaysReadable",
+   "tests": [
+    "internal/report/report_test.go#TestNumberFormattingStaysReadable"
+   ]
+  },
+  "energy.hardware-counters.001": {
+   "file": "specs/energy/hardware-counters/hardware-energy-counters.feature",
+   "fingerprint": "08ec811c8567",
+   "human": false,
+   "rule": "energy.rapl.preferred-when-readable",
+   "source": "internal/energy/energy.go#ForSample",
+   "status": "verified",
+   "test": "internal/energy/energy_test.go#TestRAPLJoulesAreConvertedAndPreferredOverTheModel",
+   "tests": [
+    "internal/energy/energy_test.go#TestRAPLJoulesAreConvertedAndPreferredOverTheModel"
+   ]
+  },
+  "energy.hardware-counters.002": {
+   "file": "specs/energy/hardware-counters/hardware-energy-counters.feature",
+   "fingerprint": "08ec811c8567",
+   "human": false,
+   "rule": "energy.rapl.memory-not-double-counted",
+   "source": "internal/energy/energy.go#ForSample",
+   "status": "verified",
+   "test": "internal/energy/energy_test.go#TestRAPLJoulesAreConvertedAndPreferredOverTheModel",
+   "tests": [
+    "internal/energy/energy_test.go#TestRAPLJoulesAreConvertedAndPreferredOverTheModel",
+    "internal/energy/energy_test.go#TestRAPLWithoutADRAMDomainAddsModelledMemory"
+   ]
+  },
+  "energy.hardware-counters.003": {
+   "file": "specs/energy/hardware-counters/hardware-energy-counters.feature",
+   "fingerprint": "0fa0155f98d4",
+   "human": false,
+   "rule": "energy.rapl.package-and-dram-only",
+   "source": "internal/energy/energy.go#RAPLReader",
+   "status": "verified",
+   "test": "internal/energy/energy_test.go#TestRAPLCountsPackageAndDRAMButNotTheCoreSubdomain",
+   "tests": [
+    "internal/energy/energy_test.go#TestRAPLCountsPackageAndDRAMButNotTheCoreSubdomain",
+    "internal/energy/energy_test.go#TestRAPLReaderSumsTheDeltaAcrossDomains"
+   ]
+  },
+  "energy.hardware-counters.004": {
+   "file": "specs/energy/hardware-counters/hardware-energy-counters.feature",
+   "fingerprint": "b04c36e218b0",
+   "human": false,
+   "rule": "energy.rapl.unreadable-counter-skipped",
+   "source": "internal/energy/energy.go#NewRAPLReader",
+   "status": "verified",
+   "test": "internal/energy/energy_test.go#TestUnreadableCountersAreSkippedRatherThanFatal",
+   "tests": [
+    "internal/energy/energy_test.go#TestUnreadableCountersAreSkippedRatherThanFatal"
+   ]
+  },
+  "energy.hardware-counters.005": {
+   "file": "specs/energy/hardware-counters/hardware-energy-counters.feature",
+   "fingerprint": "08ec811c8567",
+   "human": false,
+   "rule": "energy.rapl.demand-refused-without-counters",
+   "source": "internal/energy/energy.go#ForSample",
+   "status": "verified",
+   "test": "internal/energy/energy_test.go#TestAskingForRAPLWithoutCountersIsAnError",
+   "tests": [
+    "internal/energy/energy_test.go#TestAskingForRAPLWithoutCountersIsAnError"
+   ]
+  },
+  "energy.idle-baseline.001": {
+   "file": "specs/energy/idle-baseline/idle-baseline.feature",
+   "fingerprint": "08ec811c8567",
+   "human": false,
+   "rule": "energy.idle.baseline-subtracted-floored-at-zero",
+   "source": "internal/energy/energy.go#ForSample",
+   "status": "verified",
+   "test": "internal/energy/energy_test.go#TestIdleBaselineIsSubtractedAndNeverGoesNegative",
+   "tests": [
+    "internal/energy/energy_test.go#TestIdleBaselineIsSubtractedAndNeverGoesNegative"
+   ]
+  },
+  "energy.idle-baseline.002": {
+   "file": "specs/energy/idle-baseline/idle-baseline.feature",
+   "fingerprint": "3777bf08a01b",
+   "human": false,
+   "rule": "energy.idle.only-with-counters-and-duration",
+   "source": "internal/energy/energy.go#SampleIdleWatts",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "energy.modelled-energy.001": {
+   "file": "specs/energy/modelled-energy/modelled-energy.feature",
+   "fingerprint": "08ec811c8567",
+   "human": false,
+   "rule": "energy.model.used-without-counters-or-on-request",
+   "source": "internal/energy/energy.go#ForSample",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "energy.modelled-energy.002": {
+   "file": "specs/energy/modelled-energy/modelled-energy.feature",
+   "fingerprint": "90ec68317a59",
+   "human": false,
+   "rule": "energy.model.cpu-linear-in-utilisation",
+   "source": "internal/energy/energy.go#CPUkWh",
+   "status": "verified",
+   "test": "internal/energy/energy_test.go#TestCPUModelHitsIdleAndFullLoadEndpoints",
+   "tests": [
+    "internal/energy/energy_test.go#TestCPUModelHitsIdleAndFullLoadEndpoints"
+   ]
+  },
+  "energy.modelled-energy.003": {
+   "file": "specs/energy/modelled-energy/modelled-energy.feature",
+   "fingerprint": "a3c9f9fe59b3",
+   "human": false,
+   "rule": "energy.model.utilisation-of-reserved-capacity",
+   "source": "internal/energy/energy.go#Utilisation",
+   "status": "verified",
+   "test": "internal/energy/energy_test.go#TestUtilisationIsAFractionOfReservedCapacity",
+   "tests": [
+    "internal/energy/energy_test.go#TestUtilisationIsAFractionOfReservedCapacity"
+   ]
+  },
+  "energy.modelled-energy.004": {
+   "file": "specs/energy/modelled-energy/modelled-energy.feature",
+   "fingerprint": "08ec811c8567",
+   "human": false,
+   "rule": "energy.model.memory-defaults-to-peak-rss",
+   "source": "internal/energy/energy.go#ForSample",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "energy.modelled-energy.005": {
+   "file": "specs/energy/modelled-energy/modelled-energy.feature",
+   "fingerprint": "08ec811c8567",
+   "human": false,
+   "rule": "energy.model.storage-and-network-when-provisioned",
+   "source": "internal/energy/energy.go#ForSample",
+   "status": "verified",
+   "test": "internal/energy/energy_test.go#TestMemoryStorageAndNetworkUseThePublishedCoefficients",
+   "tests": [
+    "internal/energy/energy_test.go#TestMemoryStorageAndNetworkUseThePublishedCoefficients"
+   ]
+  },
+  "energy.modelled-energy.006": {
+   "file": "specs/energy/modelled-energy/modelled-energy.feature",
+   "fingerprint": "08ec811c8567",
+   "human": false,
+   "rule": "energy.pue.datacentre-overhead-line",
+   "source": "internal/energy/energy.go#ForSample",
+   "status": "verified",
+   "test": "internal/energy/energy_test.go#TestPUEShowsUpAsDatacentreOverhead",
+   "tests": [
+    "internal/energy/energy_test.go#TestPUEShowsUpAsDatacentreOverhead"
+   ]
+  },
+  "functional-units.metrics-scraping.001": {
+   "file": "specs/functional-units/metrics-scraping/scraping-a-metrics-counter.feature",
+   "fingerprint": "fe713c806eed",
+   "human": false,
+   "rule": "units.metrics.counter-sums-every-series",
+   "source": "internal/units/units.go#ScrapeCounter",
+   "status": "verified",
+   "test": "internal/units/units_test.go#TestScrapeCounterSumsEverySeriesOfTheMetric",
+   "tests": [
+    "internal/units/units_test.go#TestScrapeCounterSumsEverySeriesOfTheMetric",
+    "cmd/sci-disclose/units_cli_test.go#TestCounterDeltaAcrossTheRunBecomesR"
+   ]
+  },
+  "functional-units.metrics-scraping.002": {
+   "file": "specs/functional-units/metrics-scraping/scraping-a-metrics-counter.feature",
+   "fingerprint": "fe713c806eed",
+   "human": false,
+   "rule": "units.metrics.unavailable-counter-is-refused",
+   "source": "internal/units/units.go#ScrapeCounter",
+   "status": "verified",
+   "test": "internal/units/units_test.go#TestScrapeCounterRejectsABadEndpoint",
+   "tests": [
+    "internal/units/units_test.go#TestScrapeCounterRejectsABadEndpoint",
+    "internal/units/units_test.go#TestScrapeCounterSumsEverySeriesOfTheMetric"
+   ]
+  },
+  "functional-units.metrics-scraping.003": {
+   "file": "specs/functional-units/metrics-scraping/scraping-a-metrics-counter.feature",
+   "fingerprint": "fe713c806eed",
+   "human": false,
+   "rule": "units.metrics.timestamped-samples-ignored",
+   "source": "internal/units/units.go#ScrapeCounter",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "functional-units.unit-counting.001": {
+   "file": "specs/functional-units/unit-counting/counting-units-from-the-run.feature",
+   "fingerprint": "82b07652ab55",
+   "human": false,
+   "rule": "units.counting.count-read-from-chosen-source",
+   "source": "cmd/sci-disclose/measure.go#countRunUnits",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "functional-units.unit-counting.002": {
+   "file": "specs/functional-units/unit-counting/counting-units-from-the-run.feature",
+   "fingerprint": "5141b97df241",
+   "human": false,
+   "rule": "units.counting.explicit-units-win",
+   "source": "cmd/sci-disclose/measure.go#commandNotes",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "functional-units.unit-counting.003": {
+   "file": "specs/functional-units/unit-counting/counting-units-from-the-run.feature",
+   "fingerprint": "82b07652ab55",
+   "human": false,
+   "rule": "units.counting.uncountable-run-refused",
+   "source": "cmd/sci-disclose/measure.go#countRunUnits",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "functional-units.unit-counting.004": {
+   "file": "specs/functional-units/unit-counting/counting-functional-units.feature",
+   "fingerprint": "3c515d66ada8",
+   "human": false,
+   "rule": "units.counting.marker-spellings",
+   "source": "internal/units/units.go#ScanUnits",
+   "status": "verified",
+   "test": "internal/units/units_test.go#TestScanUnitsAcceptsTheUsualMarkerSpellings",
+   "tests": [
+    "internal/units/units_test.go#TestScanUnitsAcceptsTheUsualMarkerSpellings",
+    "cmd/sci-disclose/units_cli_test.go#TestUnitsAreReadFromTheWorkloadsOwnOutput"
+   ]
+  },
+  "functional-units.unit-counting.005": {
+   "file": "specs/functional-units/unit-counting/counting-functional-units.feature",
+   "fingerprint": "3c515d66ada8",
+   "human": false,
+   "rule": "units.counting.last-reported-count-wins",
+   "source": "internal/units/units.go#ScanUnits",
+   "status": "verified",
+   "test": "internal/units/units_test.go#TestScanUnitsTakesTheWorkloadsFinalWord",
+   "tests": [
+    "internal/units/units_test.go#TestScanUnitsTakesTheWorkloadsFinalWord"
+   ]
+  },
+  "functional-units.unit-counting.006": {
+   "file": "specs/functional-units/unit-counting/counting-functional-units.feature",
+   "fingerprint": "3c515d66ada8",
+   "human": false,
+   "rule": "units.counting.no-count-is-refused",
+   "source": "internal/units/units.go#ScanUnits",
+   "status": "verified",
+   "test": "internal/units/units_test.go#TestScanUnitsRejectsNonsense",
+   "tests": [
+    "internal/units/units_test.go#TestScanUnitsRejectsNonsense",
+    "cmd/sci-disclose/units_cli_test.go#TestAMissingMarkerIsAnErrorNotASilentOne"
+   ]
+  },
+  "functional-units.unit-counting.007": {
+   "file": "specs/functional-units/unit-counting/counting-functional-units.feature",
+   "fingerprint": "3b1ef451d092",
+   "human": false,
+   "rule": "units.counting.from-written-file",
+   "source": "internal/units/units.go#FromFile",
+   "status": "verified",
+   "test": "internal/units/units_test.go#TestUnitsFromFileTakesABareNumberOrAMarker",
+   "tests": [
+    "internal/units/units_test.go#TestUnitsFromFileTakesABareNumberOrAMarker"
+   ]
+  },
+  "functional-units.unit-counting.008": {
+   "file": "specs/functional-units/unit-counting/counting-functional-units.feature",
+   "fingerprint": "3b1ef451d092",
+   "human": false,
+   "rule": "units.counting.unreadable-file-is-refused",
+   "source": "internal/units/units.go#FromFile",
+   "status": "verified",
+   "test": "internal/units/units_test.go#TestUnitsFromFileTakesABareNumberOrAMarker",
+   "tests": [
+    "internal/units/units_test.go#TestUnitsFromFileTakesABareNumberOrAMarker"
+   ]
+  },
+  "functional-units.unit-counting.009": {
+   "file": "specs/functional-units/unit-counting/counting-functional-units.feature",
+   "fingerprint": "45a1bfe62f18",
+   "human": false,
+   "rule": "units.counting.from-follow-up-command",
+   "source": "internal/units/units.go#FromCommand",
+   "status": "verified",
+   "test": "internal/units/units_test.go#TestUnitsFromCommandReadsStdout",
+   "tests": [
+    "internal/units/units_test.go#TestUnitsFromCommandReadsStdout"
+   ]
+  },
+  "functional-units.unit-counting.010": {
+   "file": "specs/functional-units/unit-counting/counting-functional-units.feature",
+   "fingerprint": "45a1bfe62f18",
+   "human": false,
+   "rule": "units.counting.failed-follow-up-command-is-refused",
+   "source": "internal/units/units.go#FromCommand",
+   "status": "verified",
+   "test": "internal/units/units_test.go#TestUnitsFromCommandReadsStdout",
+   "tests": [
+    "internal/units/units_test.go#TestUnitsFromCommandReadsStdout"
+   ]
+  },
+  "functional-units.units-command.001": {
+   "file": "specs/functional-units/units-command/reconciling-units-later.feature",
+   "fingerprint": "2adcd3638206",
+   "human": false,
+   "rule": "units.reconcile.sci-recomputed-from-total",
+   "source": "cmd/sci-disclose/disclosures.go#cmdUnits",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "functional-units.units-command.002": {
+   "file": "specs/functional-units/units-command/reconciling-units-later.feature",
+   "fingerprint": "2adcd3638206",
+   "human": false,
+   "rule": "units.reconcile.budget-checked-on-new-rate",
+   "source": "cmd/sci-disclose/disclosures.go#cmdUnits",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "functional-units.units-command.003": {
+   "file": "specs/functional-units/units-command/reconciling-units-later.feature",
+   "fingerprint": "2adcd3638206",
+   "human": false,
+   "rule": "units.reconcile.invalid-input-refused",
+   "source": "cmd/sci-disclose/disclosures.go#cmdUnits",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "measurement.command-runs.001": {
+   "file": "specs/measurement/command-runs/measuring-commands-and-scripts.feature",
+   "fingerprint": "0217b355ab56",
+   "human": false,
+   "rule": "measurement.commands.run-disclosed-per-run",
+   "source": "cmd/sci-disclose/measure.go#cmdRun",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestRunMeasuresACommandAndEmitsJSON",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestRunMeasuresACommandAndEmitsJSON"
+   ]
+  },
+  "measurement.command-runs.002": {
+   "file": "specs/measurement/command-runs/measuring-commands-and-scripts.feature",
+   "fingerprint": "104adb788088",
+   "human": false,
+   "rule": "measurement.scripts.interpreter-by-extension",
+   "source": "cmd/sci-disclose/measure.go#cmdFile",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestFileTargetRunsTheScript",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestFileTargetRunsTheScript"
+   ]
+  },
+  "measurement.command-runs.003": {
+   "file": "specs/measurement/command-runs/measuring-commands-and-scripts.feature",
+   "fingerprint": "104adb788088",
+   "human": false,
+   "rule": "measurement.scripts.unrunnable-script-refused",
+   "source": "cmd/sci-disclose/measure.go#cmdFile",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestFileTargetNeedsAKnownInterpreter",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestFileTargetNeedsAKnownInterpreter"
+   ]
+  },
+  "measurement.command-runs.004": {
+   "file": "specs/measurement/command-runs/measuring-commands-and-scripts.feature",
+   "fingerprint": "25d8951e834f",
+   "human": false,
+   "rule": "energy.backend.rapl-required-but-unreadable-refused",
+   "source": "cmd/sci-disclose/measure.go#energyBackend",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "measurement.function-benchmarks.001": {
+   "file": "specs/measurement/function-benchmarks/function-benchmarks.feature",
+   "fingerprint": "f3475c1b1edf",
+   "human": false,
+   "rule": "measurement.functions.sci-per-call",
+   "source": "cmd/sci-disclose/measure.go#cmdFunc",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestFuncTargetDividesByTheIterationCount",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestFuncTargetDividesByTheIterationCount"
+   ]
+  },
+  "measurement.function-benchmarks.002": {
+   "file": "specs/measurement/function-benchmarks/function-benchmarks.feature",
+   "fingerprint": "f3475c1b1edf",
+   "human": false,
+   "rule": "measurement.functions.unrunnable-function-refused",
+   "source": "cmd/sci-disclose/measure.go#cmdFunc",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestFuncTargetRejectsABadReference",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestFuncTargetRejectsABadReference"
+   ]
+  },
+  "measurement.function-benchmarks.003": {
+   "file": "specs/measurement/function-benchmarks/function-benchmarks.feature",
+   "fingerprint": "a92b00a8ee25",
+   "human": false,
+   "rule": "measurement.functions.short-run-warned",
+   "source": "cmd/sci-disclose/measure.go#funcNotes",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "measurement.function-benchmarks.004": {
+   "file": "specs/measurement/function-benchmarks/function-benchmarks-harness.feature",
+   "fingerprint": "c6514d726b86",
+   "human": false,
+   "rule": "measurement.function-benchmarks.per-call-measurement",
+   "source": "internal/harness/harness.go#MeasureFunction",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestFuncTargetDividesByTheIterationCount",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestFuncTargetDividesByTheIterationCount"
+   ]
+  },
+  "measurement.function-benchmarks.005": {
+   "file": "specs/measurement/function-benchmarks/function-benchmarks-harness.feature",
+   "fingerprint": "fb4fc67f7ef2",
+   "human": false,
+   "rule": "measurement.function-benchmarks.bad-reference-refused",
+   "source": "internal/harness/harness.go#pythonHarness",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestFuncTargetRejectsABadReference",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestFuncTargetRejectsABadReference"
+   ]
+  },
+  "measurement.function-benchmarks.006": {
+   "file": "specs/measurement/function-benchmarks/function-benchmarks-harness.feature",
+   "fingerprint": "c6514d726b86",
+   "human": false,
+   "rule": "measurement.function-benchmarks.modelled-without-hardware-counters",
+   "source": "internal/harness/harness.go#MeasureFunction",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "measurement.function-benchmarks.007": {
+   "file": "specs/measurement/function-benchmarks/function-benchmarks-harness.feature",
+   "fingerprint": "c6514d726b86",
+   "human": false,
+   "rule": "measurement.function-benchmarks.function-output-shared-with-report",
+   "source": "internal/harness/harness.go#MeasureFunction",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "measurement.process-usage.001": {
+   "file": "specs/measurement/process-usage/process-usage-non-unix.feature",
+   "fingerprint": "b61360d5d3ae",
+   "human": false,
+   "rule": "measurement.process-usage.cpu-time-is-user-plus-system",
+   "source": "internal/energy/usage_other.go#processUsage",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "measurement.process-usage.002": {
+   "file": "specs/measurement/process-usage/process-usage-non-unix.feature",
+   "fingerprint": "b61360d5d3ae",
+   "human": false,
+   "rule": "measurement.process-usage.undeclared-memory-counts-as-zero",
+   "source": "internal/energy/usage_other.go#processUsage",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "measurement.process-usage.003": {
+   "file": "specs/measurement/process-usage/process-usage-non-unix.feature",
+   "fingerprint": "08ec811c8567",
+   "human": false,
+   "rule": "measurement.process-usage.declared-memory-replaces-peak-rss",
+   "source": "internal/energy/energy.go#ForSample",
+   "status": "verified",
+   "test": "internal/energy/energy_test.go#TestIdleBaselineIsSubtractedAndNeverGoesNegative",
+   "tests": [
+    "internal/energy/energy_test.go#TestIdleBaselineIsSubtractedAndNeverGoesNegative"
+   ]
+  },
+  "measurement.process-usage.004": {
+   "file": "specs/measurement/process-usage/process-usage-unix.feature",
+   "fingerprint": "330370e21528",
+   "human": false,
+   "rule": "measurement.process-usage.cpu-covers-process-tree",
+   "source": "internal/energy/usage_unix.go#processUsage",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "measurement.process-usage.005": {
+   "file": "specs/measurement/process-usage/process-usage-unix.feature",
+   "fingerprint": "330370e21528",
+   "human": false,
+   "rule": "measurement.process-usage.peak-memory-units-per-os",
+   "source": "internal/energy/usage_unix.go#processUsage",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "measurement.process-usage.006": {
+   "file": "specs/measurement/process-usage/process-usage-unix.feature",
+   "fingerprint": "330370e21528",
+   "human": false,
+   "rule": "measurement.process-usage.peak-memory-is-largest-single-process",
+   "source": "internal/energy/usage_unix.go#processUsage",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "measurement.repo-workloads.001": {
+   "file": "specs/measurement/repo-workloads/repository-workloads.feature",
+   "fingerprint": "c4cb0e84c2ad",
+   "human": false,
+   "rule": "measurement.repos.detected-workload-measured",
+   "source": "cmd/sci-disclose/measure.go#cmdRepo",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestRepoTargetRunsTheDetectedWorkload",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestRepoTargetRunsTheDetectedWorkload"
+   ]
+  },
+  "measurement.repo-workloads.002": {
+   "file": "specs/measurement/repo-workloads/repository-workloads.feature",
+   "fingerprint": "c4cb0e84c2ad",
+   "human": false,
+   "rule": "measurement.repos.command-overrides-detection",
+   "source": "cmd/sci-disclose/measure.go#cmdRepo",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "measurement.repo-workloads.003": {
+   "file": "specs/measurement/repo-workloads/repository-workloads.feature",
+   "fingerprint": "c4cb0e84c2ad",
+   "human": false,
+   "rule": "measurement.repos.no-runnable-workload-refused",
+   "source": "cmd/sci-disclose/measure.go#cmdRepo",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestRepoTargetSaysSoWhenThereIsNoWorkload",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestRepoTargetSaysSoWhenThereIsNoWorkload"
+   ]
+  },
+  "measurement.repo-workloads.004": {
+   "file": "specs/measurement/repo-workloads/repo-workload-detection.feature",
+   "fingerprint": "5d5750ebe965",
+   "human": false,
+   "rule": "repo.workload.detected-from-project-layout",
+   "source": "internal/discover/discover.go#DetectWorkload",
+   "status": "verified",
+   "test": "internal/discover/discover_test.go#TestDetectWorkloadFallsThroughToLanguageDefaults",
+   "tests": [
+    "internal/discover/discover_test.go#TestDetectWorkloadFallsThroughToLanguageDefaults",
+    "cmd/sci-disclose/main_test.go#TestRepoTargetRunsTheDetectedWorkload"
+   ]
+  },
+  "measurement.repo-workloads.005": {
+   "file": "specs/measurement/repo-workloads/repo-workload-detection.feature",
+   "fingerprint": "5d5750ebe965",
+   "human": false,
+   "rule": "repo.workload.makefile-takes-precedence",
+   "source": "internal/discover/discover.go#DetectWorkload",
+   "status": "verified",
+   "test": "internal/discover/discover_test.go#TestDetectWorkloadPrefersTheMakefile",
+   "tests": [
+    "internal/discover/discover_test.go#TestDetectWorkloadPrefersTheMakefile",
+    "internal/discover/discover_test.go#TestDetectWorkloadFallsThroughToLanguageDefaults"
+   ]
+  },
+  "measurement.repo-workloads.006": {
+   "file": "specs/measurement/repo-workloads/repo-workload-detection.feature",
+   "fingerprint": "5d5750ebe965",
+   "human": false,
+   "rule": "repo.workload.none-found-is-refused",
+   "source": "internal/discover/discover.go#DetectWorkload",
+   "status": "verified",
+   "test": "internal/discover/discover_test.go#TestDetectWorkloadReturnsNothingForAnEmptyRepo",
+   "tests": [
+    "internal/discover/discover_test.go#TestDetectWorkloadReturnsNothingForAnEmptyRepo",
+    "cmd/sci-disclose/main_test.go#TestRepoTargetSaysSoWhenThereIsNoWorkload"
+   ]
+  },
+  "sci-score.carbon-budgets.001": {
+   "file": "specs/sci-score/carbon-budgets/carbon-budget-gate.feature",
+   "fingerprint": "803fef405d33",
+   "human": false,
+   "rule": "budgets.gate.over-budget-exits-one",
+   "source": "cmd/sci-disclose/measure.go#measureCommand",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestBudgetGateFailsTheCommand",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestBudgetGateFailsTheCommand"
+   ]
+  },
+  "sci-score.carbon-budgets.002": {
+   "file": "specs/sci-score/carbon-budgets/carbon-budget-gate.feature",
+   "fingerprint": "3be526da4bad",
+   "human": false,
+   "rule": "budgets.gate.no-budget-never-fails",
+   "source": "cmd/sci-disclose/options.go#finish",
+   "status": "verified",
+   "test": "cmd/sci-disclose/main_test.go#TestRunMeasuresACommandAndEmitsJSON",
+   "tests": [
+    "cmd/sci-disclose/main_test.go#TestRunMeasuresACommandAndEmitsJSON"
+   ]
+  },
+  "sci-score.carbon-budgets.003": {
+   "file": "specs/sci-score/carbon-budgets/sci-budget.feature",
+   "fingerprint": "1469bd02e947",
+   "human": false,
+   "rule": "sci.budget.score-at-or-below-limit-passes",
+   "source": "internal/sci/sci.go#ApplyBudget",
+   "status": "verified",
+   "test": "internal/sci/sci_test.go#TestBudgetVerdictIsAttachedAndReturned",
+   "tests": [
+    "internal/sci/sci_test.go#TestBudgetVerdictIsAttachedAndReturned"
+   ]
+  },
+  "sci-score.carbon-budgets.004": {
+   "file": "specs/sci-score/carbon-budgets/sci-budget.feature",
+   "fingerprint": "1469bd02e947",
+   "human": false,
+   "rule": "sci.budget.no-verdict-without-budget",
+   "source": "internal/sci/sci.go#ApplyBudget",
+   "status": "verified",
+   "test": "internal/sci/sci_test.go#TestBudgetVerdictIsAttachedAndReturned",
+   "tests": [
+    "internal/sci/sci_test.go#TestBudgetVerdictIsAttachedAndReturned"
+   ]
+  },
+  "sci-score.embodied-emissions.001": {
+   "file": "specs/sci-score/embodied-emissions/embodied-share.feature",
+   "fingerprint": "b74fc8d36646",
+   "human": false,
+   "rule": "sci.embodied.time-and-resource-share",
+   "source": "internal/sci/sci.go#EmbodiedGCO2e",
+   "status": "verified",
+   "test": "internal/sci/sci_test.go#TestEmbodiedIsTotalTimesTimeShareTimesResourceShare",
+   "tests": [
+    "internal/sci/sci_test.go#TestEmbodiedIsTotalTimesTimeShareTimesResourceShare"
+   ]
+  },
+  "sci-score.sci-equation.001": {
+   "file": "specs/sci-score/sci-equation/sci-score-of-a-run.feature",
+   "fingerprint": "c2101f04ef1b",
+   "human": false,
+   "rule": "sci.equation.rate-per-functional-unit",
+   "source": "internal/sci/sci.go#New",
+   "status": "verified",
+   "test": "internal/sci/sci_test.go#TestSCIIsTotalCarbonDividedByTheFunctionalUnit",
+   "tests": [
+    "internal/sci/sci_test.go#TestSCIIsTotalCarbonDividedByTheFunctionalUnit"
+   ]
+  },
+  "sci-score.sci-equation.002": {
+   "file": "specs/sci-score/sci-equation/sci-score-of-a-run.feature",
+   "fingerprint": "c2101f04ef1b",
+   "human": false,
+   "rule": "sci.equation.uncounted-units-score-as-one",
+   "source": "internal/sci/sci.go#New",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "sci-score.sci-equation.003": {
+   "file": "specs/sci-score/sci-equation/sci-score-of-a-run.feature",
+   "fingerprint": "c2101f04ef1b",
+   "human": false,
+   "rule": "sci.equation.intensity-caveats-disclosed",
+   "source": "internal/sci/sci.go#New",
+   "status": "verified",
+   "test": "cmd/sci-disclose/crosscutting_test.go#TestAFallenBackBasisIsNotedInTheReport",
+   "tests": [
+    "cmd/sci-disclose/crosscutting_test.go#TestAFallenBackBasisIsNotedInTheReport"
+   ]
+  },
+  "sci-score.sci-equation.004": {
+   "file": "specs/sci-score/sci-equation/sci-score-of-a-run.feature",
+   "fingerprint": "c2101f04ef1b",
+   "human": false,
+   "rule": "sci.equation.boundary-and-assumptions-stated",
+   "source": "internal/sci/sci.go#New",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "sci-score.sci-equation.005": {
+   "file": "specs/sci-score/sci-equation/sci-score-of-a-run.feature",
+   "fingerprint": "c2101f04ef1b",
+   "human": false,
+   "rule": "sci.equation.no-score-without-energy-or-intensity",
+   "source": "internal/sci/sci.go#New",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  }
+ },
+ "taxonomy": {
+  "domains": [
+   {
+    "areas": [
+     {
+      "description": "Measuring an arbitrary command or script file as it executes (run, file).",
+      "slug": "command-runs",
+      "title": "Command and script runs"
+     },
+     {
+      "description": "Timing a single function through per-language harnesses with warmup and iterations (func).",
+      "slug": "function-benchmarks",
+      "title": "Function benchmarks"
+     },
+     {
+      "description": "Detecting a repository's own test or build workload and measuring it (repo).",
+      "slug": "repo-workloads",
+      "title": "Repository workloads"
+     },
+     {
+      "description": "Collecting CPU and memory usage of the measured process on Unix and other platforms.",
+      "slug": "process-usage",
+      "title": "Process resource usage"
+     }
+    ],
+    "description": "Running a real workload and capturing its wall time, CPU time and energy.",
+    "slug": "measurement",
+    "title": "Workload measurement"
+   },
+   {
+    "areas": [
+     {
+      "description": "Reading RAPL energy counters when available, including wraparound arithmetic.",
+      "slug": "hardware-counters",
+      "title": "Hardware power counters"
+     },
+     {
+      "description": "Estimating CPU, memory, storage and network energy from utilisation and power profiles.",
+      "slug": "modelled-energy",
+      "title": "Modelled energy"
+     },
+     {
+      "description": "Sampling idle power so only the workload's share of energy is attributed.",
+      "slug": "idle-baseline",
+      "title": "Idle baseline"
+     }
+    ],
+    "description": "Turning a measured sample into kilowatt-hours, the E in the SCI equation.",
+    "slug": "energy",
+    "title": "Energy accounting"
+   },
+   {
+    "areas": [
+     {
+      "description": "Fetching grid intensity for a zone or region from an external API with its reading window.",
+      "slug": "intensity-lookup",
+      "title": "Live intensity lookup"
+     },
+     {
+      "description": "Reusing cached readings and falling back to published defaults when offline.",
+      "slug": "intensity-cache-fallback",
+      "title": "Caching and offline fallback"
+     },
+     {
+      "description": "The single bounded, timed-out HTTP client used for all network calls.",
+      "slug": "http-client",
+      "title": "Outbound HTTP"
+     }
+    ],
+    "description": "Determining how much carbon each kilowatt-hour emits, the I in the equation.",
+    "slug": "carbon-intensity",
+    "title": "Grid carbon intensity"
+   },
+   {
+    "areas": [
+     {
+      "description": "Computing ((E \u00d7 I) + M) / R and assembling the report with provenance.",
+      "slug": "sci-equation",
+      "title": "SCI equation"
+     },
+     {
+      "description": "Amortising hardware manufacturing carbon over the time the workload used it (M).",
+      "slug": "embodied-emissions",
+      "title": "Embodied emissions"
+     },
+     {
+      "description": "Checking a score against a budget and failing when it is exceeded.",
+      "slug": "carbon-budgets",
+      "title": "Carbon budgets"
+     }
+    ],
+    "description": "Combining energy, intensity and embodied emissions into a per-unit carbon rate.",
+    "slug": "sci-score",
+    "title": "SCI score"
+   },
+   {
+    "areas": [
+     {
+      "description": "Extracting unit counts from text, files or command output by pattern.",
+      "slug": "unit-counting",
+      "title": "Counting from output and files"
+     },
+     {
+      "description": "Reading unit counts from a Prometheus-style metrics endpoint.",
+      "slug": "metrics-scraping",
+      "title": "Metrics scraping"
+     },
+     {
+      "description": "The CLI verb that reports a unit count on its own.",
+      "slug": "units-command",
+      "title": "Units command"
+     }
+    ],
+    "description": "Counting the units of work a score is divided by, the R in the equation.",
+    "slug": "functional-units",
+    "title": "Functional units"
+   },
+   {
+    "areas": [
+     {
+      "description": "Loading sci.yaml, applying defaults and estimating each component and the total (estimate).",
+      "slug": "manifest-estimates",
+      "title": "Manifest estimates"
+     },
+     {
+      "description": "Scanning Kubernetes and Terraform files for CPU, memory and instance sizes.",
+      "slug": "infrastructure-discovery",
+      "title": "Infrastructure discovery"
+     },
+     {
+      "description": "Writing a starter manifest from discovered components (init).",
+      "slug": "manifest-generation",
+      "title": "Manifest generation"
+     }
+    ],
+    "description": "Estimating SCI for systems described in a manifest instead of run locally.",
+    "slug": "declared-deployments",
+    "title": "Declared deployments"
+   },
+   {
+    "areas": [
+     {
+      "description": "Rendering reports as text, JSON or Markdown to stdout or a file.",
+      "slug": "report-formats",
+      "title": "Report formats"
+     },
+     {
+      "description": "Comparing a before and after report within a tolerance to flag regressions (compare).",
+      "slug": "report-comparison",
+      "title": "Report comparison"
+     },
+     {
+      "description": "Publishing every constant with its citation and printing them (coefficients).",
+      "slug": "coefficient-sources",
+      "title": "Coefficient sources"
+     }
+    ],
+    "description": "Presenting results as auditable disclosures and comparing them over time.",
+    "slug": "disclosure",
+    "title": "Disclosure and reporting"
+   },
+   {
+    "areas": [
+     {
+      "description": "Default boundary, grid, hardware and functional-unit settings, each overridable by a flag.",
+      "slug": "assumptions",
+      "title": "Assumptions and overrides"
+     },
+     {
+      "description": "Subcommand dispatch, usage and version output, and exit status conventions.",
+      "slug": "cli-dispatch",
+      "title": "Commands, help and exit codes"
+     }
+    ],
+    "description": "How users set assumptions and drive the tool from the command line.",
+    "slug": "configuration",
+    "title": "Configuration and CLI"
+   },
+   {
+    "areas": [
+     {
+      "description": "Make targets for building, installing, testing, coverage, linting and hooks.",
+      "slug": "build-tasks",
+      "title": "Build and checks"
+     },
+     {
+      "description": "Shared test helpers and fake intensity API fixtures.",
+      "slug": "test-support",
+      "title": "Test support"
+     }
+    ],
+    "description": "Building, testing and maintaining the project itself.",
+    "slug": "developer-tooling",
+    "title": "Developer tooling"
+   }
+  ]
+ }
+}
