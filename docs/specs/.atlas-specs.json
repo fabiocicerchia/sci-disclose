@@ -1,0 +1,278 @@
+{
+ "excluded": {
+  "stylesheets/extra": [
+   {
+    "candidate": "Home hero styling (gradient h1, tagline, spaced buttons)",
+    "covered_by": "no page in docs/ uses class=\"hero\", although the comment says docs/README.md renders one",
+    "reason": "UNVERIFIABLE",
+    "source": "docs/stylesheets/extra.css#.md-typeset .hero"
+   },
+   {
+    "candidate": "Feature card depth and hover lift",
+    "covered_by": "no page in docs/ uses grid cards",
+    "reason": "UNVERIFIABLE",
+    "source": "docs/stylesheets/extra.css#.md-typeset .grid.cards > ul > li"
+   },
+   {
+    "candidate": "Pill buttons with gradient primary and an indigo hover glow",
+    "covered_by": "no page in docs/ uses md-button. The rgba(99,102,241) glow is left over from the default palette and clashes with the green pair",
+    "reason": "UNVERIFIABLE",
+    "source": "docs/stylesheets/extra.css#.md-typeset .md-button"
+   },
+   {
+    "candidate": "Translucent blurred header, hairline dividers, tab opacity",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "docs/stylesheets/extra.css#.md-header"
+   },
+   {
+    "candidate": "Heading weights, letter-spacing and font features",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "docs/stylesheets/extra.css#.md-typeset h1"
+   },
+   {
+    "candidate": "Rounded bordered code blocks",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "docs/stylesheets/extra.css#.md-typeset .highlight"
+   },
+   {
+    "candidate": "Sidebar active-link weight and footer colours",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "docs/stylesheets/extra.css#.md-footer-meta"
+   },
+   {
+    "candidate": "Smooth scrolling to anchors",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "docs/stylesheets/extra.css#html"
+   }
+  ]
+ },
+ "lifted": {
+  "stylesheets/extra": []
+ },
+ "retired": [],
+ "scenarios": {
+  "docs.documentation-site.site-theme.001": {
+   "file": "docs/specs/documentation-site/site-theme/docs-site-theme.feature",
+   "fingerprint": "d8424b84d164",
+   "human": false,
+   "rule": "docs.theme.single-accent-palette-shared",
+   "source": "docs/stylesheets/extra.css#:root",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "docs.documentation-site.site-theme.002": {
+   "file": "docs/specs/documentation-site/site-theme/docs-site-theme.feature",
+   "fingerprint": "d8424b84d164",
+   "human": false,
+   "rule": "docs.theme.no-external-font-requests",
+   "source": "docs/stylesheets/extra.css#:root",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "docs.documentation-site.site-theme.003": {
+   "file": "docs/specs/documentation-site/site-theme/docs-site-theme.feature",
+   "fingerprint": "433084a194b6",
+   "human": false,
+   "rule": "docs.theme.links-legible-in-both-schemes",
+   "source": "docs/stylesheets/extra.css#[data-md-color-scheme=\"slate\"]",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "docs.documentation-site.site-theme.004": {
+   "file": "docs/specs/documentation-site/site-theme/docs-site-theme.feature",
+   "fingerprint": "c702704e5aae",
+   "human": false,
+   "rule": "docs.theme.no-placeholder-logo",
+   "source": "docs/stylesheets/extra.css#.md-header__button.md-logo",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "docs.documentation-site.site-theme.005": {
+   "file": "docs/specs/documentation-site/site-theme/docs-site-theme.feature",
+   "fingerprint": "721086d36c47",
+   "human": false,
+   "rule": "docs.theme.wide-tables-reachable",
+   "source": "docs/stylesheets/extra.css#.md-typeset table:not([class])",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  }
+ },
+ "taxonomy": {
+  "domains": [
+   {
+    "areas": [
+     {
+      "description": "Measuring a command, script or function by running it under observation.",
+      "slug": "command-targets",
+      "title": "Command and script targets"
+     },
+     {
+      "description": "Finding and running a repository's own workload to measure it.",
+      "slug": "repo-discovery",
+      "title": "Repository workload discovery"
+     },
+     {
+      "description": "Per-language harnesses that invoke a single function repeatedly for measurement.",
+      "slug": "function-harnesses",
+      "title": "Function harnesses"
+     },
+     {
+      "description": "Reading energy from RAPL counters or estimating it with a hardware model.",
+      "slug": "energy-backends",
+      "title": "Energy backends"
+     }
+    ],
+    "description": "Running a workload and measuring the energy it consumes.",
+    "slug": "measurement",
+    "title": "Measurement"
+   },
+   {
+    "areas": [
+     {
+      "description": "Looking up the carbon intensity of the electricity grid, with caching and offline fallback.",
+      "slug": "grid-intensity",
+      "title": "Grid intensity"
+     },
+     {
+      "description": "Amortising the hardware's manufacturing emissions over the measured run.",
+      "slug": "embodied-emissions",
+      "title": "Embodied emissions"
+     },
+     {
+      "description": "Counting the units of work that the carbon rate is expressed per.",
+      "slug": "functional-units",
+      "title": "Functional units"
+     },
+     {
+      "description": "Combining energy, intensity, embodied emissions and units into the SCI score.",
+      "slug": "sci-equation",
+      "title": "SCI equation"
+     },
+     {
+      "description": "The sourced constants behind every assumption, listable from the CLI.",
+      "slug": "coefficients",
+      "title": "Published coefficients"
+     }
+    ],
+    "description": "Turning energy, grid intensity and hardware into a Software Carbon Intensity rate.",
+    "slug": "carbon-calculation",
+    "title": "Carbon calculation"
+   },
+   {
+    "areas": [
+     {
+      "description": "Declaring a deployment's components and usage in a manifest file.",
+      "slug": "manifests",
+      "title": "Deployment manifests"
+     },
+     {
+      "description": "Reading Kubernetes and Terraform definitions to describe a deployment.",
+      "slug": "infrastructure-scan",
+      "title": "Infrastructure scanning"
+     }
+    ],
+    "description": "Estimating carbon for deployments described rather than run.",
+    "slug": "declared-deployments",
+    "title": "Declared deployments"
+   },
+   {
+    "areas": [
+     {
+      "description": "Rendering disclosures as text, JSON or Markdown.",
+      "slug": "report-formats",
+      "title": "Report formats"
+     },
+     {
+      "description": "Labelling every number with where it came from: measured, modelled or an API reading.",
+      "slug": "provenance",
+      "title": "Provenance"
+     },
+     {
+      "description": "Comparing two reports to show how carbon intensity changed.",
+      "slug": "comparison",
+      "title": "Comparison"
+     }
+    ],
+    "description": "Presenting results as auditable carbon disclosures.",
+    "slug": "disclosure",
+    "title": "Disclosure and reporting"
+   },
+   {
+    "areas": [
+     {
+      "description": "Subcommands, flags and exit codes of the command-line tool.",
+      "slug": "commands-and-flags",
+      "title": "Commands and flags"
+     },
+     {
+      "description": "Setting the measurement boundary, grid, hardware and functional unit, each overridable.",
+      "slug": "boundary-and-overrides",
+      "title": "Boundary and overrides"
+     },
+     {
+      "description": "The single HTTP client with timeouts, bounded reads and an identifying User-Agent.",
+      "slug": "network-access",
+      "title": "Network access"
+     }
+    ],
+    "description": "How users drive the tool and override its assumptions.",
+    "slug": "configuration",
+    "title": "Configuration and CLI"
+   },
+   {
+    "areas": [
+     {
+      "description": "The shared visual theme, palette, typography and layout for the docs and splash page.",
+      "slug": "site-theme",
+      "title": "Site theme and styling"
+     },
+     {
+      "description": "The standalone splash page introducing the project.",
+      "slug": "landing-page",
+      "title": "Landing page"
+     },
+     {
+      "description": "Getting started, CLI reference, methodology, architecture and roadmap pages.",
+      "slug": "guides-and-reference",
+      "title": "Guides and reference"
+     }
+    ],
+    "description": "The published documentation and landing page for the project.",
+    "slug": "documentation-site",
+    "title": "Documentation site"
+   },
+   {
+    "areas": [
+     {
+      "description": "Make targets for compiling, testing, coverage, linting and formatting.",
+      "slug": "build-and-test",
+      "title": "Build and test"
+     },
+     {
+      "description": "Pre-commit hooks and CI checks, including secret scanning.",
+      "slug": "quality-gates",
+      "title": "Quality gates"
+     },
+     {
+      "description": "Versioning and changelog generation through release-please.",
+      "slug": "releases",
+      "title": "Releases"
+     }
+    ],
+    "description": "Building, testing and releasing the project.",
+    "slug": "developer-tooling",
+    "title": "Developer tooling"
+   }
+  ]
+ }
+}
