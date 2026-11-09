@@ -1,0 +1,97 @@
+name: sci-disclose
+description: >-
+  Estimate the Software Carbon Intensity of a declared deployment (sci.yaml)
+  and fail the job when it is over a carbon budget.
+author: Fabio Cicerchia
+branding:
+  icon: cloud
+  color: green
+inputs:
+  manifest:
+    description: The sci.yaml to estimate (scaffold one with `sci-disclose init`)
+    default: sci.yaml
+  budget:
+    description: >-
+      Fail the step when SCI exceeds this many gCO2e per functional unit.
+      Empty reports without gating.
+    default: ""
+  args:
+    description: >-
+      Extra estimate flags, e.g. `--country IT` or `--offline`. Split on
+      whitespace; no shell expansion.
+    default: ""
+  pr-comment:
+    description: Post or update one PR comment with the disclosure
+    default: "false"
+  github-token:
+    description: Token for the PR comment; needs pull-requests write
+    default: ${{ github.token }}
+outputs:
+  sci:
+    description: SCI per functional unit, in gCO2e
+    value: ${{ steps.estimate.outputs.sci }}
+  sci-unit:
+    description: What the SCI is per, e.g. "gCO2e per deploy"
+    value: ${{ steps.estimate.outputs.sci-unit }}
+  total-gco2e:
+    description: C, the total over the manifest's period, in gCO2e
+    value: ${{ steps.estimate.outputs.total-gco2e }}
+  within-budget:
+    description: "true, or false when over budget; true when no budget was set"
+    value: ${{ steps.estimate.outputs.within-budget }}
+runs:
+  using: composite
+  steps:
+    # Built from the action's own checkout, so the CLI is always the one this
+    # ref of action.yml was written against.
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e  # v7.0.0
+      with:
+        go-version-file: ${{ github.action_path }}/go.mod
+        cache: false
+
+    - id: estimate
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        MANIFEST: ${{ inputs.manifest }}
+        BUDGET: ${{ inputs.budget }}
+        ARGS: ${{ inputs.args }}
+      run: |
+        set -uo pipefail
+        bin="$RUNNER_TEMP/sci-disclose"
+        (cd "$ACTION_PATH" && go build -buildvcs=false -o "$bin" ./cmd/sci-disclose) || exit 2
+        read -ra extra <<<"$ARGS"
+        gate=(); [ -n "$BUDGET" ] && gate=(--budget "$BUDGET")
+        "$bin" estimate -f "$MANIFEST" --format json -o "$RUNNER_TEMP/sci.json" \
+          --markdown "$RUNNER_TEMP/sci.md" "${gate[@]}" "${extra[@]}"
+        code=$?
+        [ "$code" -le 1 ] || exit "$code"
+        jq -r '"sci=\(.sci)", "sci-unit=\(.sci_unit)",
+               "total-gco2e=\(.total_gco2e)",
+               "within-budget=\(if .budget then .budget.pass else true end)"' \
+          "$RUNNER_TEMP/sci.json" >>"$GITHUB_OUTPUT"
+        cat "$RUNNER_TEMP/sci.md" >>"$GITHUB_STEP_SUMMARY"
+        echo "code=$code" >>"$GITHUB_OUTPUT"
+
+    - if: inputs.pr-comment == 'true' && github.event.pull_request.number
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR: ${{ github.event.pull_request.number }}
+      run: |
+        # The marker finds this action's comment again, so a re-run edits it.
+        marker='<!-- sci-disclose -->'
+        body="$marker"$'\n'"$(cat "$RUNNER_TEMP/sci.md")"
+        api="repos/$GITHUB_REPOSITORY/issues"
+        pick=".[] | select(.body | startswith(\"$marker\")) | .id"
+        id=$(gh api --paginate "$api/$PR/comments" --jq "$pick" | head -1)
+        if [ -n "$id" ]; then
+          gh api -X PATCH "$api/comments/$id" -f body="$body" >/dev/null
+        else
+          gh api "$api/$PR/comments" -f body="$body" >/dev/null
+        fi || echo "::warning::sci-disclose: could not post the PR comment"
+
+    - shell: bash
+      env:
+        CODE: ${{ steps.estimate.outputs.code }}
+      run: exit "$CODE"

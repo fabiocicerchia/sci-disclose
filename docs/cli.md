@@ -62,6 +62,7 @@ Every assumption is overridable, and the report prints the value it used.
 | `--units N` / `--unit-label`                 | 1 × run                 | the functional unit — see [Functional units](functional-units.md)   |
 | `--budget N`                                 | off                     | exit 1 when SCI per unit exceeds this                               |
 | `--format text\|json\|markdown`              | `text`                  | JSON is the stable shape `compare` reads                            |
+| `--markdown FILE`                            | off                     | also write the markdown disclosure, alongside `--format`'s output   |
 
 `sci-disclose coefficients` prints every constant with its source, so a reviewer can
 argue with the assumptions rather than guess at them.
