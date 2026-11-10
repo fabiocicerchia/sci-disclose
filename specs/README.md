@@ -4,6 +4,7 @@ What this code does, one atomic Gherkin scenario per behaviour, read from the co
 Tags: `@verified` a test asserts it · `@inferred` read from the code only · `@gap` an entry point no test covers · `@human` written or amended by a person, never rewritten.
 
 ## Grid carbon intensity
+
 Determining how much carbon each kilowatt-hour emits, the I in the equation.
 
 - **Outbound HTTP**: [Calling external services](carbon-intensity/http-client/outbound-http.feature) (3)
@@ -11,12 +12,14 @@ Determining how much carbon each kilowatt-hour emits, the I in the equation.
 - **Live intensity lookup**: [Choosing the grid carbon intensity for a run](carbon-intensity/intensity-lookup/live-grid-intensity.feature) (2)
 
 ## Configuration and CLI
+
 How users set assumptions and drive the tool from the command line.
 
 - **Assumptions and overrides**: [Stating and overriding measurement assumptions](configuration/assumptions/measurement-assumptions.feature) (1)
 - **Commands, help and exit codes**: [Invoking sci-disclose and reading its exit status](configuration/cli-dispatch/cli-commands-and-exit-codes.feature) (3)
 
 ## Declared deployments
+
 Estimating SCI for systems described in a manifest instead of run locally.
 
 - **Infrastructure discovery**: [Discovering the deployed boundary from infrastructure files](declared-deployments/infrastructure-discovery/infrastructure-discovery.feature) (5)
@@ -24,11 +27,13 @@ Estimating SCI for systems described in a manifest instead of run locally.
 - **Manifest generation**: [Scaffolding a starter manifest](declared-deployments/manifest-generation/manifest-scaffold.feature) (3), [Scaffolding a deployment manifest](declared-deployments/manifest-generation/scaffolding-a-manifest.feature) (2)
 
 ## Developer tooling
+
 Building, testing and maintaining the project itself.
 
 - **Build and checks**: [Installing and removing sci-disclose](developer-tooling/build-tasks/installing-sci-disclose.feature) (4)
 
 ## Disclosure and reporting
+
 Presenting results as auditable disclosures and comparing them over time.
 
 - **Coefficient sources**: [Publishing the coefficients behind every estimate](disclosure/coefficient-sources/coefficient-sources.feature) (4)
@@ -36,6 +41,7 @@ Presenting results as auditable disclosures and comparing them over time.
 - **Report formats**: [Rendering a disclosure](disclosure/report-formats/disclosure-formats.feature) (6)
 
 ## Energy accounting
+
 Turning a measured sample into kilowatt-hours, the E in the SCI equation.
 
 - **Hardware power counters**: [Measuring energy from hardware power counters](energy/hardware-counters/hardware-energy-counters.feature) (4)
@@ -43,6 +49,7 @@ Turning a measured sample into kilowatt-hours, the E in the SCI equation.
 - **Modelled energy**: [Estimating energy from utilisation and power profiles](energy/modelled-energy/modelled-energy.feature) (6)
 
 ## Functional units
+
 Counting the units of work a score is divided by, the R in the equation.
 
 - **Metrics scraping**: [Counting functional units from a service's metrics endpoint](functional-units/metrics-scraping/scraping-a-metrics-counter.feature) (3)
@@ -50,6 +57,7 @@ Counting the units of work a score is divided by, the R in the equation.
 - **Units command**: [Reconciling the unit count after the measurement](functional-units/units-command/reconciling-units-later.feature) (3)
 
 ## Workload measurement
+
 Running a real workload and capturing its wall time, CPU time and energy.
 
 - **Command and script runs**: [Measuring a command or a script](measurement/command-runs/measuring-commands-and-scripts.feature) (4)
@@ -58,6 +66,7 @@ Running a real workload and capturing its wall time, CPU time and energy.
 - **Repository workloads**: [Detecting a repository's own workload](measurement/repo-workloads/repo-workload-detection.feature) (2), [Measuring a repository through its own workload](measurement/repo-workloads/repository-workloads.feature) (3)
 
 ## SCI score
+
 Combining energy, intensity and embodied emissions into a per-unit carbon rate.
 
 - **Carbon budgets**: [Gating a run on a carbon budget](sci-score/carbon-budgets/sci-budget.feature) (2)
