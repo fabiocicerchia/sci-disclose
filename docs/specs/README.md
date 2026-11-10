@@ -6,4 +6,4 @@ Tags: `@verified` a test asserts it · `@inferred` read from the code only · `@
 ## Documentation site
 The published documentation and landing page for the project.
 
-- **Site theme and styling**: [Presenting the documentation in one consistent theme](documentation-site/site-theme/docs-site-theme.feature) (5)
+- **Site theme and styling**: [Presenting the documentation in one consistent theme](documentation-site/site-theme/docs-site-theme.feature) (4)

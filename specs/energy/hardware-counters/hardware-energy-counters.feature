@@ -43,10 +43,3 @@ Feature: Measuring energy from hardware power counters
     When the operator measures a workload
     Then the run completes
     And the package counter contributes nothing to the measured energy
-
-  @id:energy.hardware-counters.005 @rule:energy.rapl.demand-refused-without-counters @verified @source:internal/energy/energy.go#ForSample @test:internal/energy/energy_test.go#TestAskingForRAPLWithoutCountersIsAnError
-  Scenario: Demanding hardware counters on a host without readable ones is refused
-    Given the host has no readable RAPL energy counters
-    When the operator measures a workload with --energy rapl
-    Then the run is refused before the workload starts
-    And the operator is told that RAPL was requested but no counters are readable, that they are Linux only and usually root-owned, and how to make them readable

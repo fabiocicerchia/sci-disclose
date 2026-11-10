@@ -54,18 +54,10 @@
  "lifted": {
   "stylesheets/extra": []
  },
- "retired": [],
+ "retired": [
+  "docs.documentation-site.site-theme.001"
+ ],
  "scenarios": {
-  "docs.documentation-site.site-theme.001": {
-   "file": "docs/specs/documentation-site/site-theme/docs-site-theme.feature",
-   "fingerprint": "d8424b84d164",
-   "human": false,
-   "rule": "docs.theme.single-accent-palette-shared",
-   "source": "docs/stylesheets/extra.css#:root",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
   "docs.documentation-site.site-theme.002": {
    "file": "docs/specs/documentation-site/site-theme/docs-site-theme.feature",
    "fingerprint": "d8424b84d164",

@@ -18,17 +18,6 @@ Feature: Comparing two disclosures
       | 1      | 1.200 | 25        | +0.200000 (+20.0%) | ok         |
       | 2      | 1     | 0         | -1 (-50.0%)        | ok         |
 
-  @id:disclosure.report-comparison.004 @rule:disclosure.compare.fail-on-regression-gate @verified @source:cmd/sci-disclose/disclosures.go#cmdCompare @test:cmd/sci-disclose/main_test.go#TestCompareCommandGatesOnRegression @test:cmd/sci-disclose/e2e_test.go#TestBinaryMeasuresThenGatesARegression
-  Scenario Outline: A regression fails the gate only when the operator asked it to
-    Given the after disclosure scores higher than the before disclosure
-    When the operator compares them <with or without> failing on regression
-    Then the command exits with status <exit>
-
-    Examples:
-      | with or without | exit |
-      | with            | 1    |
-      | without         | 0    |
-
   @id:disclosure.report-comparison.005 @rule:disclosure.compare.warns-when-grid-moved @verified @source:internal/report/report.go#RenderComparison @test:internal/report/report_test.go#TestCompareWarnsWhenTheGridMovedUnderneathTheCode
   Scenario Outline: A comparison warns when the grid intensity differs between the two runs
     Given the before disclosure used <before intensity> gCO2e/kWh and the after disclosure used <after intensity> gCO2e/kWh

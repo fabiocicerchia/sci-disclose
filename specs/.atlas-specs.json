@@ -779,7 +779,19 @@
   "testutil/testutil": [],
   "units/units": []
  },
- "retired": [],
+ "retired": [
+  "disclosure.coefficient-sources.001",
+  "disclosure.coefficient-sources.002",
+  "disclosure.coefficient-sources.004",
+  "disclosure.coefficient-sources.005",
+  "disclosure.report-comparison.004",
+  "sci-score.carbon-budgets.001",
+  "sci-score.carbon-budgets.002",
+  "energy.hardware-counters.005",
+  "measurement.function-benchmarks.001",
+  "measurement.repo-workloads.006",
+  "measurement.process-usage.003"
+ ],
  "scenarios": {
   "carbon-intensity.http-client.001": {
    "file": "specs/carbon-intensity/http-client/outbound-http.feature",
@@ -1173,30 +1185,6 @@
    "test": "",
    "tests": []
   },
-  "disclosure.coefficient-sources.001": {
-   "file": "specs/disclosure/coefficient-sources/publishing-coefficients.feature",
-   "fingerprint": "071e50f511f4",
-   "human": false,
-   "rule": "coefficients.listing.every-constant-with-source",
-   "source": "cmd/sci-disclose/disclosures.go#cmdCoefficients",
-   "status": "verified",
-   "test": "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources",
-   "tests": [
-    "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources"
-   ]
-  },
-  "disclosure.coefficient-sources.002": {
-   "file": "specs/disclosure/coefficient-sources/publishing-coefficients.feature",
-   "fingerprint": "071e50f511f4",
-   "human": false,
-   "rule": "coefficients.listing.machine-readable-form",
-   "source": "cmd/sci-disclose/disclosures.go#cmdCoefficients",
-   "status": "verified",
-   "test": "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources",
-   "tests": [
-    "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources"
-   ]
-  },
   "disclosure.coefficient-sources.003": {
    "file": "specs/disclosure/coefficient-sources/coefficient-sources.feature",
    "fingerprint": "69322ba2cc85",
@@ -1208,26 +1196,6 @@
    "tests": [
     "cmd/sci-disclose/main_test.go#TestCoefficientsArePrintedWithTheirSources"
    ]
-  },
-  "disclosure.coefficient-sources.004": {
-   "file": "specs/disclosure/coefficient-sources/coefficient-sources.feature",
-   "fingerprint": "a0a2a8084fd5",
-   "human": false,
-   "rule": "disclosure.coefficients.provider-power-profiles",
-   "source": "internal/coefficients/coefficients.go#CPUProfiles",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
-  "disclosure.coefficient-sources.005": {
-   "file": "specs/disclosure/coefficient-sources/coefficient-sources.feature",
-   "fingerprint": "6589500bc068",
-   "human": false,
-   "rule": "disclosure.coefficients.embodied-hardware-figures",
-   "source": "internal/coefficients/coefficients.go#Hardware",
-   "status": "inferred",
-   "test": "",
-   "tests": []
   },
   "disclosure.coefficient-sources.006": {
    "file": "specs/disclosure/coefficient-sources/coefficient-sources.feature",
@@ -1297,19 +1265,6 @@
    "test": "internal/report/report_test.go#TestCompareFlagsARegressionOutsideTolerance",
    "tests": [
     "internal/report/report_test.go#TestCompareFlagsARegressionOutsideTolerance"
-   ]
-  },
-  "disclosure.report-comparison.004": {
-   "file": "specs/disclosure/report-comparison/disclosure-comparison.feature",
-   "fingerprint": "0d8d7301d5fb",
-   "human": false,
-   "rule": "disclosure.compare.fail-on-regression-gate",
-   "source": "cmd/sci-disclose/disclosures.go#cmdCompare",
-   "status": "verified",
-   "test": "cmd/sci-disclose/main_test.go#TestCompareCommandGatesOnRegression",
-   "tests": [
-    "cmd/sci-disclose/main_test.go#TestCompareCommandGatesOnRegression",
-    "cmd/sci-disclose/e2e_test.go#TestBinaryMeasuresThenGatesARegression"
    ]
   },
   "disclosure.report-comparison.005": {
@@ -1448,18 +1403,6 @@
    "test": "internal/energy/energy_test.go#TestUnreadableCountersAreSkippedRatherThanFatal",
    "tests": [
     "internal/energy/energy_test.go#TestUnreadableCountersAreSkippedRatherThanFatal"
-   ]
-  },
-  "energy.hardware-counters.005": {
-   "file": "specs/energy/hardware-counters/hardware-energy-counters.feature",
-   "fingerprint": "08ec811c8567",
-   "human": false,
-   "rule": "energy.rapl.demand-refused-without-counters",
-   "source": "internal/energy/energy.go#ForSample",
-   "status": "verified",
-   "test": "internal/energy/energy_test.go#TestAskingForRAPLWithoutCountersIsAnError",
-   "tests": [
-    "internal/energy/energy_test.go#TestAskingForRAPLWithoutCountersIsAnError"
    ]
   },
   "energy.idle-baseline.001": {
@@ -1780,18 +1723,6 @@
    "test": "",
    "tests": []
   },
-  "measurement.function-benchmarks.001": {
-   "file": "specs/measurement/function-benchmarks/function-benchmarks.feature",
-   "fingerprint": "f3475c1b1edf",
-   "human": false,
-   "rule": "measurement.functions.sci-per-call",
-   "source": "cmd/sci-disclose/measure.go#cmdFunc",
-   "status": "verified",
-   "test": "cmd/sci-disclose/main_test.go#TestFuncTargetDividesByTheIterationCount",
-   "tests": [
-    "cmd/sci-disclose/main_test.go#TestFuncTargetDividesByTheIterationCount"
-   ]
-  },
   "measurement.function-benchmarks.002": {
    "file": "specs/measurement/function-benchmarks/function-benchmarks.feature",
    "fingerprint": "f3475c1b1edf",
@@ -1877,18 +1808,6 @@
    "status": "inferred",
    "test": "",
    "tests": []
-  },
-  "measurement.process-usage.003": {
-   "file": "specs/measurement/process-usage/process-usage-non-unix.feature",
-   "fingerprint": "08ec811c8567",
-   "human": false,
-   "rule": "measurement.process-usage.declared-memory-replaces-peak-rss",
-   "source": "internal/energy/energy.go#ForSample",
-   "status": "verified",
-   "test": "internal/energy/energy_test.go#TestIdleBaselineIsSubtractedAndNeverGoesNegative",
-   "tests": [
-    "internal/energy/energy_test.go#TestIdleBaselineIsSubtractedAndNeverGoesNegative"
-   ]
   },
   "measurement.process-usage.004": {
    "file": "specs/measurement/process-usage/process-usage-unix.feature",
@@ -1978,43 +1897,6 @@
    "tests": [
     "internal/discover/discover_test.go#TestDetectWorkloadPrefersTheMakefile",
     "internal/discover/discover_test.go#TestDetectWorkloadFallsThroughToLanguageDefaults"
-   ]
-  },
-  "measurement.repo-workloads.006": {
-   "file": "specs/measurement/repo-workloads/repo-workload-detection.feature",
-   "fingerprint": "5d5750ebe965",
-   "human": false,
-   "rule": "repo.workload.none-found-is-refused",
-   "source": "internal/discover/discover.go#DetectWorkload",
-   "status": "verified",
-   "test": "internal/discover/discover_test.go#TestDetectWorkloadReturnsNothingForAnEmptyRepo",
-   "tests": [
-    "internal/discover/discover_test.go#TestDetectWorkloadReturnsNothingForAnEmptyRepo",
-    "cmd/sci-disclose/main_test.go#TestRepoTargetSaysSoWhenThereIsNoWorkload"
-   ]
-  },
-  "sci-score.carbon-budgets.001": {
-   "file": "specs/sci-score/carbon-budgets/carbon-budget-gate.feature",
-   "fingerprint": "803fef405d33",
-   "human": false,
-   "rule": "budgets.gate.over-budget-exits-one",
-   "source": "cmd/sci-disclose/measure.go#measureCommand",
-   "status": "verified",
-   "test": "cmd/sci-disclose/main_test.go#TestBudgetGateFailsTheCommand",
-   "tests": [
-    "cmd/sci-disclose/main_test.go#TestBudgetGateFailsTheCommand"
-   ]
-  },
-  "sci-score.carbon-budgets.002": {
-   "file": "specs/sci-score/carbon-budgets/carbon-budget-gate.feature",
-   "fingerprint": "3be526da4bad",
-   "human": false,
-   "rule": "budgets.gate.no-budget-never-fails",
-   "source": "cmd/sci-disclose/options.go#finish",
-   "status": "verified",
-   "test": "cmd/sci-disclose/main_test.go#TestRunMeasuresACommandAndEmitsJSON",
-   "tests": [
-    "cmd/sci-disclose/main_test.go#TestRunMeasuresACommandAndEmitsJSON"
    ]
   },
   "sci-score.carbon-budgets.003": {

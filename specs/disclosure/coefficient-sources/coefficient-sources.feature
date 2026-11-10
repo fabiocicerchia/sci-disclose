@@ -13,31 +13,7 @@ Feature: Publishing the coefficients behind every estimate
     And "CPU min/max watts per vCPU" is cited to the Cloud Carbon Footprint methodology
     And "Embodied server 1200 kgCO2e / 4y" is cited to mid-range 2U server LCAs (Dell PAIA, Boavizta)
     And "Grid intensity table" is cited to Electricity Maps yearly zone averages with a world average of 481 gCO2e/kWh (Ember)
-
-  @id:disclosure.coefficient-sources.004 @rule:disclosure.coefficients.provider-power-profiles @inferred @source:internal/coefficients/coefficients.go#CPUProfiles
-  Scenario Outline: Each provider's assumed power draw and PUE is published
-    When the operator runs "sci-disclose coefficients"
-    Then the provider "<provider>" is listed with <idle> W idle and <full> W full load per vCPU
-    And its PUE is shown as <pue>
-
-    Examples:
-      | provider | idle | full | pue   |
-      | aws      | 0.74 | 3.50 | 1.135 |
-      | gcp      | 0.71 | 4.26 | 1.1   |
-      | azure    | 0.78 | 3.76 | 1.185 |
-      | onprem   | 0.74 | 3.50 | 1.58  |
-      | laptop   | 0.30 | 2.00 | 1     |
-
-  @id:disclosure.coefficient-sources.005 @rule:disclosure.coefficients.embodied-hardware-figures @inferred @source:internal/coefficients/coefficients.go#Hardware
-  Scenario Outline: Each hardware class's embodied emissions and lifespan are published
-    When the operator runs "sci-disclose coefficients"
-    Then under "Embodied emissions:" the hardware "<hardware>" is listed as <kg> kgCO2e over <years> years
-
-    Examples:
-      | hardware | kg   | years |
-      | server   | 1200 | 4     |
-      | laptop   | 250  | 4     |
-      | phone    | 60   | 3     |
+    And the last line reports the host's OS, architecture, vCPUs and whether RAPL counters are readable
 
   @id:disclosure.coefficient-sources.006 @rule:disclosure.coefficients.bundled-grid-intensity @inferred @source:internal/coefficients/coefficients.go#GridZones
   Scenario Outline: The bundled yearly grid intensities are published, cleanest zone first

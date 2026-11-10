@@ -31,14 +31,14 @@ Building, testing and maintaining the project itself.
 ## Disclosure and reporting
 Presenting results as auditable disclosures and comparing them over time.
 
-- **Coefficient sources**: [Publishing the coefficients behind every estimate](disclosure/coefficient-sources/coefficient-sources.feature) (6), [Publishing every coefficient with its source](disclosure/coefficient-sources/publishing-coefficients.feature) (2)
-- **Report comparison**: [Comparing two disclosures to catch regressions](disclosure/report-comparison/comparing-disclosures.feature) (2), [Comparing two disclosures](disclosure/report-comparison/disclosure-comparison.feature) (4)
+- **Coefficient sources**: [Publishing the coefficients behind every estimate](disclosure/coefficient-sources/coefficient-sources.feature) (4)
+- **Report comparison**: [Comparing two disclosures to catch regressions](disclosure/report-comparison/comparing-disclosures.feature) (2), [Comparing two disclosures](disclosure/report-comparison/disclosure-comparison.feature) (3)
 - **Report formats**: [Rendering a disclosure](disclosure/report-formats/disclosure-formats.feature) (6)
 
 ## Energy accounting
 Turning a measured sample into kilowatt-hours, the E in the SCI equation.
 
-- **Hardware power counters**: [Measuring energy from hardware power counters](energy/hardware-counters/hardware-energy-counters.feature) (5)
+- **Hardware power counters**: [Measuring energy from hardware power counters](energy/hardware-counters/hardware-energy-counters.feature) (4)
 - **Idle baseline**: [Reporting marginal energy above the idle baseline](energy/idle-baseline/idle-baseline.feature) (2)
 - **Modelled energy**: [Estimating energy from utilisation and power profiles](energy/modelled-energy/modelled-energy.feature) (6)
 
@@ -53,13 +53,13 @@ Counting the units of work a score is divided by, the R in the equation.
 Running a real workload and capturing its wall time, CPU time and energy.
 
 - **Command and script runs**: [Measuring a command or a script](measurement/command-runs/measuring-commands-and-scripts.feature) (4)
-- **Function benchmarks**: [Benchmarking a single function](measurement/function-benchmarks/function-benchmarks-harness.feature) (4), [Measuring a function per call](measurement/function-benchmarks/function-benchmarks.feature) (3)
-- **Process resource usage**: [Measuring process usage on platforms without peak memory](measurement/process-usage/process-usage-non-unix.feature) (3), [Reporting the CPU time and peak memory of a measured command](measurement/process-usage/process-usage-unix.feature) (3)
-- **Repository workloads**: [Detecting a repository's own workload](measurement/repo-workloads/repo-workload-detection.feature) (3), [Measuring a repository through its own workload](measurement/repo-workloads/repository-workloads.feature) (3)
+- **Function benchmarks**: [Benchmarking a single function](measurement/function-benchmarks/function-benchmarks-harness.feature) (4), [Measuring a function per call](measurement/function-benchmarks/function-benchmarks.feature) (2)
+- **Process resource usage**: [Measuring process usage on platforms without peak memory](measurement/process-usage/process-usage-non-unix.feature) (2), [Reporting the CPU time and peak memory of a measured command](measurement/process-usage/process-usage-unix.feature) (3)
+- **Repository workloads**: [Detecting a repository's own workload](measurement/repo-workloads/repo-workload-detection.feature) (2), [Measuring a repository through its own workload](measurement/repo-workloads/repository-workloads.feature) (3)
 
 ## SCI score
 Combining energy, intensity and embodied emissions into a per-unit carbon rate.
 
-- **Carbon budgets**: [Failing a run that exceeds its carbon budget](sci-score/carbon-budgets/carbon-budget-gate.feature) (2), [Gating a run on a carbon budget](sci-score/carbon-budgets/sci-budget.feature) (2)
+- **Carbon budgets**: [Gating a run on a carbon budget](sci-score/carbon-budgets/sci-budget.feature) (2)
 - **Embodied emissions**: [Amortising embodied hardware carbon](sci-score/embodied-emissions/embodied-share.feature) (1)
 - **SCI equation**: [Scoring a measured run](sci-score/sci-equation/sci-score-of-a-run.feature) (5)

@@ -19,9 +19,3 @@ Feature: Measuring process usage on platforms without peak memory
     Then the report shows peak RSS 0 MB
     And the memory line of the energy breakdown is 0 kWh
     And the report gives no warning that memory was not measured
-
-  @id:measurement.process-usage.003 @rule:measurement.process-usage.declared-memory-replaces-peak-rss @verified @source:internal/energy/energy.go#ForSample @test:internal/energy/energy_test.go#TestIdleBaselineIsSubtractedAndNeverGoesNegative
-  Scenario: A declared memory size is used where peak memory cannot be measured
-    Given the operator sets --memory-gb to 4
-    When the operator measures a command
-    Then the memory line of the energy breakdown is modelled from 4 GB over the run's wall time

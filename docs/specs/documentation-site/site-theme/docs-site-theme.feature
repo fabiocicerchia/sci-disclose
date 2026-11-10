@@ -5,14 +5,6 @@ Feature: Presenting the documentation in one consistent theme
   Background:
     Given the documentation site is published with the rendered docs under /docs/ and the splash page at the site root
 
-  @id:docs.documentation-site.site-theme.001 @rule:docs.theme.single-accent-palette-shared @inferred @source:docs/stylesheets/extra.css#:root
-  Scenario: The docs and the splash page show the same green accent pair
-    Given the project's accent pair is the GreenOps green #34d399 and #059669
-    When a reader opens the splash page and then the rendered docs
-    Then the splash title gradient runs from #34d399 to #059669
-    And the docs primary colour and light-mode links use #059669
-    And the docs interactive accent is #34d399
-
   @id:docs.documentation-site.site-theme.002 @rule:docs.theme.no-external-font-requests @inferred @source:docs/stylesheets/extra.css#:root
   Scenario: The docs render in system fonts without downloading a web font
     Given the reader's browser blocks or has no access to third-party hosts

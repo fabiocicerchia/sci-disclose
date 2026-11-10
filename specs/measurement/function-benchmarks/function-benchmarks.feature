@@ -2,15 +2,6 @@
 Feature: Measuring a function per call
   Developers get the carbon of one function call by timing many calls in a harness and dividing by the call count.
 
-  @id:measurement.function-benchmarks.001 @rule:measurement.functions.sci-per-call @verified @source:cmd/sci-disclose/measure.go#cmdFunc @test:cmd/sci-disclose/main_test.go#TestFuncTargetDividesByTheIterationCount
-  Scenario: A function's SCI is its total divided by the number of measured calls
-    Given a Python function workload_under_test:go
-    When the developer runs sci-disclose func -n 50 -warmup 1 on it
-    Then the functional unit is 50 x "call"
-    And the SCI equals the total emissions divided by 50
-    And the notes say 50 calls were measured inside the interpreter, so startup and import time are outside the bracket
-    And the notes say 1 warmup call was discarded first
-
   @id:measurement.function-benchmarks.002 @rule:measurement.functions.unrunnable-function-refused @verified @source:cmd/sci-disclose/measure.go#cmdFunc @test:cmd/sci-disclose/main_test.go#TestFuncTargetRejectsABadReference
   Scenario Outline: A function benchmark that cannot run is refused
     Given <situation>

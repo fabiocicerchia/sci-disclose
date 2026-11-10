@@ -29,11 +29,3 @@ Feature: Detecting a repository's own workload
     And the repository also has a go.mod and a package.json with a "test" script
     When the operator measures the repository
     Then the measured command is "make test"
-
-  @id:measurement.repo-workloads.006 @rule:repo.workload.none-found-is-refused @verified @source:internal/discover/discover.go#DetectWorkload @test:internal/discover/discover_test.go#TestDetectWorkloadReturnsNothingForAnEmptyRepo @test:cmd/sci-disclose/main_test.go#TestRepoTargetSaysSoWhenThereIsNoWorkload
-  Scenario: A repository with no recognisable workload is refused, not guessed
-    Given the repository has no Makefile test/check/bench target, no package.json test/bench/build script, no go.mod, no Cargo.toml and no pytest.ini, tox.ini, pyproject.toml or tests directory
-    When the operator measures the repository
-    Then the command exits with status 2
-    And the output says "no workload found in this repo"
-    And the output suggests passing -command or declaring the deployment with `sci-disclose init` and `sci-disclose estimate`
