@@ -42,3 +42,58 @@ jobs:
         with:
           # Pinned per FC-GEN-059; matches the v2 config schema.
           version: v2.13.2
+
+  action:
+    # Dependabot's token is read-only, so the ledger push cannot work there.
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # a throwaway ledger branch, deleted at the end
+    env:
+      LEDGER: ci-ledger-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - id: first
+        uses: ./
+        with:
+          manifest: examples/sci.yaml
+          args: --offline
+          window-budget: "1e12"
+          ledger-branch: ${{ env.LEDGER }}
+
+      - id: limit
+        env:
+          SPENT: ${{ steps.first.outputs.total-gco2e }}
+        run: echo "limit=$(jq -n "$SPENT * 1.5")" >>"$GITHUB_OUTPUT"
+
+      - id: second
+        continue-on-error: true
+        uses: ./
+        with:
+          manifest: examples/sci.yaml
+          args: --offline
+          window-budget: ${{ steps.limit.outputs.limit }}
+          ledger-branch: ${{ env.LEDGER }}
+
+      - id: over
+        continue-on-error: true
+        uses: ./
+        with:
+          manifest: examples/sci.yaml
+          args: --offline
+          budget: "0.000001"
+
+      - name: Check the gates
+        env:
+          SECOND: ${{ steps.second.outcome }}/${{ steps.second.outputs.within-window-budget }}
+          OVER: ${{ steps.over.outcome }}/${{ steps.over.outputs.within-budget }}/${{ steps.over.outputs.sci }}
+        run: |
+          set -x
+          [ "$SECOND" = failure/false ]
+          [[ "$OVER" == failure/false/?* ]]
+          git fetch -q origin "$LEDGER"
+          [ "$(git show FETCH_HEAD:ledger.jsonl | wc -l)" -eq 1 ]
+
+      - if: always()
+        run: git push -q origin --delete "$LEDGER" || true

@@ -116,6 +116,28 @@ disclosure to the job summary, and fails the step when SCI is over `budget`:
 Outputs: `sci`, `sci-unit`, `total-gco2e` and `within-budget`. The action
 builds the CLI from its own ref, so it needs no release download.
 
+To cap what deploys spend over time, set `window-budget` on the deploy job.
+Each run that passes appends its `total-gco2e` to `ledger.jsonl` on the
+`ledger-branch` (default `sci-disclose-ledger`, created on first use). The
+gate fails when that run plus every run recorded in the last `window-hours`
+(default 720) is over `window-budget`:
+
+```yaml
+permissions:
+  contents: write          # the ledger branch
+steps:
+  - uses: fabiocicerchia/sci-disclose@<tag or commit SHA>
+    with:
+      window-budget: "5000"  # gCO2e across the rolling window
+  - run: ./deploy.sh
+```
+
+A run over the window budget is not recorded, since its deploy does not go
+ahead. Concurrent runs cannot both spend the rest of the budget: the
+ledger push is rejected for the one that lost the race, which re-reads the
+ledger and is gated again. A run that cannot be recorded fails rather than
+deploy uncounted. Outputs: `window-gco2e` and `within-window-budget`.
+
 ### Coming from carbon-budget-action
 
 carbon-budget-action is archived and its gate lives here now. Budgets moved
@@ -134,7 +156,7 @@ deploy (`quantity: 1`) and the two are the same number.
 | `base-gco2e` | `sci-disclose compare base.json head.json` |
 | `pr-comment`, `github-token` | the same inputs |
 | `em-zone`, `em-token` | not carried over: intensity comes from the Carbon Intensity API or the bundled averages |
-| `track-budget`, `burned-gco2e`, `window-start` | not carried over: SCI is a rate, and a running window total is a different question |
+| `track-budget`, `burned-gco2e`, `window-start` | `window-budget` and `window-hours`: the ledger branch keeps the state, so there is nothing to feed back, and the window rolls instead of resetting |
 
 The model differs too: carbon-budget-action priced requested CPU and memory at
 fixed watts, while sci-disclose needs the `utilisation` you expect, which
