@@ -62,9 +62,10 @@ runs:
         (cd "$ACTION_PATH" && go build -buildvcs=false -o "$bin" ./cmd/sci-disclose) || exit 2
         read -ra extra <<<"$ARGS"
         gate=(); [ -n "$BUDGET" ] && gate=(--budget "$BUDGET")
+        # The runner's bash has -e on; `|| code=$?` keeps an over-budget exit 1 from aborting here.
+        code=0
         "$bin" estimate -f "$MANIFEST" --format json -o "$RUNNER_TEMP/sci.json" \
-          --markdown "$RUNNER_TEMP/sci.md" "${gate[@]}" "${extra[@]}"
-        code=$?
+          --markdown "$RUNNER_TEMP/sci.md" "${gate[@]}" "${extra[@]}" || code=$?
         [ "$code" -le 1 ] || exit "$code"
         jq -r '"sci=\(.sci)", "sci-unit=\(.sci_unit)",
                "total-gco2e=\(.total_gco2e)",
