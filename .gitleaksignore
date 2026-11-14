@@ -1,0 +1,10 @@
+# Fingerprints gitleaks should not report, one per line, as
+# <commit>:<path>:<rule>:<line>.
+#
+# d4668b39 — intensity_test.go checked the credit string for
+# "AGPL-3.0-or-later", an SPDX licence id that generic-api-key reads as a key.
+# It was never a credential, and the line now carries gitleaks:allow
+# (internal/grid/intensity_test.go). The old commit is still in main's history,
+# which the scheduled full-history scan reads, so its fingerprint is silenced
+# here rather than by rewriting published commits.
+d4668b3943bb63fbdbd61fa511885a4d126d1709:intensity_test.go:generic-api-key:138
