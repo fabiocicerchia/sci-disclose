@@ -117,6 +117,14 @@ func RenderMarkdown(report *sci.Report) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "### SCI: %s %s\n\n", FormatNumber(report.SCI), report.SCIUnit)
 	fmt.Fprintf(&b, "`%s`\n\n", report.Target.Description)
+	if report.Budget != nil {
+		verdict := "✅ within budget"
+		if !report.Budget.Pass {
+			verdict = "❌ **over budget**"
+		}
+		fmt.Fprintf(&b, "%s: %s vs %s %s\n\n", verdict,
+			FormatNumber(report.SCI), FormatNumber(report.Budget.Limit), report.SCIUnit)
+	}
 	fmt.Fprintf(&b, "| Term | Value | Source |\n| --- | --- | --- |\n")
 	fmt.Fprintf(&b, "| E energy | %s kWh | %s |\n",
 		FormatNumber(report.EnergyKWh), report.EnergySource)

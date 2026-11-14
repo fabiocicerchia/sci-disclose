@@ -9,6 +9,8 @@
       offline fallback and staleness flagged
 - [x] Budget gate, regression compare with a grid-moved warning, JSON/Markdown
       disclosures
+- [x] GitHub Action with a per-run budget and a rolling-window budget
+      recorded across runs
 
 ## Next
 

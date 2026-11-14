@@ -1,0 +1,171 @@
+name: sci-disclose
+description: >-
+  Estimate the Software Carbon Intensity of a declared deployment (sci.yaml)
+  and fail the job when it is over a carbon budget, per run or summed over a
+  rolling window of runs.
+author: Fabio Cicerchia
+branding:
+  icon: cloud
+  color: green
+inputs:
+  manifest:
+    description: The sci.yaml to estimate (scaffold one with `sci-disclose init`)
+    default: sci.yaml
+  budget:
+    description: >-
+      Fail the step when SCI exceeds this many gCO2e per functional unit.
+      Empty reports without gating.
+    default: ""
+  window-budget:
+    description: >-
+      Fail the step when this run's total-gco2e plus every run recorded in the
+      last window-hours exceeds this many gCO2e. Empty turns the window off.
+      Use it on the deploy job only: every run that passes is counted.
+    default: ""
+  window-hours:
+    description: Length of the rolling window, in hours
+    default: "720"
+  ledger-branch:
+    description: >-
+      Branch holding ledger.jsonl, the record of what each passing run spent.
+      Created on first use; needs github-token with contents write.
+    default: sci-disclose-ledger
+  args:
+    description: >-
+      Extra estimate flags, e.g. `--country IT` or `--offline`. Split on
+      whitespace; no shell expansion.
+    default: ""
+  pr-comment:
+    description: Post or update one PR comment with the disclosure
+    default: "false"
+  github-token:
+    description: >-
+      Token for the PR comment (pull-requests write) and the ledger (contents
+      write)
+    default: ${{ github.token }}
+outputs:
+  sci:
+    description: SCI per functional unit, in gCO2e
+    value: ${{ steps.estimate.outputs.sci }}
+  sci-unit:
+    description: What the SCI is per, e.g. "gCO2e per deploy"
+    value: ${{ steps.estimate.outputs.sci-unit }}
+  total-gco2e:
+    description: C, the total over the manifest's period, in gCO2e
+    value: ${{ steps.estimate.outputs.total-gco2e }}
+  within-budget:
+    description: "true, or false when over budget; true when no budget was set"
+    value: ${{ steps.estimate.outputs.within-budget }}
+  window-gco2e:
+    description: The window's total including this run, in gCO2e; set with window-budget
+    value: ${{ steps.window.outputs.window-gco2e }}
+  within-window-budget:
+    description: "true, or false when the window is over budget; set with window-budget"
+    value: ${{ steps.window.outputs.within-window-budget }}
+runs:
+  using: composite
+  steps:
+    # Built from the action's own checkout, so the CLI is always the one this
+    # ref of action.yml was written against.
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e  # v7.0.0
+      with:
+        go-version-file: ${{ github.action_path }}/go.mod
+        cache: false
+
+    - id: estimate
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        MANIFEST: ${{ inputs.manifest }}
+        BUDGET: ${{ inputs.budget }}
+        ARGS: ${{ inputs.args }}
+      run: |
+        set -uo pipefail
+        bin="$RUNNER_TEMP/sci-disclose"
+        (cd "$ACTION_PATH" && go build -buildvcs=false -o "$bin" ./cmd/sci-disclose) || exit 2
+        read -ra extra <<<"$ARGS"
+        gate=(); [ -n "$BUDGET" ] && gate=(--budget "$BUDGET")
+        # The runner's bash has -e on; `|| code=$?` keeps an over-budget exit 1 from aborting here.
+        code=0
+        # extra goes first: the flag parser keeps the last value, so args cannot redirect the JSON.
+        "$bin" estimate "${extra[@]}" -f "$MANIFEST" --format json -o "$RUNNER_TEMP/sci.json" \
+          --markdown "$RUNNER_TEMP/sci.md" "${gate[@]}" || code=$?
+        [ "$code" -le 1 ] || exit "$code"
+        jq -r '"sci=\(.sci)", "sci-unit=\(.sci_unit)",
+               "total-gco2e=\(.total_gco2e)",
+               "within-budget=\(if .budget then .budget.pass else true end)"' \
+          "$RUNNER_TEMP/sci.json" >>"$GITHUB_OUTPUT"
+        cat "$RUNNER_TEMP/sci.md" >>"$GITHUB_STEP_SUMMARY"
+        echo "code=$code" >>"$GITHUB_OUTPUT"
+
+    - id: window
+      if: inputs.window-budget != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        LIMIT: ${{ inputs.window-budget }}
+        HOURS: ${{ inputs.window-hours }}
+        BRANCH: ${{ inputs.ledger-branch }}
+      run: |
+        set -uo pipefail
+        spent=$(jq .total_gco2e "$RUNNER_TEMP/sci.json")
+        run="$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+        remote="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+        auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+        g() { git -c http.extraheader="$auth" -c user.name='github-actions[bot]' \
+          -c user.email='41898282+github-actions[bot]@users.noreply.github.com' "$@"; }
+        # The push is a compare-and-swap on the branch: a run that loses the race
+        # re-reads the ledger and is gated again, so two runs cannot both spend the rest.
+        recorded=false
+        for try in 1 2 3 4 5; do
+          dir="$RUNNER_TEMP/sci-ledger"; rm -rf "$dir"; git init -q "$dir"; cd "$dir" || exit 2
+          if g fetch -q --depth 1 "$remote" "$BRANCH" 2>/dev/null; then git checkout -q FETCH_HEAD; fi
+          touch ledger.jsonl
+          window=$(jq -s --argjson h "$HOURS" --argjson spent "$spent" \
+            '(now - $h * 3600 | todate) as $since
+             | map(select(.at >= $since)) | unique_by(.run) | map(.gco2e) | add // 0 | . + $spent' ledger.jsonl)
+          within=$(jq -n --argjson w "$window" --argjson l "$LIMIT" '$w <= $l')
+          [ "$within" = true ] || break
+          jq -nc --arg run "$run" --arg sha "$GITHUB_SHA" --argjson g "$spent" \
+            '{at: (now | todate), gco2e: $g, run: $run, sha: $sha}' >>ledger.jsonl
+          git add ledger.jsonl && g commit -qm "ledger: run $run, $spent gCO2e"
+          if g push -q "$remote" "HEAD:refs/heads/$BRANCH"; then recorded=true; break; fi
+          sleep "$try"
+        done
+        echo "window-gco2e=$window" >>"$GITHUB_OUTPUT"
+        echo "within-window-budget=$within" >>"$GITHUB_OUTPUT"
+        line="Rolling ${HOURS}h window: **$window gCO2e** of a $LIMIT gCO2e budget, this run included."
+        echo "$line" >>"$RUNNER_TEMP/sci.md"
+        echo "$line" >>"$GITHUB_STEP_SUMMARY"
+        if [ "$within" != true ]; then echo "code=1" >>"$GITHUB_OUTPUT"
+        elif [ "$recorded" != true ]; then
+          echo "::error::sci-disclose: could not record this run on $BRANCH; failing rather than leave it uncounted"
+          echo "code=2" >>"$GITHUB_OUTPUT"
+        fi
+
+    - if: inputs.pr-comment == 'true' && github.event.pull_request.number
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR: ${{ github.event.pull_request.number }}
+      run: |
+        # The marker finds this action's comment again, so a re-run edits it.
+        marker='<!-- sci-disclose -->'
+        body="$marker"$'\n'"$(cat "$RUNNER_TEMP/sci.md")"
+        api="repos/$GITHUB_REPOSITORY/issues"
+        pick=".[] | select(.body | startswith(\"$marker\")) | .id"
+        id=$(gh api --paginate "$api/$PR/comments" --jq "$pick" | head -1) ||
+          { echo "::warning::sci-disclose: could not read the PR comments"; exit 0; }
+        if [ -n "$id" ]; then
+          gh api -X PATCH "$api/comments/$id" -f body="$body" >/dev/null
+        else
+          gh api "$api/$PR/comments" -f body="$body" >/dev/null
+        fi || echo "::warning::sci-disclose: could not post the PR comment"
+
+    - shell: bash
+      env:
+        CODE: ${{ steps.estimate.outputs.code }}
+        WINDOW_CODE: ${{ steps.window.outputs.code }}
+      run: |
+        w=${WINDOW_CODE:-0}
+        exit "$(( CODE > w ? CODE : w ))"

@@ -99,6 +99,69 @@ produces a table for a PR comment. One trap worth knowing: with a live
 intensity, two runs of *identical* code do not tie, because the grid moved
 between them — `compare` detects that and says so.
 
+### As a GitHub Action
+
+For a declared deployment, the action estimates `sci.yaml`, writes the
+disclosure to the job summary, and fails the step when SCI is over `budget`:
+
+```yaml
+- uses: fabiocicerchia/sci-disclose@<tag or commit SHA>   # the first release with action.yml
+  with:
+    manifest: sci.yaml
+    budget: "0.5"          # gCO2e per functional unit; leave empty to report only
+    args: --country IT     # any other estimate flag
+    pr-comment: "true"     # one comment, edited on re-runs; needs pull-requests: write
+```
+
+Outputs: `sci`, `sci-unit`, `total-gco2e` and `within-budget`. The action
+builds the CLI from its own ref, so it needs no release download.
+
+To cap what deploys spend over time, set `window-budget` on the deploy job.
+Each run that passes appends its `total-gco2e` to `ledger.jsonl` on the
+`ledger-branch` (default `sci-disclose-ledger`, created on first use). The
+gate fails when that run plus every run recorded in the last `window-hours`
+(default 720) is over `window-budget`:
+
+```yaml
+permissions:
+  contents: write          # the ledger branch
+steps:
+  - uses: fabiocicerchia/sci-disclose@<tag or commit SHA>
+    with:
+      window-budget: "5000"  # gCO2e across the rolling window
+  - run: ./deploy.sh
+```
+
+A run over the window budget is not recorded, since its deploy does not go
+ahead. Concurrent runs cannot both spend the rest of the budget: the
+ledger push is rejected for the one that lost the race, which re-reads the
+ledger and is gated again. A run that cannot be recorded fails rather than
+deploy uncounted. Outputs: `window-gco2e` and `within-window-budget`.
+
+### Coming from carbon-budget-action
+
+carbon-budget-action is archived and its gate lives here now. Budgets moved
+from gCO2e per deploy to SCI per functional unit; declare the unit as one
+deploy (`quantity: 1`) and the two are the same number.
+
+| carbon-budget-action | sci-disclose |
+| --- | --- |
+| `budget-gco2e` | `budget`, with `functional-unit: {label: deploy, quantity: 1}` |
+| `replicas`, `cpu-request`, `memory-request`, `manifest-path` | `sci-disclose init` reads them from your Kubernetes manifests into `sci.yaml` |
+| `hours` | `defaults.period-hours` |
+| `grid-intensity` | `defaults.intensity`, or `args: --intensity N` |
+| `ci-api-area` | `defaults.country` / `defaults.zone`, or `args: --country` / `--zone` |
+| `embodied-gco2e`, `embodied-lifetime-years` | a component's `embodied` block |
+| `mode: report` | leave `budget` empty |
+| `base-gco2e` | `sci-disclose compare base.json head.json` |
+| `pr-comment`, `github-token` | the same inputs |
+| `em-zone`, `em-token` | not carried over: intensity comes from the Carbon Intensity API or the bundled averages |
+| `track-budget`, `burned-gco2e`, `window-start` | `window-budget` and `window-hours`: the ledger branch keeps the state, so there is nothing to feed back, and the window rolls instead of resetting |
+
+The model differs too: carbon-budget-action priced requested CPU and memory at
+fixed watts, while sci-disclose needs the `utilisation` you expect, which
+`init` leaves as a placeholder on purpose.
+
 ## Verify the download
 
 Every release is signed with [cosign][cosign], keyless: the identity is the

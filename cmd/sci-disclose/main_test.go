@@ -294,3 +294,25 @@ func TestHelpAndVersion(t *testing.T) {
 		t.Errorf("version: exit %d\n%s", code, out)
 	}
 }
+
+func TestMarkdownCopyRidesAlongTheMainFormat(t *testing.T) {
+	dir := t.TempDir()
+	jsonPath, mdPath := filepath.Join(dir, "sci.json"), filepath.Join(dir, "sci.md")
+	code, stdout := runCLI(t, "estimate", "-f", "../../examples/sci.yaml", "-offline",
+		"-format", "json", "-o", jsonPath, "-markdown", mdPath, "-budget", "1")
+	if code != 0 {
+		t.Fatalf("exit %d:\n%s", code, stdout)
+	}
+	var parsed struct{ SCI float64 }
+	data, err := os.ReadFile(jsonPath)
+	if err != nil || json.Unmarshal(data, &parsed) != nil || parsed.SCI <= 0 {
+		t.Fatalf("the JSON disclosure should parse with an SCI: %v\n%s", err, data)
+	}
+	md, err := os.ReadFile(mdPath)
+	if err != nil || !strings.Contains(string(md), "|") || !strings.Contains(string(md), "budget") {
+		t.Errorf("the markdown copy should be the table, verdict included: %v\n%s", err, md)
+	}
+	if strings.Contains(stdout, mdPath) {
+		t.Errorf("the markdown copy should not be announced on stdout:\n%s", stdout)
+	}
+}

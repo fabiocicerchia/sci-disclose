@@ -78,7 +78,7 @@ func measureCommand(argv []string, dir string, target sci.Target, opts *options,
 		return fail(out, err)
 	}
 	within := sci.ApplyBudget(disclosure, opts.budget, opts.budgetSet)
-	if err := report.Emit(disclosure, opts.format, opts.output, out); err != nil {
+	if err := emitDisclosure(disclosure, opts, out); err != nil {
 		return fail(out, err)
 	}
 	switch {
@@ -254,7 +254,7 @@ func cmdFunc(args []string, out io.Writer) int {
 		return fail(out, err)
 	}
 	within := sci.ApplyBudget(disclosure, opts.budget, opts.budgetSet)
-	if err := report.Emit(disclosure, opts.format, opts.output, out); err != nil {
+	if err := emitDisclosure(disclosure, opts, out); err != nil {
 		return fail(out, err)
 	}
 	if !within {
