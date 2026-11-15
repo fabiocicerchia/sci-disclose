@@ -70,6 +70,33 @@ or pass `--offline` when you want to attribute a delta to the code alone.
 Exit codes: **0** fine · **1** over budget or a regression · **2** usage or
 config error · **3** the measured workload itself failed.
 
+## Gate deploys with the GitHub Action
+
+The action estimates a `sci.yaml`, writes the disclosure to the job summary,
+and fails the step on either budget:
+
+```yaml
+permissions:
+  contents: write            # only for window-budget: the ledger branch
+steps:
+  - uses: actions/checkout@<SHA>
+  - uses: fabiocicerchia/sci-disclose@<tag or commit SHA>
+    with:
+      budget: "0.5"          # gCO2e per functional unit, this run alone
+      window-budget: "5000"  # gCO2e across every run in the last window-hours
+  - run: ./deploy.sh
+```
+
+`window-budget` keeps a running total across runs in `ledger.jsonl` on the
+`sci-disclose-ledger` branch. Only a run that passes is recorded, so use it
+on the deploy job, not on pull requests. The window rolls: a run drops out
+`window-hours` (default 720) after it was recorded.
+
+Inputs: `manifest`, `budget`, `window-budget`, `window-hours`,
+`ledger-branch`, `args`, `pr-comment`, `github-token`. Outputs: `sci`,
+`sci-unit`, `total-gco2e`, `within-budget`, `window-gco2e`,
+`within-window-budget`.
+
 ## Overrides
 
 Every assumption is a flag, and the report prints the value it used. The two

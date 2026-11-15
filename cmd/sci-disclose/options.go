@@ -26,6 +26,7 @@ type options struct {
 	unitsURL        string
 	format          string
 	output          string
+	markdown        string
 	budget          float64
 	budgetSet       bool
 }
@@ -131,6 +132,7 @@ func addFlags(fs *flag.FlagSet) *options {
 	fs.StringVar(&opts.format, "format", "text", "text, json or markdown")
 	fs.StringVar(&opts.output, "o", "", "write the disclosure to a file")
 	fs.StringVar(&opts.output, "output", "", "write the disclosure to a file")
+	fs.StringVar(&opts.markdown, "markdown", "", "also write the disclosure as markdown to this file")
 	fs.Float64Var(&opts.budget, "budget", 0,
 		"fail (exit 1) if SCI exceeds this many gCO2e per unit")
 	return opts

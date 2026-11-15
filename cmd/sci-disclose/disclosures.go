@@ -20,6 +20,18 @@ import (
 	"github.com/fabiocicerchia/sci-disclose/internal/sci"
 )
 
+// emitDisclosure writes the disclosure in --format, plus a markdown copy when
+// --markdown names a file, so one run can feed both a parser and a PR comment.
+func emitDisclosure(disclosure *sci.Report, opts *options, out io.Writer) error {
+	if err := report.Emit(disclosure, opts.format, opts.output, out); err != nil {
+		return err
+	}
+	if opts.markdown == "" {
+		return nil
+	}
+	return report.Emit(disclosure, "markdown", opts.markdown, io.Discard)
+}
+
 func cmdEstimate(args []string, out io.Writer) int {
 	fs := flag.NewFlagSet("estimate", flag.ContinueOnError)
 	file := fs.String("f", "sci.yaml", "manifest to read")
@@ -40,7 +52,7 @@ func cmdEstimate(args []string, out io.Writer) int {
 		return fail(out, err)
 	}
 	within := sci.ApplyBudget(disclosure, opts.budget, opts.budgetSet)
-	if err := report.Emit(disclosure, opts.format, opts.output, out); err != nil {
+	if err := emitDisclosure(disclosure, opts, out); err != nil {
 		return fail(out, err)
 	}
 	if !within {

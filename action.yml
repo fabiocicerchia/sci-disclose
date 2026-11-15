@@ -1,0 +1,106 @@
+name: sci-disclose
+description: >-
+  Estimate the Software Carbon Intensity of a declared deployment (sci.yaml)
+  and fail the job when it is over a carbon budget, per run or summed over a
+  rolling window of runs.
+author: Fabio Cicerchia
+branding:
+  icon: cloud
+  color: green
+inputs:
+  manifest:
+    description: The sci.yaml to estimate (scaffold one with `sci-disclose init`)
+    default: sci.yaml
+  budget:
+    description: >-
+      Fail the step when SCI exceeds this many gCO2e per functional unit.
+      Empty reports without gating.
+    default: ""
+  window-budget:
+    description: >-
+      Fail the step when this run's total-gco2e plus every run recorded in the
+      last window-hours exceeds this many gCO2e. Empty turns the window off.
+      Use it on the deploy job only: every run that passes is counted.
+    default: ""
+  window-hours:
+    description: Length of the rolling window, in hours
+    default: "720"
+  ledger-branch:
+    description: >-
+      Branch holding ledger.jsonl, the record of what each passing run spent.
+      Created on first use; needs github-token with contents write.
+    default: sci-disclose-ledger
+  args:
+    description: >-
+      Extra estimate flags, e.g. `--country IT` or `--offline`. Split on
+      whitespace; no shell expansion.
+    default: ""
+  pr-comment:
+    description: Post or update one PR comment with the disclosure
+    default: "false"
+  github-token:
+    description: >-
+      Token for the PR comment (pull-requests write) and the ledger (contents
+      write)
+    default: ${{ github.token }}
+outputs:
+  sci:
+    description: SCI per functional unit, in gCO2e
+    value: ${{ steps.estimate.outputs.sci }}
+  sci-unit:
+    description: What the SCI is per, e.g. "gCO2e per deploy"
+    value: ${{ steps.estimate.outputs.sci-unit }}
+  total-gco2e:
+    description: C, the total over the manifest's period, in gCO2e
+    value: ${{ steps.estimate.outputs.total-gco2e }}
+  within-budget:
+    description: "true, or false when over budget; true when no budget was set"
+    value: ${{ steps.estimate.outputs.within-budget }}
+  window-gco2e:
+    description: The window's total including this run, in gCO2e; set with window-budget
+    value: ${{ steps.window.outputs.window-gco2e }}
+  within-window-budget:
+    description: "true, or false when the window is over budget; set with window-budget"
+    value: ${{ steps.window.outputs.within-window-budget }}
+runs:
+  using: composite
+  steps:
+    # Built from the action's own checkout, so the CLI is always the one this
+    # ref of action.yml was written against.
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e  # v7.0.0
+      with:
+        go-version-file: ${{ github.action_path }}/go.mod
+        cache: false
+
+    - id: estimate
+      shell: bash
+      env:
+        MANIFEST: ${{ inputs.manifest }}
+        BUDGET: ${{ inputs.budget }}
+        ARGS: ${{ inputs.args }}
+      run: "$GITHUB_ACTION_PATH/scripts/estimate.sh"
+
+    - id: window
+      if: inputs.window-budget != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        LIMIT: ${{ inputs.window-budget }}
+        HOURS: ${{ inputs.window-hours }}
+        BRANCH: ${{ inputs.ledger-branch }}
+      run: "$GITHUB_ACTION_PATH/scripts/window.sh"
+
+    - if: inputs.pr-comment == 'true' && github.event.pull_request.number
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR: ${{ github.event.pull_request.number }}
+      run: "$GITHUB_ACTION_PATH/scripts/pr-comment.sh"
+
+    - shell: bash
+      env:
+        CODE: ${{ steps.estimate.outputs.code }}
+        WINDOW_CODE: ${{ steps.window.outputs.code }}
+      run: |
+        w=${WINDOW_CODE:-0}
+        exit "$(( CODE > w ? CODE : w ))"

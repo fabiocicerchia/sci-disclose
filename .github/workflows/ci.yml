@@ -42,3 +42,54 @@ jobs:
         with:
           # Pinned per FC-GEN-059; matches the v2 config schema.
           version: v2.13.2
+
+  action:
+    # PRs from Dependabot and from forks get a read-only token, so the ledger push cannot work there.
+    if: github.event_name != 'pull_request' || (github.actor != 'dependabot[bot]' && !github.event.pull_request.head.repo.fork)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # a throwaway ledger branch, deleted at the end
+    env:
+      LEDGER: ci-ledger-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - id: seed-ledger
+        uses: ./
+        with:
+          manifest: examples/sci.yaml
+          args: --offline
+          window-budget: "1e12"  # unbounded: this run must pass to be recorded
+          ledger-branch: ${{ env.LEDGER }}
+
+      # Budget of one run's spend, window of two: the gate must fail and record nothing.
+      - id: over-window
+        continue-on-error: true
+        uses: ./
+        with:
+          manifest: examples/sci.yaml
+          args: --offline
+          window-budget: ${{ steps.seed-ledger.outputs.total-gco2e }}
+          ledger-branch: ${{ env.LEDGER }}
+
+      - id: over-budget
+        continue-on-error: true
+        uses: ./
+        with:
+          manifest: examples/sci.yaml
+          args: --offline
+          budget: "0.000001"
+
+      - name: Check the gates
+        env:
+          WINDOW: ${{ steps.over-window.outcome }}/${{ steps.over-window.outputs.within-window-budget }}
+          BUDGET: ${{ steps.over-budget.outcome }}/${{ steps.over-budget.outputs.within-budget }}/${{ steps.over-budget.outputs.sci }}
+        run: |
+          set -x
+          [ "$WINDOW" = failure/false ]
+          [[ "$BUDGET" == failure/false/?* ]]
+          git fetch -q origin "$LEDGER"
+          [ "$(git show FETCH_HEAD:ledger.jsonl | wc -l)" -eq 1 ]
+
+      - if: always()
+        run: git push -q origin --delete "$LEDGER" || true
