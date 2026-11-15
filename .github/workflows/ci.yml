@@ -44,8 +44,8 @@ jobs:
           version: v2.13.2
 
   action:
-    # Dependabot's token is read-only, so the ledger push cannot work there.
-    if: ${{ github.actor != 'dependabot[bot]' }}
+    # PRs from Dependabot and from forks get a read-only token, so the ledger push cannot work there.
+    if: github.event_name != 'pull_request' || (github.actor != 'dependabot[bot]' && !github.event.pull_request.head.repo.fork)
     runs-on: ubuntu-latest
     permissions:
       contents: write  # a throwaway ledger branch, deleted at the end
@@ -54,29 +54,25 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - id: first
+      - id: seed-ledger
         uses: ./
         with:
           manifest: examples/sci.yaml
           args: --offline
-          window-budget: "1e12"
+          window-budget: "1e12"  # unbounded: this run must pass to be recorded
           ledger-branch: ${{ env.LEDGER }}
 
-      - id: limit
-        env:
-          SPENT: ${{ steps.first.outputs.total-gco2e }}
-        run: echo "limit=$(jq -n "$SPENT * 1.5")" >>"$GITHUB_OUTPUT"
-
-      - id: second
+      # Budget of one run's spend, window of two: the gate must fail and record nothing.
+      - id: over-window
         continue-on-error: true
         uses: ./
         with:
           manifest: examples/sci.yaml
           args: --offline
-          window-budget: ${{ steps.limit.outputs.limit }}
+          window-budget: ${{ steps.seed-ledger.outputs.total-gco2e }}
           ledger-branch: ${{ env.LEDGER }}
 
-      - id: over
+      - id: over-budget
         continue-on-error: true
         uses: ./
         with:
@@ -86,12 +82,12 @@ jobs:
 
       - name: Check the gates
         env:
-          SECOND: ${{ steps.second.outcome }}/${{ steps.second.outputs.within-window-budget }}
-          OVER: ${{ steps.over.outcome }}/${{ steps.over.outputs.within-budget }}/${{ steps.over.outputs.sci }}
+          WINDOW: ${{ steps.over-window.outcome }}/${{ steps.over-window.outputs.within-window-budget }}
+          BUDGET: ${{ steps.over-budget.outcome }}/${{ steps.over-budget.outputs.within-budget }}/${{ steps.over-budget.outputs.sci }}
         run: |
           set -x
-          [ "$SECOND" = failure/false ]
-          [[ "$OVER" == failure/false/?* ]]
+          [ "$WINDOW" = failure/false ]
+          [[ "$BUDGET" == failure/false/?* ]]
           git fetch -q origin "$LEDGER"
           [ "$(git show FETCH_HEAD:ledger.jsonl | wc -l)" -eq 1 ]
 
